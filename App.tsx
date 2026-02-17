@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { Platform, SafeAreaView, StatusBar as RNStatusBar, StyleSheet } from "react-native";
 import { TabBar, TabItem } from "./src/components/ui";
 import { Course, WalkRecord, initialCourses, records } from "./src/mocks/walkingData";
 import {
@@ -160,5 +160,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.base.background,
+    paddingTop: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) : 0,
   },
 });
