@@ -2,7 +2,7 @@
 title: "서울 전용 산책 및 걷기 앱 PRD (MVP)"
 doc_type: "PRD"
 version: "1.0"
-product_codename: "서울발자국"
+product_codename: "서울걷길"
 platforms: ["iOS", "Android"]
 date: "2026-02-17"
 ---
@@ -10,7 +10,7 @@ date: "2026-02-17"
 # 서울 전용 산책 및 걷기 앱 PRD (MVP)
 
 ## 문서 정보
-- 제품 가칭: **서울발자국**
+- 제품 가칭: **서울걷길**
 - 대상 플랫폼: **iOS / Android**
 - 문서 버전: **1.0**
 - 작성 기준일: **2026-02-17**

@@ -1,6 +1,6 @@
 ---
 title: "서울 전용 산책/걷기 앱 MVP — 화면별 와이어프레임 (Stitch 입력용)"
-project: "Seoul Walk (가칭: 서울발자국)"
+project: "Seoul Walk (가칭: 서울걷길)"
 doc_type: "wireframe_spec"
 version: "1.0"
 language: "ko-KR"
@@ -492,4 +492,3 @@ S5(코스 상세) 하단 링크 또는 S8(요약)에서 옵션.
 - 지도 위 정보는 Bottom Sheet로 제공(지도 가림 최소화).
 - 위험 액션(삭제/폐기)은 항상 2차 확인.
 - “권한/배터리” 안내는 과도한 방해 없이, 필요한 순간에만 노출.
-

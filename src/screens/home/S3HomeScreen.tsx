@@ -16,7 +16,7 @@ export function S3HomeScreen({ courses, onOpenRoutes, onOpenCourse }: S3HomeScre
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="서울발자국" rightLabel="설정" />
+      <ScreenHeader title="서울걷길" rightLabel="설정" />
       <ScrollView contentContainerStyle={styles.content}>
         <Input placeholder="산책로, 코스, 지역 검색" />
         <View style={styles.chips}>
