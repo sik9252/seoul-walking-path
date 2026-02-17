@@ -7,6 +7,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 
 export type TabItem = {
@@ -23,8 +24,10 @@ type TabBarProps = {
 };
 
 export function TabBar({ tabs, activeKey, onPressTab, style }: TabBarProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={[styles.root, style]}>
+    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, spacing.sm) }, style]}>
       {tabs.map((tab) => {
         const active = tab.key === activeKey;
         return (
@@ -52,6 +55,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.base.background,
     flexDirection: "row",
     paddingHorizontal: spacing.sm,
+    paddingTop: spacing.xs,
   },
   tabButton: {
     flex: 1,

@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Platform, SafeAreaView, StatusBar as RNStatusBar, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
 import { Course, WalkRecord, initialCourses, records } from "./src/mocks/walkingData";
 import {
@@ -21,6 +22,14 @@ type RouteFlow = "s4" | "s5" | "s6" | "s7" | "s8" | "s13";
 type RecordFlow = "s9" | "s10";
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
   const [tab, setTab] = React.useState<MainTab>("routes");
   const [routeFlow, setRouteFlow] = React.useState<RouteFlow>("s4");
   const [recordFlow, setRecordFlow] = React.useState<RecordFlow>("s9");
@@ -136,7 +145,7 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
       {tab === "routes" ? renderRouteFlow() : null}
       {tab === "records" ? renderRecordFlow() : null}
@@ -160,6 +169,5 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.base.background,
-    paddingTop: Platform.OS === "android" ? (RNStatusBar.currentHeight ?? 0) : 0,
   },
 });

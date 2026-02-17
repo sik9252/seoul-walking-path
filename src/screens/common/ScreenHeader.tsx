@@ -17,14 +17,17 @@ export function ScreenHeader({
   onPressLeft,
   onPressRight,
 }: ScreenHeaderProps) {
+  const isLeftIcon = leftLabel === "←" || leftLabel === "✕";
+  const isRightIcon = rightLabel === "⋮" || rightLabel === "공유";
+
   return (
     <View style={styles.header}>
       <Pressable onPress={onPressLeft} style={styles.side} hitSlop={8}>
-        <Text style={styles.sideText}>{leftLabel ?? ""}</Text>
+        <Text style={[styles.sideText, isLeftIcon && styles.iconText]}>{leftLabel ?? ""}</Text>
       </Pressable>
       <Text style={styles.title}>{title}</Text>
       <Pressable onPress={onPressRight} style={styles.side} hitSlop={8}>
-        <Text style={styles.sideText}>{rightLabel ?? ""}</Text>
+        <Text style={[styles.sideText, isRightIcon && styles.rightIconText]}>{rightLabel ?? ""}</Text>
       </Pressable>
     </View>
   );
@@ -43,7 +46,18 @@ const styles = StyleSheet.create({
   },
   sideText: {
     color: colors.base.text,
+    fontSize: typography.size.labelMd,
+    lineHeight: typography.lineHeight.labelMd,
+    fontWeight: typography.weight.semibold,
+  },
+  iconText: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: typography.weight.bold,
+  },
+  rightIconText: {
     fontSize: typography.size.labelLg,
+    lineHeight: typography.lineHeight.labelLg,
   },
   title: {
     color: colors.base.text,
