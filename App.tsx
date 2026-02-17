@@ -13,7 +13,7 @@ import {
   S7TrackingScreen,
   S8SummaryScreen,
   S9RecordListScreen,
-} from "./src/screens/WalkingScreens";
+} from "./src/screens";
 import { colors } from "./src/theme/tokens";
 
 type MainTab = "routes" | "records" | "my";
