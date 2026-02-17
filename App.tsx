@@ -1,10 +1,12 @@
 import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
 import { Course, WalkRecord, initialCourses, records } from "./src/mocks/walkingData";
 import {
+  S3HomeScreen,
   S10RecordDetailScreen,
   S11SettingsScreen,
   S13ReportScreen,
@@ -17,7 +19,7 @@ import {
 } from "./src/screens";
 import { colors } from "./src/theme/tokens";
 
-type MainTab = "routes" | "records" | "my";
+type MainTab = "home" | "routes" | "records" | "my";
 type RouteFlow = "s4" | "s5" | "s6" | "s7" | "s8" | "s13";
 type RecordFlow = "s9" | "s10";
 
@@ -30,7 +32,7 @@ export default function App() {
 }
 
 function AppContent() {
-  const [tab, setTab] = React.useState<MainTab>("routes");
+  const [tab, setTab] = React.useState<MainTab>("home");
   const [routeFlow, setRouteFlow] = React.useState<RouteFlow>("s4");
   const [recordFlow, setRecordFlow] = React.useState<RecordFlow>("s9");
   const [selectedCourse, setSelectedCourse] = React.useState<Course>(initialCourses[0]);
@@ -65,9 +67,10 @@ function AppContent() {
   };
 
   const tabs: TabItem[] = [
-    { key: "routes", label: "코스" },
-    { key: "records", label: "기록" },
-    { key: "my", label: "마이" },
+    { key: "home", label: "홈", icon: <Ionicons name="home-outline" size={18} color={colors.base.text} /> },
+    { key: "routes", label: "코스", icon: <Ionicons name="map-outline" size={18} color={colors.base.text} /> },
+    { key: "records", label: "기록", icon: <Ionicons name="time-outline" size={18} color={colors.base.text} /> },
+    { key: "my", label: "마이", icon: <Ionicons name="person-outline" size={18} color={colors.base.text} /> },
   ];
 
   const renderRouteFlow = () => {
@@ -147,15 +150,30 @@ function AppContent() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
+      {tab === "home" ? (
+        <S3HomeScreen
+          courses={courseItems}
+          onOpenRoutes={() => {
+            setTab("routes");
+            setRouteFlow("s4");
+          }}
+          onOpenCourse={(course) => {
+            setSelectedCourse(course);
+            setTab("routes");
+            setRouteFlow("s5");
+          }}
+        />
+      ) : null}
       {tab === "routes" ? renderRouteFlow() : null}
       {tab === "records" ? renderRecordFlow() : null}
       {tab === "my" ? <S11SettingsScreen /> : null}
-      {routeFlow !== "s7" ? (
+      {!(tab === "routes" && routeFlow === "s7") ? (
         <TabBar
           tabs={tabs}
           activeKey={tab}
           onPressTab={(key) => {
             setTab(key as MainTab);
+            if (key === "home") return;
             if (key === "routes") setRouteFlow("s4");
             if (key === "records") setRecordFlow("s9");
           }}

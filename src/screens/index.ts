@@ -1,3 +1,4 @@
+export * from "./home/S3HomeScreen";
 export * from "./records/S10RecordDetailScreen";
 export * from "./records/S9RecordListScreen";
 export * from "./routes/S13ReportScreen";
