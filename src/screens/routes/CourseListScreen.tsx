@@ -22,10 +22,22 @@ export function CourseListScreen({
   onOpenCourse,
 }: CourseListScreenProps) {
   const [query, setQuery] = React.useState("");
+  const [difficultyFilter, setDifficultyFilter] = React.useState<"all" | "쉬움" | "보통">("all");
+  const [distanceUnderFive, setDistanceUnderFive] = React.useState(false);
+  const [sortKey, setSortKey] = React.useState<"recommend" | "distance" | "duration">("recommend");
+
   const filtered = courses.filter((course) => {
     const passFavorite = !favoritesOnly || course.isFavorite;
     const passQuery = !query.trim() || course.name.includes(query) || course.district.includes(query);
-    return passFavorite && passQuery;
+    const passDifficulty = difficultyFilter === "all" || course.difficulty === difficultyFilter;
+    const passDistance = !distanceUnderFive || course.distanceKm < 5;
+    return passFavorite && passQuery && passDifficulty && passDistance;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortKey === "distance") return a.distanceKm - b.distanceKm;
+    if (sortKey === "duration") return a.durationMin - b.durationMin;
+    return b.rating - a.rating;
   });
 
   return (
@@ -52,12 +64,38 @@ export function CourseListScreen({
 
         <Input value={query} onChangeText={setQuery} placeholder="산책로, 코스, 지역 검색" />
         <View style={styles.chips}>
-          <Chip label="필터" selected />
-          <Chip label="난이도: 쉬움" />
-          <Chip label="거리: 5km 미만" />
+          <Chip
+            label={`정렬: ${sortKey === "recommend" ? "추천" : sortKey === "distance" ? "거리" : "시간"}`}
+            selected
+            onPress={() =>
+              setSortKey((prev) =>
+                prev === "recommend" ? "distance" : prev === "distance" ? "duration" : "recommend",
+              )
+            }
+          />
+          <Chip
+            label="난이도: 쉬움"
+            selected={difficultyFilter === "쉬움"}
+            onPress={() => setDifficultyFilter((prev) => (prev === "쉬움" ? "all" : "쉬움"))}
+          />
+          <Chip
+            label="거리: 5km 미만"
+            selected={distanceUnderFive}
+            onPress={() => setDistanceUnderFive((prev) => !prev)}
+          />
+          {(difficultyFilter !== "all" || distanceUnderFive || sortKey !== "recommend") && (
+            <Chip
+              label="초기화"
+              onPress={() => {
+                setDifficultyFilter("all");
+                setDistanceUnderFive(false);
+                setSortKey("recommend");
+              }}
+            />
+          )}
         </View>
 
-        {favoritesOnly && filtered.length === 0 ? (
+        {favoritesOnly && sorted.length === 0 ? (
           <View style={styles.emptyWrap}>
             <View style={styles.emptyIconCircle}>
               <Ionicons name="heart" size={28} color={colors.brand[600]} />
@@ -67,7 +105,7 @@ export function CourseListScreen({
             <Button label="코스 탐색하기" onPress={() => onToggleFavoritesOnly(false)} />
           </View>
         ) : (
-          filtered.map((course, index) => (
+          sorted.map((course, index) => (
             <Card key={course.id} style={styles.routeCard} padded={false}>
               <Pressable onPress={() => onOpenCourse(course)}>
                 <View style={[styles.routeHero, { backgroundColor: heroBackgrounds[index % heroBackgrounds.length] }]}>
