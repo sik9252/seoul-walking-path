@@ -1,4 +1,5 @@
 import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState, BackHandler } from "react-native";
 import { trackEvent } from "../analytics/tracker";
 import { Course, IntroFlow, MainTab, RecordFlow, RouteFlow, WalkRecord } from "../domain/types";
@@ -6,6 +7,20 @@ import { calculateMetrics, filterDistanceIncrementMeters, TrackingMetrics } from
 import { walkingRepository } from "../repositories/mock/walkingRepository";
 
 const DEFAULT_DISTANCE_PER_SEC_METERS = 1.4;
+const STORAGE_KEYS = {
+  records: "@seoul-walking-path/records",
+  favoriteCourseIds: "@seoul-walking-path/favorite-course-ids",
+} as const;
+
+async function loadJson<T>(key: string): Promise<T | null> {
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
 
 function advanceTracking(
   prev: TrackingMetrics,
@@ -57,6 +72,7 @@ export function useWalkingAppState() {
     status: "idle",
   });
   const [gpsQualityLow, setGpsQualityLow] = React.useState(false);
+  const [hydrated, setHydrated] = React.useState(false);
   const backgroundAtMsRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
@@ -65,13 +81,39 @@ export function useWalkingAppState() {
         walkingRepository.getCourses(),
         walkingRepository.getRecords(),
       ]);
-      setCourseItems(courses);
-      setRecordItems(records);
-      setSelectedCourse(courses[0] ?? null);
-      setSelectedRecord(records[0] ?? null);
+
+      const [savedRecords, favoriteCourseIds] = await Promise.all([
+        loadJson<WalkRecord[]>(STORAGE_KEYS.records),
+        loadJson<string[]>(STORAGE_KEYS.favoriteCourseIds),
+      ]);
+
+      const nextCourses = favoriteCourseIds
+        ? courses.map((course) => ({
+            ...course,
+            isFavorite: favoriteCourseIds.includes(course.id),
+          }))
+        : courses;
+      const nextRecords = savedRecords ?? records;
+
+      setCourseItems(nextCourses);
+      setRecordItems(nextRecords);
+      setSelectedCourse(nextCourses[0] ?? null);
+      setSelectedRecord(nextRecords[0] ?? null);
+      setHydrated(true);
     };
     void bootstrap();
   }, []);
+
+  React.useEffect(() => {
+    if (!hydrated) return;
+    void AsyncStorage.setItem(STORAGE_KEYS.records, JSON.stringify(recordItems));
+  }, [hydrated, recordItems]);
+
+  React.useEffect(() => {
+    if (!hydrated) return;
+    const favoriteIds = courseItems.filter((course) => course.isFavorite).map((course) => course.id);
+    void AsyncStorage.setItem(STORAGE_KEYS.favoriteCourseIds, JSON.stringify(favoriteIds));
+  }, [courseItems, hydrated]);
 
   const handleBackInIntro = React.useCallback(() => {
     if (introFlow === "permission") {
