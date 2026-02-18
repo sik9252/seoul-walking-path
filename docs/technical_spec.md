@@ -39,6 +39,11 @@
 ## 4) 인프라 / 배포
 - 모바일 빌드: EAS Build (`eas.json` 설정)
 - Android 배포 대상: Google Play Console (Internal track 우선)
+- 백엔드 배포: **미확정 (필수 결정 필요)**
+  - 후보: Render / Railway / Fly.io / Google Cloud Run
+  - 요구사항: 24시간 API 가용성, HTTPS, 환경변수/시크릿 관리, 일일 배치 실행 가능
+- 운영 DB: **미연동**
+  - 목표: PostgreSQL (Supabase/Neon/Cloud SQL 등 중 선택)
 - 앱 식별자
   - Android package: `com.sik9252.seoulwalkingpath`
   - iOS bundleIdentifier: `com.sik9252.seoulwalkingpath`
@@ -63,6 +68,7 @@
 - 현재 코드 기준 필수 유료 인프라: 없음
 - 즉시 비용이 발생하는 항목: 없음 (로컬/인메모리 중심)
 - 추후 비용 가능 항목
+  - 백엔드 호스팅(무료 티어 초과/슬립 해제 시)
   - 운영 DB 도입 시 (예: PostgreSQL managed)
   - Sentry 유료 플랜 확장 시
   - Play Store 배포 계정/운영 비용

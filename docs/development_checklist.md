@@ -80,6 +80,9 @@
 - [x] 앱 ID/서명/버전 전략 정리
 - [ ] Play Console 내부 테스트 트랙 배포
 - [x] 배포 가이드 문서화 커밋
+- [ ] 백엔드 배포 플랫폼 확정(Render/Railway/Fly.io/Cloud Run 중 1개)
+- [ ] 백엔드 프로덕션 배포 + HTTPS 도메인 연결
+- [ ] 프로덕션 DB(PostgreSQL) 연결 및 백업/복구 정책 설정
 
 ## 12. PRD 누락 방지 항목(추가)
 - [x] 위치/이동경로 개인정보 고지 화면 및 문구 반영
@@ -159,3 +162,4 @@
 - 프론트 데이터 소스 전환: `walkingRepository`가 `/routes` API를 우선 호출하고 실패 시 mock을 사용.
 - 좌표 검수 절차 확정: `checkpoint-overrides.json` 수동 보정 + `export:unresolved-checkpoints` 검수 목록 생성.
 - 환경변수 로딩 보강: 백엔드 앱/배치 스크립트에서 `backend/.env` 자동 로드 지원 추가.
+- 상용 배포 TODO: 백엔드 플랫폼/DB 배포를 확정해야 실제 앱 사용자가 API 접근 가능.
