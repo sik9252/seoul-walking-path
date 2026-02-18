@@ -72,10 +72,10 @@
 - [x] API 계약/서버 초기화 커밋
 
 ## 11. Android 배포 준비
-- [ ] EAS build 설정
-- [ ] 앱 ID/서명/버전 전략 정리
+- [x] EAS build 설정
+- [x] 앱 ID/서명/버전 전략 정리
 - [ ] Play Console 내부 테스트 트랙 배포
-- [ ] 배포 가이드 문서화 커밋
+- [x] 배포 가이드 문서화 커밋
 
 ## 12. PRD 누락 방지 항목(추가)
 - [ ] 위치/이동경로 개인정보 고지 화면 및 문구 반영
@@ -97,7 +97,6 @@
 - 코스 탐색 고도화: `CourseListScreen` 검색/필터/정렬 상태를 실제 동작으로 연결.
 - 트래킹 상태머신 도입: `src/domain/tracking.ts` + `useWalkingAppState`에서 실시간 메트릭 계산.
 - 안정성 보강: `TopBanner` 공통 컴포넌트 도입, 트래킹 화면 GPS 저품질 경고 노출.
-- 영속화 보류: 네트워크 제한으로 `@react-native-async-storage/async-storage` 설치 실패(추후 재시도 필요).
 - 분석 이벤트 1차 연결: `src/analytics/tracker.ts` 기반으로 핵심 view/action 이벤트 추적.
 - 분석 이벤트 확장: 코스 상세 `주요 포인트` 클릭 시 `poi_click` 이벤트 기록.
 - 백그라운드 보정: 앱 복귀 시 누락된 경과 시간을 `AppState` 기반으로 추적값에 반영.
@@ -105,3 +104,4 @@
 - 영속화 적용: `@react-native-async-storage/async-storage`로 기록/즐겨찾기 상태 저장 및 복원 연결.
 - 안정성 보강(영속화): 저장 예외를 `try/catch` 처리해 저장 실패 시에도 앱 흐름이 중단되지 않도록 보호.
 - 백엔드 1차: `backend/`에 NestJS 부트스트랩, `backend/openapi.seoul-walking-path-mvp.yaml` 초안, `docs/mock_to_api_migration_plan.md` 작성.
+- Android 배포 준비: `eas.json` 추가, 앱 ID(`com.sik9252.seoulwalkingpath`)와 버전 전략, 내부테스트 배포 가이드 초안 문서화.
