@@ -1,4 +1,7 @@
 export * from "./home/S3HomeScreen";
+export * from "./onboarding/S0SplashScreen";
+export * from "./onboarding/S1OnboardingScreen";
+export * from "./onboarding/S2PermissionScreen";
 export * from "./records/S10RecordDetailScreen";
 export * from "./records/S9RecordListScreen";
 export * from "./routes/S13ReportScreen";

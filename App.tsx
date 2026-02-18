@@ -6,6 +6,9 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
 import { Course, WalkRecord, initialCourses, records } from "./src/mocks/walkingData";
 import {
+  S0SplashScreen,
+  S1OnboardingScreen,
+  S2PermissionScreen,
   S3HomeScreen,
   S10RecordDetailScreen,
   S11SettingsScreen,
@@ -22,6 +25,7 @@ import { colors } from "./src/theme/tokens";
 type MainTab = "home" | "routes" | "records" | "my";
 type RouteFlow = "s4" | "s5" | "s6" | "s7" | "s8" | "s13";
 type RecordFlow = "s9" | "s10";
+type IntroFlow = "s0" | "s1" | "s2" | "done";
 
 export default function App() {
   return (
@@ -32,6 +36,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const [introFlow, setIntroFlow] = React.useState<IntroFlow>("s0");
   const [tab, setTab] = React.useState<MainTab>("home");
   const [routeFlow, setRouteFlow] = React.useState<RouteFlow>("s4");
   const [recordFlow, setRecordFlow] = React.useState<RecordFlow>("s9");
@@ -150,6 +155,13 @@ function AppContent() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
+      {introFlow === "s0" ? <S0SplashScreen onDone={() => setIntroFlow("s1")} /> : null}
+      {introFlow === "s1" ? <S1OnboardingScreen onStart={() => setIntroFlow("s2")} /> : null}
+      {introFlow === "s2" ? (
+        <S2PermissionScreen onAllow={() => setIntroFlow("done")} onLater={() => setIntroFlow("done")} />
+      ) : null}
+      {introFlow === "done" ? (
+        <>
       {tab === "home" ? (
         <S3HomeScreen
           courses={courseItems}
@@ -178,6 +190,8 @@ function AppContent() {
             if (key === "records") setRecordFlow("s9");
           }}
         />
+      ) : null}
+        </>
       ) : null}
     </SafeAreaView>
   );
