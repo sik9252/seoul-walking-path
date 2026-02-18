@@ -56,10 +56,38 @@ function AppContent() {
   } = useWalkingAppState();
 
   const tabs: TabItem[] = [
-    { key: "home", label: "홈", icon: <Ionicons name="home-outline" size={18} color={colors.base.text} /> },
-    { key: "routes", label: "코스", icon: <Ionicons name="map-outline" size={18} color={colors.base.text} /> },
-    { key: "records", label: "기록", icon: <Ionicons name="time-outline" size={18} color={colors.base.text} /> },
-    { key: "my", label: "마이", icon: <Ionicons name="person-outline" size={18} color={colors.base.text} /> },
+    {
+      key: "home",
+      label: "홈",
+      renderIcon: (active) => (
+        <Ionicons name={active ? "home" : "home-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+      ),
+    },
+    {
+      key: "routes",
+      label: "코스",
+      renderIcon: (active) => (
+        <Ionicons name={active ? "map" : "map-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+      ),
+    },
+    {
+      key: "records",
+      label: "기록",
+      renderIcon: (active) => (
+        <Ionicons name={active ? "time" : "time-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+      ),
+    },
+    {
+      key: "my",
+      label: "마이",
+      renderIcon: (active) => (
+        <Ionicons
+          name={active ? "person" : "person-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
+      ),
+    },
   ];
 
   const renderRouteFlow = () => {

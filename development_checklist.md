@@ -11,7 +11,7 @@
 ## 1. UI 정합성 고정
 - [x] S0~S13 화면 Figma 대비 1차 정합
 - [ ] 토큰(색/타입/간격) 최종 고정
-- [ ] 공통 컴포넌트 API 정리(Button/Input/Chip/Card/BottomSheet/TabBar)
+- [x] 공통 컴포넌트 API 정리(Button/Input/Chip/Card/BottomSheet/TabBar)
 - [ ] UI freeze 커밋
 
 ## 2. 내비게이션 구조 확정
@@ -92,3 +92,4 @@
 - UI 정합성 진행 중: S7(트래킹), S8(요약) 1차 정합 패치 완료.
 - UI 정합성 진행 중: S9/S10/S11/S12/S13 1차 정합 패치 완료.
 - 아키텍처 정리: `src/domain/types.ts`, `src/repositories/mock`, `src/hooks/useWalkingAppState.ts` 도입.
+- 컴포넌트 API 정리: `TabBar`에 `renderIcon(active)` API 추가, 활성 상태 아이콘 분기 적용.

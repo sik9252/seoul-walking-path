@@ -14,6 +14,7 @@ export type TabItem = {
   key: string;
   label: string;
   icon?: React.ReactNode;
+  renderIcon?: (active: boolean) => React.ReactNode;
 };
 
 type TabBarProps = {
@@ -38,7 +39,9 @@ export function TabBar({ tabs, activeKey, onPressTab, style }: TabBarProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
           >
-            <View style={[styles.iconWrap, active && styles.iconWrapActive]}>{tab.icon}</View>
+            <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
+              {tab.renderIcon ? tab.renderIcon(active) : tab.icon}
+            </View>
             <Text style={[styles.label, active ? styles.labelActive : styles.labelInactive]}>{tab.label}</Text>
           </Pressable>
         );
