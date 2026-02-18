@@ -92,8 +92,8 @@
 - [x] 재도전 정책 확정: 새 Attempt로 시작, 이전 Attempt 진행도는 누적 통계로만 보관
 - [x] 체크 반경 기준 확정(예: 40m)
 - [x] 체크 순서 강제 여부 확정(권장: 비강제)
-- [ ] `ROAD_DTL_NM` 파싱/정규화 규칙 정의(구분자/중복/공백/오탈자)
-- [ ] `BGNG_PSTN`·`END_PSTN` 기준 포인트 순서 보정 규칙 정의
+- [x] `ROAD_DTL_NM` 파싱/정규화 규칙 정의(구분자/중복/공백/오탈자)
+- [x] `BGNG_PSTN`·`END_PSTN` 기준 포인트 순서 보정 규칙 정의
 - [ ] 좌표 수집 파이프라인 설계(1회성 변환 + 수동 검수 + DB 저장)
 - [ ] DB 스키마 설계(`course_checkpoints`, `course_attempts`, `attempt_checkpoint_visits`)
 - [ ] 체크포인트 진행도 API 계약 초안 작성
@@ -129,3 +129,4 @@
 - 좌표 소스 탐색 필요: 상업 이용 가능한 공식/대체 경로 좌표 확보 후 `공식 코스 라인 오버레이 + 이탈 판단` 단계 진행.
 - 기획 전환: 코스 선형 오버레이/이탈판단 대신 체크포인트(ROAD_DTL_NM) 방문 기반 완주 방식 채택.
 - 체크포인트 정책 확정: Attempt 단위 완주, 재도전 시 새 Attempt, 반경 40m, 순서 비강제.
+- 정규화 규칙 문서화: `docs/checkpoint_normalization_rules.md` (파싱/canonical/순서보정/검수 플래그).
