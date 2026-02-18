@@ -169,6 +169,29 @@ export function useWalkingAppState() {
     setTracking((prev) => ({ ...prev, status: "finished" }));
   }, []);
 
+  const saveCurrentSessionAsRecord = React.useCallback(async (): Promise<boolean> => {
+    const shouldFail = Math.random() < 0.25;
+    if (shouldFail) return false;
+
+    setRecordItems((prev) => {
+      const newRecord: WalkRecord = {
+        id: `r${Date.now()}`,
+        courseId: selectedCourse?.id ?? "custom",
+        title: selectedCourse ? `${selectedCourse.name} 산책` : "자유 산책",
+        startedAt: new Date().toLocaleString("ko-KR"),
+        distanceKm: Number((tracking.distanceMeters / 1000).toFixed(2)),
+        durationText: elapsedText,
+        paceText:
+          tracking.distanceMeters > 0
+            ? `${Math.max(1, Math.round(tracking.elapsedSec / (tracking.distanceMeters / 1000)))}초/km`
+            : "0초/km",
+      };
+      return [newRecord, ...prev];
+    });
+
+    return true;
+  }, [elapsedText, selectedCourse, tracking.distanceMeters, tracking.elapsedSec]);
+
   const toggleFavorite = React.useCallback((courseId: string) => {
     setCourseItems((prev) =>
       prev.map((course) =>
@@ -205,6 +228,7 @@ export function useWalkingAppState() {
     startTracking,
     toggleTrackingPause,
     finishTracking,
+    saveCurrentSessionAsRecord,
     toggleFavorite,
   };
 }

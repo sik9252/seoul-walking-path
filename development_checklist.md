@@ -55,7 +55,7 @@
 ## 8. 실패 케이스/안정성 (NFR)
 - [x] 위치 권한 거부 UX
 - [x] GPS 품질 저하 배너
-- [ ] 저장 실패 재시도 UX
+- [x] 저장 실패 재시도 UX
 - [ ] 안정성 개선 커밋
 
 ## 9. 분석 이벤트 적용
@@ -97,3 +97,4 @@
 - 코스 탐색 고도화: `CourseListScreen` 검색/필터/정렬 상태를 실제 동작으로 연결.
 - 트래킹 상태머신 도입: `src/domain/tracking.ts` + `useWalkingAppState`에서 실시간 메트릭 계산.
 - 안정성 보강: `TopBanner` 공통 컴포넌트 도입, 트래킹 화면 GPS 저품질 경고 노출.
+- 영속화 보류: 네트워크 제한으로 `@react-native-async-storage/async-storage` 설치 실패(추후 재시도 필요).

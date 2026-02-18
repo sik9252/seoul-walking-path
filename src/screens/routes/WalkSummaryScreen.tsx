@@ -6,7 +6,7 @@ import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
 type WalkSummaryScreenProps = {
-  onConfirm: () => void;
+  onConfirm: () => Promise<boolean>;
   onBack: () => void;
   distanceText: string;
   elapsedText: string;
@@ -15,6 +15,19 @@ type WalkSummaryScreenProps = {
 
 export function WalkSummaryScreen({ onConfirm, onBack, distanceText, elapsedText, kcal }: WalkSummaryScreenProps) {
   const [mood, setMood] = React.useState(2);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError(null);
+    const ok = await onConfirm();
+    if (!ok) {
+      setSaveError("저장에 실패했어요. 네트워크 상태를 확인하고 다시 시도해주세요.");
+    }
+    setSaving(false);
+  };
+
   return (
     <View style={styles.screen}>
       <ScreenHeader
@@ -71,9 +84,10 @@ export function WalkSummaryScreen({ onConfirm, onBack, distanceText, elapsedText
             </Pressable>
           ))}
         </View>
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
       </ScrollView>
       <View style={styles.bottomCta}>
-        <Button label="확인" onPress={onConfirm} style={{ flex: 1 }} />
+        <Button label={saving ? "저장 중..." : "확인"} onPress={handleSave} style={{ flex: 1 }} disabled={saving} />
       </View>
     </View>
   );
@@ -133,5 +147,11 @@ const styles = StyleSheet.create({
   },
   moodBtnActive: { backgroundColor: colors.brand[200], borderColor: colors.brand[600] },
   moodText: { fontSize: 22 },
+  errorText: {
+    color: colors.semantic.error,
+    fontSize: typography.size.bodySm,
+    lineHeight: typography.lineHeight.bodySm,
+    fontWeight: typography.weight.medium,
+  },
   bottomCta: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
 });

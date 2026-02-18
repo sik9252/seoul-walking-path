@@ -56,6 +56,7 @@ function AppContent() {
     startTracking,
     toggleTrackingPause,
     finishTracking,
+    saveCurrentSessionAsRecord,
     toggleFavorite,
   } = useWalkingAppState();
 
@@ -155,10 +156,13 @@ function AppContent() {
             distanceText={distanceText}
             elapsedText={elapsedText}
             kcal={tracking.kcal}
-            onConfirm={() => {
+            onConfirm={async () => {
+              const saved = await saveCurrentSessionAsRecord();
+              if (!saved) return false;
               setTab("records");
               setRecordFlow("recordList");
               setRouteFlow("courseList");
+              return true;
             }}
           />
         );
