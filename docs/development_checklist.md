@@ -95,7 +95,7 @@
 - [x] `ROAD_DTL_NM` 파싱/정규화 규칙 정의(구분자/중복/공백/오탈자)
 - [x] `BGNG_PSTN`·`END_PSTN` 기준 포인트 순서 보정 규칙 정의
 - [x] 좌표 수집 파이프라인 설계(1회성 변환 + 수동 검수 + DB 저장)
-- [ ] DB 스키마 설계(`course_checkpoints`, `course_attempts`, `attempt_checkpoint_visits`)
+- [x] DB 스키마 설계(`course_checkpoints`, `course_attempts`, `attempt_checkpoint_visits`)
 - [ ] 체크포인트 진행도 API 계약 초안 작성
 - [ ] 백엔드 판정 로직(반경 체크/중복 체크 방지/완주 계산) 구현
 - [ ] 프론트 체크포인트 UI/진행도 연동 구현
@@ -131,3 +131,4 @@
 - 체크포인트 정책 확정: Attempt 단위 완주, 재도전 시 새 Attempt, 반경 40m, 순서 비강제.
 - 정규화 규칙 문서화: `docs/checkpoint_normalization_rules.md` (파싱/canonical/순서보정/검수 플래그).
 - 좌표 파이프라인 문서/스크립트 추가: `docs/checkpoint_coordinate_pipeline.md`, `backend/scripts/build-checkpoint-seed.ts`.
+- DB 스키마 초안 추가: `docs/checkpoint_db_schema.md`, `backend/sql/checkpoint_schema.sql`.
