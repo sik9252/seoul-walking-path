@@ -1,6 +1,7 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { Button, TopBanner } from "../../components/ui";
 import { AttemptStatus, CourseCheckpoint } from "../../domain/types";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
@@ -38,6 +39,16 @@ export function TrackingScreen({
   onBack,
 }: TrackingScreenProps) {
   const progressText = `${visitedCheckpointIds.length}/${checkpoints.length}`;
+  const routeCoordinates = checkpoints.map((checkpoint) => ({ latitude: checkpoint.lat, longitude: checkpoint.lng }));
+  const visitedCoordinates = checkpoints
+    .filter((checkpoint) => visitedCheckpointIds.includes(checkpoint.id))
+    .map((checkpoint) => ({ latitude: checkpoint.lat, longitude: checkpoint.lng }));
+  const currentCoordinate =
+    visitedCoordinates[visitedCoordinates.length - 1] ??
+    routeCoordinates[0] ?? {
+      latitude: 37.5665,
+      longitude: 126.978,
+    };
 
   return (
     <View style={styles.screen}>
@@ -48,10 +59,44 @@ export function TrackingScreen({
         onPressLeft={onBack}
       />
       <View style={styles.trackingMap}>
-        <View style={styles.routeLineMock} />
-        <View style={styles.walkedTrackMock} />
-        <View style={styles.currentLocationDot} />
-        <View style={styles.currentLocationHalo} />
+        <MapView
+          style={StyleSheet.absoluteFill}
+          initialRegion={{
+            latitude: currentCoordinate.latitude,
+            longitude: currentCoordinate.longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+          }}
+          region={{
+            latitude: currentCoordinate.latitude,
+            longitude: currentCoordinate.longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+          }}
+        >
+          {routeCoordinates.length > 1 ? (
+            <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor={colors.map.routeGreen1} />
+          ) : null}
+          {visitedCoordinates.length > 1 ? (
+            <Polyline coordinates={visitedCoordinates} strokeWidth={5} strokeColor={colors.brand[700]} />
+          ) : null}
+          {checkpoints.map((checkpoint) => {
+            const visited = visitedCheckpointIds.includes(checkpoint.id);
+            return (
+              <Marker
+                key={checkpoint.id}
+                coordinate={{ latitude: checkpoint.lat, longitude: checkpoint.lng }}
+                title={checkpoint.name}
+                pinColor={visited ? colors.brand[600] : colors.base.textSubtle}
+              />
+            );
+          })}
+          <Marker coordinate={currentCoordinate} title="내 위치">
+            <View style={styles.currentLocationMarker}>
+              <View style={styles.currentLocationInner} />
+            </View>
+          </Marker>
+        </MapView>
         <View style={styles.locationPill}>
           <Ionicons name="locate" size={12} color={colors.brand[700]} />
           <Text style={styles.locationPillText}>내 위치</Text>
@@ -139,46 +184,21 @@ export function TrackingScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.base.background },
   trackingMap: { flex: 1, backgroundColor: colors.map.slate100, overflow: "hidden" },
-  routeLineMock: {
-    position: "absolute",
-    left: "18%",
-    top: "20%",
-    width: "62%",
-    height: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.map.routeGreen1,
-    transform: [{ rotate: "-52deg" }],
-  },
-  walkedTrackMock: {
-    position: "absolute",
-    left: "26%",
-    top: "42%",
-    width: "34%",
-    height: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brand[700],
-    transform: [{ rotate: "-52deg" }],
-  },
-  currentLocationDot: {
-    position: "absolute",
-    left: "58%",
-    top: "33%",
-    width: 16,
-    height: 16,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brand[500],
-    borderWidth: 2,
-    borderColor: colors.base.surface,
-  },
-  currentLocationHalo: {
-    position: "absolute",
-    left: "55%",
-    top: "30%",
-    width: 28,
-    height: 28,
+  currentLocationMarker: {
+    width: 24,
+    height: 24,
     borderRadius: radius.pill,
     backgroundColor: colors.brand[200],
-    opacity: 0.6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  currentLocationInner: {
+    width: 12,
+    height: 12,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand[600],
+    borderWidth: 2,
+    borderColor: colors.base.surface,
   },
   locationPill: {
     position: "absolute",

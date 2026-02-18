@@ -39,8 +39,10 @@
 - [x] 노이즈 포인트 필터 1차
 - [x] 백그라운드 기록 기본 지원
 - [x] 트래킹 엔진 커밋
+- [ ] 실측 GPS/센서 기반 거리·걸음·소모량 연동(시뮬레이션 제거)
 
 ## 6. 지도 + POI 구현 (FR-4)
+- [x] `react-native-maps` 기반 실제 지도 렌더링 적용(트래킹 화면)
 - [x] 코스 목록/상세 화면 구현(코스 메타데이터 기반)
 - [x] 실시간 내 GPS 궤적 표시(사용자 위치 기반 트래킹)
 - [x] POI 카테고리 토글
@@ -136,3 +138,5 @@
 - 백엔드 1차 구현: `attempts` API 및 반경 40m 체크포인트 판정/중복방지/완주 처리 로직 추가.
 - 프론트 연동 1차: 트래킹 화면에 체크포인트 목록/진행률/완주 상태 표시(Attempt 기반).
 - QA 1차: `backend/scripts/verify-checkpoint-flow.ts` 자동 검증 통과, `docs/checkpoint_qa_validation.md` 작성.
+- 지도 실제화: `react-native-maps` 적용으로 트래킹 화면에 실제 지도/마커/경로 폴리라인 렌더링.
+- 비용 산정 문서 추가: `docs/deployment_cost_estimate.md`에 스토어/빌드/지도 비용 기준 정리.

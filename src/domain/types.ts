@@ -39,6 +39,8 @@ export type CourseCheckpoint = {
   routeId: string;
   order: number;
   name: string;
+  lat: number;
+  lng: number;
 };
 
 export type AttemptStatus = "in_progress" | "completed" | "abandoned";

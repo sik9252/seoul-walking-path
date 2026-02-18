@@ -313,11 +313,15 @@ export function useWalkingAppState() {
       status: "running",
     });
     if (selectedCourse) {
+      const baseLat = 37.5665;
+      const baseLng = 126.978;
       const checkpoints: CourseCheckpoint[] = selectedCourse.points.map((point, index) => ({
         id: `${selectedCourse.id}-cp-${index + 1}`,
         routeId: selectedCourse.id,
         order: index + 1,
         name: point.title,
+        lat: baseLat + index * 0.0024,
+        lng: baseLng + index * 0.0021,
       }));
       setActiveCheckpoints(checkpoints);
       setAttemptProgress({
