@@ -43,7 +43,10 @@ export function CourseListScreen({
             onPress={() => onToggleFavoritesOnly(true)}
             style={[styles.segmentBtn, favoritesOnly && styles.segmentBtnActive]}
           >
-            <Text style={styles.segmentText}>저장됨</Text>
+            <View style={styles.segmentLabelWithIcon}>
+              <Ionicons name="heart" size={14} color={colors.base.text} />
+              <Text style={styles.segmentText}>저장됨</Text>
+            </View>
           </Pressable>
         </View>
 
@@ -61,30 +64,41 @@ export function CourseListScreen({
             <Button label="코스 탐색하기" onPress={() => onToggleFavoritesOnly(false)} />
           </View>
         ) : (
-          filtered.map((course) => (
+          filtered.map((course, index) => (
             <Card key={course.id} style={styles.routeCard} padded={false}>
-              <Pressable onPress={() => onOpenCourse(course)} style={styles.routePressable}>
-                <View style={styles.routeThumb} />
-                <View style={styles.routeMeta}>
-                  <View style={styles.routeTopRow}>
-                    <Text style={styles.routeTitle}>{course.name}</Text>
-                    <Pressable onPress={() => onToggleFavorite(course.id)}>
+              <Pressable onPress={() => onOpenCourse(course)}>
+                <View style={[styles.routeHero, { backgroundColor: heroBackgrounds[index % heroBackgrounds.length] }]}>
+                  <View style={styles.heroOverlayRow}>
+                    <Text style={styles.heroMetaText}>
+                      {course.distanceKm}km · {Math.max(30, course.durationMin - 5)}분
+                    </Text>
+                    <Pressable onPress={() => onToggleFavorite(course.id)} hitSlop={8}>
                       <Ionicons
                         name={course.isFavorite ? "heart" : "heart-outline"}
                         size={22}
-                        color={course.isFavorite ? "#E53935" : colors.base.textSubtle}
+                        color={course.isFavorite ? "#E53935" : colors.base.surface}
                       />
                     </Pressable>
                   </View>
-                  <Text style={styles.routeSubtitle}>{course.subtitle}</Text>
-                  <Text style={styles.routeInfo}>
-                    {course.distanceKm}km · {course.durationMin}분 · {course.difficulty}
+                </View>
+
+                <View style={styles.routeBody}>
+                  <View style={styles.routeTopRow}>
+                    <Text style={styles.routeTitle}>{course.name}</Text>
+                    <View style={styles.levelBadge}>
+                      <Text style={styles.levelText}>{course.difficulty}</Text>
+                    </View>
+                  </View>
+
+                  <Text numberOfLines={2} style={styles.routeSubtitle}>
+                    {course.subtitle}
                   </Text>
+
                   <View style={styles.ratingRow}>
-                    <Text style={styles.routeInfo}>{course.district} · </Text>
+                    <Ionicons name="location-outline" size={13} color={colors.base.textSubtle} />
+                    <Text style={styles.routeInfo}>{course.district}</Text>
                     <Ionicons name="star" size={12} color="#F59E0B" />
                     <Text style={styles.routeInfo}>
-                      {" "}
                       {course.rating} ({course.reviewCount})
                     </Text>
                   </View>
@@ -111,11 +125,18 @@ const styles = StyleSheet.create({
   segmentBtn: { flex: 1, paddingVertical: spacing.md, alignItems: "center", backgroundColor: colors.base.surface },
   segmentBtnActive: { backgroundColor: colors.base.subtle },
   segmentText: { color: colors.base.text, fontWeight: typography.weight.semibold },
+  segmentLabelWithIcon: { flexDirection: "row", alignItems: "center", gap: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  routeCard: { borderRadius: radius.lg, overflow: "hidden" },
-  routePressable: { flexDirection: "row", gap: spacing.md, padding: spacing.md },
-  routeThumb: { width: 96, height: 96, borderRadius: radius.md, backgroundColor: colors.base.subtle },
-  routeMeta: { flex: 1, gap: 4 },
+  routeCard: { borderRadius: radius.xl, overflow: "hidden" },
+  routeHero: { height: 160, justifyContent: "space-between", padding: spacing.md },
+  heroOverlayRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: "auto" },
+  heroMetaText: {
+    color: colors.base.surface,
+    fontSize: typography.size.bodySm,
+    lineHeight: typography.lineHeight.bodySm,
+    fontWeight: typography.weight.semibold,
+  },
+  routeBody: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: 8 },
   routeTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   routeTitle: {
     color: colors.base.text,
@@ -124,10 +145,24 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     flex: 1,
   },
+  levelBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    backgroundColor: colors.base.subtle,
+  },
+  levelText: {
+    color: colors.base.text,
+    fontSize: typography.size.caption,
+    lineHeight: typography.lineHeight.caption,
+    fontWeight: typography.weight.medium,
+  },
   routeSubtitle: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
-  routeInfo: { color: colors.base.textSubtle, fontSize: typography.size.caption },
-  ratingRow: { flexDirection: "row", alignItems: "center" },
+  routeInfo: { color: colors.base.textSubtle, fontSize: typography.size.caption, marginRight: spacing.sm },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   emptyWrap: { paddingTop: 80, gap: spacing.md, alignItems: "center" },
   emptyTitle: { color: colors.base.text, fontSize: typography.size.titleSm, fontWeight: typography.weight.bold },
   emptyBody: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd },
 });
+
+const heroBackgrounds = ["#7CA06E", "#6A8F58", "#7C8C60"];

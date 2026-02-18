@@ -27,6 +27,10 @@ export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggle
         <View style={styles.mapBox}>
           <Text style={styles.mapPlaceholder}>Map Preview</Text>
         </View>
+        <View style={styles.pillMeta}>
+          <Text style={styles.pillMetaText}>추천 코스</Text>
+          <Text style={styles.detailSub}>{course.district}</Text>
+        </View>
         <View style={styles.titleRow}>
           <Text style={styles.detailTitle}>{course.name}</Text>
           <Pressable onPress={onToggleFavorite}>
@@ -77,6 +81,13 @@ export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggle
 
       <View style={styles.bottomCta}>
         <Button label="산책 시작하기" onPress={onStart} style={{ flex: 1 }} />
+        <Pressable onPress={onToggleFavorite} style={styles.bookmarkBtn}>
+          <Ionicons
+            name={course.isFavorite ? "bookmark" : "bookmark-outline"}
+            size={22}
+            color={course.isFavorite ? colors.brand[600] : colors.base.text}
+          />
+        </Pressable>
       </View>
     </View>
   );
@@ -86,11 +97,22 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.base.background },
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: 110 },
   mapBox: {
-    height: 220,
+    height: 260,
     borderRadius: radius.xl,
-    backgroundColor: colors.base.subtle,
+    backgroundColor: "#C7D2BF",
     alignItems: "center",
     justifyContent: "center",
+  },
+  pillMeta: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  pillMetaText: {
+    backgroundColor: colors.brand[100],
+    color: colors.brand[700],
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    fontSize: typography.size.caption,
+    lineHeight: typography.lineHeight.caption,
+    fontWeight: typography.weight.semibold,
   },
   mapPlaceholder: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
@@ -128,5 +150,23 @@ const styles = StyleSheet.create({
   pointTitle: { color: colors.base.text, fontWeight: typography.weight.bold },
   pointDetail: { color: colors.base.textSubtle, marginTop: 2 },
   reportBtn: { alignSelf: "flex-start", paddingHorizontal: 0, minHeight: 40 },
-  bottomCta: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
+  bottomCta: {
+    position: "absolute",
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.lg,
+    flexDirection: "row",
+    gap: spacing.sm,
+    alignItems: "center",
+  },
+  bookmarkBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.pill,
+    backgroundColor: colors.base.subtle,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.base.border,
+  },
 });
