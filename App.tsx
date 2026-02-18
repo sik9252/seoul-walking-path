@@ -4,6 +4,7 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
+import { trackEvent } from "./src/analytics/tracker";
 import { MainTab } from "./src/domain/types";
 import {
   CourseDetailScreen,
@@ -119,6 +120,9 @@ function AppContent() {
             onStart={() => setRouteFlow("preStartCheck")}
             onReport={() => setRouteFlow("reportIssue")}
             onToggleFavorite={() => toggleFavorite(selectedCourse.id)}
+            onPressPoint={(pointTitle) => {
+              trackEvent("poi_click", { route_id: selectedCourse.id, poi_title: pointTitle });
+            }}
           />
         );
       case "preStartCheck":
@@ -189,13 +193,31 @@ function AppContent() {
     );
   };
 
+  React.useEffect(() => {
+    if (introFlow !== "main") return;
+    if (tab === "home") trackEvent("view_home");
+    if (tab === "routes" && routeFlow === "courseList") trackEvent("view_route_list");
+    if (tab === "routes" && routeFlow === "courseDetail" && selectedCourse) {
+      trackEvent("view_route_detail", { route_id: selectedCourse.id });
+    }
+  }, [introFlow, routeFlow, selectedCourse, tab]);
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
       {introFlow === "splash" ? <SplashScreen onDone={() => setIntroFlow("onboarding")} /> : null}
       {introFlow === "onboarding" ? <OnboardingScreen onStart={() => setIntroFlow("permission")} /> : null}
       {introFlow === "permission" ? (
-        <PermissionScreen onAllow={() => setIntroFlow("main")} onLater={() => setIntroFlow("main")} />
+        <PermissionScreen
+          onAllow={() => {
+            trackEvent("permission_location_granted");
+            setIntroFlow("main");
+          }}
+          onLater={() => {
+            trackEvent("permission_location_denied");
+            setIntroFlow("main");
+          }}
+        />
       ) : null}
       {introFlow === "main" ? (
         <>

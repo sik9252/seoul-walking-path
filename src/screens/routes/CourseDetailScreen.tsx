@@ -12,9 +12,17 @@ type CourseDetailScreenProps = {
   onStart: () => void;
   onReport: () => void;
   onToggleFavorite: () => void;
+  onPressPoint?: (pointTitle: string) => void;
 };
 
-export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggleFavorite }: CourseDetailScreenProps) {
+export function CourseDetailScreen({
+  course,
+  onBack,
+  onStart,
+  onReport,
+  onToggleFavorite,
+  onPressPoint,
+}: CourseDetailScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader
@@ -70,10 +78,10 @@ export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggle
 
         <Text style={styles.sectionTitle}>주요 포인트</Text>
         {course.points.map((point) => (
-          <View key={point.title} style={styles.pointRow}>
+          <Pressable key={point.title} style={styles.pointRow} onPress={() => onPressPoint?.(point.title)}>
             <Text style={styles.pointTitle}>{point.title}</Text>
             <Text style={styles.pointDetail}>{point.detail}</Text>
-          </View>
+          </Pressable>
         ))}
 
         <Button label="문제 제보" variant="ghost" onPress={onReport} style={styles.reportBtn} />

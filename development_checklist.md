@@ -59,11 +59,11 @@
 - [ ] 안정성 개선 커밋
 
 ## 9. 분석 이벤트 적용
-- [ ] view_home / view_route_list / view_route_detail
-- [ ] click_start_walk / walk_pause / walk_resume / walk_finish
-- [ ] poi_click / route_favorite_add/remove
-- [ ] permission_location_granted/denied
-- [ ] 이벤트 트래킹 커밋
+- [x] view_home / view_route_list / view_route_detail
+- [x] click_start_walk / walk_pause / walk_resume / walk_finish
+- [x] poi_click / route_favorite_add/remove
+- [x] permission_location_granted/denied
+- [x] 이벤트 트래킹 커밋
 
 ## 10. 백엔드 준비 및 API 계약
 - [ ] OpenAPI 초안(Route/POI/Session/Favorite)
@@ -98,3 +98,5 @@
 - 트래킹 상태머신 도입: `src/domain/tracking.ts` + `useWalkingAppState`에서 실시간 메트릭 계산.
 - 안정성 보강: `TopBanner` 공통 컴포넌트 도입, 트래킹 화면 GPS 저품질 경고 노출.
 - 영속화 보류: 네트워크 제한으로 `@react-native-async-storage/async-storage` 설치 실패(추후 재시도 필요).
+- 분석 이벤트 1차 연결: `src/analytics/tracker.ts` 기반으로 핵심 view/action 이벤트 추적.
+- 분석 이벤트 확장: 코스 상세 `주요 포인트` 클릭 시 `poi_click` 이벤트 기록.

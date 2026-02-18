@@ -1,5 +1,6 @@
 import React from "react";
 import { BackHandler } from "react-native";
+import { trackEvent } from "../analytics/tracker";
 import { Course, IntroFlow, MainTab, RecordFlow, RouteFlow, WalkRecord } from "../domain/types";
 import { calculateMetrics, filterDistanceIncrementMeters, TrackingMetrics } from "../domain/tracking";
 import { walkingRepository } from "../repositories/mock/walkingRepository";
@@ -149,6 +150,11 @@ export function useWalkingAppState() {
   const distanceText = React.useMemo(() => `${(tracking.distanceMeters / 1000).toFixed(2)}km`, [tracking.distanceMeters]);
 
   const startTracking = React.useCallback(() => {
+    if (selectedCourse) {
+      trackEvent("click_start_walk", { route_id: selectedCourse.id });
+    } else {
+      trackEvent("click_start_walk");
+    }
     setTracking({
       elapsedSec: 0,
       distanceMeters: 0,
@@ -156,18 +162,26 @@ export function useWalkingAppState() {
       kcal: 0,
       status: "running",
     });
-  }, []);
+  }, [selectedCourse]);
 
   const toggleTrackingPause = React.useCallback(() => {
-    setTracking((prev) => ({
-      ...prev,
-      status: prev.status === "running" ? "paused" : "running",
-    }));
+    setTracking((prev) => {
+      const next = prev.status === "running" ? "paused" : "running";
+      trackEvent(next === "paused" ? "walk_pause" : "walk_resume");
+      return {
+        ...prev,
+        status: next,
+      };
+    });
   }, []);
 
   const finishTracking = React.useCallback(() => {
+    trackEvent("walk_finish", {
+      duration_sec: tracking.elapsedSec,
+      distance_m: Math.round(tracking.distanceMeters),
+    });
     setTracking((prev) => ({ ...prev, status: "finished" }));
-  }, []);
+  }, [tracking.distanceMeters, tracking.elapsedSec]);
 
   const saveCurrentSessionAsRecord = React.useCallback(async (): Promise<boolean> => {
     const shouldFail = Math.random() < 0.25;
@@ -193,6 +207,12 @@ export function useWalkingAppState() {
   }, [elapsedText, selectedCourse, tracking.distanceMeters, tracking.elapsedSec]);
 
   const toggleFavorite = React.useCallback((courseId: string) => {
+    const currentCourse = courseItems.find((course) => course.id === courseId);
+    if (currentCourse) {
+      trackEvent(currentCourse.isFavorite ? "route_favorite_remove" : "route_favorite_add", {
+        route_id: courseId,
+      });
+    }
     setCourseItems((prev) =>
       prev.map((course) =>
         course.id === courseId ? { ...course, isFavorite: !course.isFavorite } : course,
@@ -202,7 +222,7 @@ export function useWalkingAppState() {
       if (!prev || prev.id !== courseId) return prev;
       return { ...prev, isFavorite: !prev.isFavorite };
     });
-  }, []);
+  }, [courseItems]);
 
   return {
     introFlow,
