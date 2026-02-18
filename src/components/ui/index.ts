@@ -4,3 +4,4 @@ export * from "./Card";
 export * from "./Chip";
 export * from "./Input";
 export * from "./TabBar";
+export * from "./TopBanner";

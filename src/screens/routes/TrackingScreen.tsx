@@ -1,7 +1,7 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Button } from "../../components/ui";
+import { Button, TopBanner } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
@@ -12,6 +12,7 @@ type TrackingScreenProps = {
   steps: number;
   kcal: number;
   isPaused: boolean;
+  showGpsWarning: boolean;
   onTogglePause: () => void;
   onFinish: () => void;
   onBack: () => void;
@@ -24,6 +25,7 @@ export function TrackingScreen({
   steps,
   kcal,
   isPaused,
+  showGpsWarning,
   onTogglePause,
   onFinish,
   onBack,
@@ -48,6 +50,12 @@ export function TrackingScreen({
         </View>
       </View>
       <View style={styles.hud}>
+        {showGpsWarning ? (
+          <TopBanner
+            type="warning"
+            message="GPS 정확도가 낮아요. 건물 밀집 구간에서는 오차가 생길 수 있어요."
+          />
+        ) : null}
         <View style={styles.hudTop}>
           <View style={styles.hudMetaRow}>
             <Text style={styles.recordingTag}>RECORDING</Text>

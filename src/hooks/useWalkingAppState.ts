@@ -23,6 +23,7 @@ export function useWalkingAppState() {
     kcal: 0,
     status: "idle",
   });
+  const [gpsQualityLow, setGpsQualityLow] = React.useState(false);
 
   React.useEffect(() => {
     const bootstrap = async () => {
@@ -117,6 +118,18 @@ export function useWalkingAppState() {
   }, [routeFlow, tracking.status]);
 
   React.useEffect(() => {
+    if (routeFlow !== "tracking" || tracking.status !== "running") return;
+    const interval = setInterval(() => {
+      const shouldWarn = Math.random() < 0.2;
+      setGpsQualityLow(shouldWarn);
+      if (shouldWarn) {
+        setTimeout(() => setGpsQualityLow(false), 5000);
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [routeFlow, tracking.status]);
+
+  React.useEffect(() => {
     const onHardwareBack = () => {
       if (introFlow !== "main") return handleBackInIntro();
       return handleBackInMain();
@@ -186,6 +199,7 @@ export function useWalkingAppState() {
     favoritesOnly,
     setFavoritesOnly,
     tracking,
+    gpsQualityLow,
     distanceText,
     elapsedText,
     startTracking,

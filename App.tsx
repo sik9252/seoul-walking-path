@@ -50,6 +50,7 @@ function AppContent() {
     favoritesOnly,
     setFavoritesOnly,
     tracking,
+    gpsQualityLow,
     distanceText,
     elapsedText,
     startTracking,
@@ -138,6 +139,7 @@ function AppContent() {
             steps={tracking.steps}
             kcal={tracking.kcal}
             isPaused={tracking.status === "paused"}
+            showGpsWarning={gpsQualityLow}
             onTogglePause={toggleTrackingPause}
             onFinish={() => {
               finishTracking();
