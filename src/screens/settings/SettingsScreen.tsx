@@ -1,11 +1,16 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { Card } from "../../components/ui";
+import { Card, Chip } from "../../components/ui";
 import { colors, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-export function SettingsScreen() {
+type SettingsScreenProps = {
+  trackingMode: "balanced" | "accurate";
+  onChangeTrackingMode: (mode: "balanced" | "accurate") => void;
+};
+
+export function SettingsScreen({ trackingMode, onChangeTrackingMode }: SettingsScreenProps) {
   const [voice, setVoice] = React.useState(true);
   return (
     <View style={styles.screen}>
@@ -46,6 +51,24 @@ export function SettingsScreen() {
             <Text style={styles.body}>음성 안내</Text>
           </View>
           <Switch value={voice} onValueChange={setVoice} trackColor={{ true: colors.brand[600] }} />
+        </View>
+        <View style={styles.modeWrap}>
+          <Text style={styles.modeTitle}>트래킹 모드</Text>
+          <View style={styles.modeChips}>
+            <Chip
+              label="균형"
+              selected={trackingMode === "balanced"}
+              onPress={() => onChangeTrackingMode("balanced")}
+            />
+            <Chip
+              label="정확"
+              selected={trackingMode === "accurate"}
+              onPress={() => onChangeTrackingMode("accurate")}
+            />
+          </View>
+          <Text style={styles.modeHint}>
+            균형: 배터리 효율 우선 · 정확: 위치 샘플링 빈도/정밀도 우선
+          </Text>
         </View>
 
         <Text style={styles.section}>지원</Text>
@@ -106,4 +129,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.base.border,
   },
+  modeWrap: { gap: spacing.sm },
+  modeTitle: { color: colors.base.text, fontSize: typography.size.bodyMd, fontWeight: typography.weight.bold },
+  modeChips: { flexDirection: "row", gap: spacing.sm },
+  modeHint: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
 });

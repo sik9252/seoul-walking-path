@@ -10,6 +10,7 @@ const DEFAULT_DISTANCE_PER_SEC_METERS = 1.4;
 const STORAGE_KEYS = {
   records: "@seoul-walking-path/records",
   favoriteCourseIds: "@seoul-walking-path/favorite-course-ids",
+  trackingMode: "@seoul-walking-path/tracking-mode",
 } as const;
 
 async function loadJson<T>(key: string): Promise<T | null> {
@@ -34,18 +35,22 @@ function advanceTracking(
   prev: TrackingMetrics,
   elapsedIncrementSec: number,
   withNoise: boolean,
+  trackingMode: "balanced" | "accurate",
 ): TrackingMetrics {
   const safeElapsedIncrement = Math.max(0, elapsedIncrementSec);
   if (safeElapsedIncrement === 0) return prev;
 
   let distanceIncrementMeters = 0;
+  const basePerSec = trackingMode === "accurate" ? 1.2 : DEFAULT_DISTANCE_PER_SEC_METERS;
+  const maxDelta = trackingMode === "accurate" ? 5 : 8;
   if (withNoise) {
     for (let index = 0; index < safeElapsedIncrement; index += 1) {
-      const rawMeters = 1.2 + Math.random() * 0.8;
-      distanceIncrementMeters += filterDistanceIncrementMeters(rawMeters);
+      const rawMeters =
+        trackingMode === "accurate" ? 0.95 + Math.random() * 0.5 : 1.2 + Math.random() * 0.8;
+      distanceIncrementMeters += filterDistanceIncrementMeters(rawMeters, maxDelta);
     }
   } else {
-    distanceIncrementMeters = filterDistanceIncrementMeters(DEFAULT_DISTANCE_PER_SEC_METERS) * safeElapsedIncrement;
+    distanceIncrementMeters = filterDistanceIncrementMeters(basePerSec, maxDelta) * safeElapsedIncrement;
   }
 
   const nextElapsed = prev.elapsedSec + safeElapsedIncrement;
@@ -80,6 +85,7 @@ export function useWalkingAppState() {
     status: "idle",
   });
   const [gpsQualityLow, setGpsQualityLow] = React.useState(false);
+  const [trackingMode, setTrackingMode] = React.useState<"balanced" | "accurate">("balanced");
   const [hydrated, setHydrated] = React.useState(false);
   const backgroundAtMsRef = React.useRef<number | null>(null);
 
@@ -90,11 +96,16 @@ export function useWalkingAppState() {
         walkingRepository.getRecords(),
       ]);
 
-      const [savedRecords, favoriteCourseIds] = await Promise.all([
+      const [savedRecords, favoriteCourseIds, savedTrackingMode] = await Promise.all([
         loadJson<WalkRecord[]>(STORAGE_KEYS.records),
         loadJson<string[]>(STORAGE_KEYS.favoriteCourseIds),
+        loadJson<"balanced" | "accurate">(STORAGE_KEYS.trackingMode),
       ]);
 
+      const nextTrackingMode =
+        savedTrackingMode && (savedTrackingMode === "balanced" || savedTrackingMode === "accurate")
+          ? savedTrackingMode
+          : "balanced";
       const nextCourses = favoriteCourseIds
         ? courses.map((course) => ({
             ...course,
@@ -107,6 +118,7 @@ export function useWalkingAppState() {
       setRecordItems(nextRecords);
       setSelectedCourse(nextCourses[0] ?? null);
       setSelectedRecord(nextRecords[0] ?? null);
+      setTrackingMode(nextTrackingMode);
       setHydrated(true);
     };
     void bootstrap();
@@ -122,6 +134,11 @@ export function useWalkingAppState() {
     const favoriteIds = courseItems.filter((course) => course.isFavorite).map((course) => course.id);
     void persistJson(STORAGE_KEYS.favoriteCourseIds, favoriteIds);
   }, [courseItems, hydrated]);
+
+  React.useEffect(() => {
+    if (!hydrated) return;
+    void persistJson(STORAGE_KEYS.trackingMode, trackingMode);
+  }, [hydrated, trackingMode]);
 
   const handleBackInIntro = React.useCallback(() => {
     if (introFlow === "privacyNotice") {
@@ -187,10 +204,10 @@ export function useWalkingAppState() {
   React.useEffect(() => {
     if (routeFlow !== "tracking" || tracking.status !== "running") return;
     const timer = setInterval(() => {
-      setTracking((prev) => advanceTracking(prev, 1, true));
+      setTracking((prev) => advanceTracking(prev, 1, true, trackingMode));
     }, 1000);
     return () => clearInterval(timer);
-  }, [routeFlow, tracking.status]);
+  }, [routeFlow, tracking.status, trackingMode]);
 
   React.useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
@@ -206,7 +223,7 @@ export function useWalkingAppState() {
         if (routeFlow === "tracking" && tracking.status === "running") {
           const elapsedSecWhileBackground = Math.floor((Date.now() - backgroundAtMsRef.current) / 1000);
           if (elapsedSecWhileBackground > 0) {
-            setTracking((prev) => advanceTracking(prev, elapsedSecWhileBackground, false));
+            setTracking((prev) => advanceTracking(prev, elapsedSecWhileBackground, false, trackingMode));
           }
         }
         backgroundAtMsRef.current = null;
@@ -214,7 +231,7 @@ export function useWalkingAppState() {
     });
 
     return () => subscription.remove();
-  }, [routeFlow, tracking.status]);
+  }, [routeFlow, tracking.status, trackingMode]);
 
   React.useEffect(() => {
     if (routeFlow !== "tracking" || tracking.status !== "running") return;
@@ -351,6 +368,8 @@ export function useWalkingAppState() {
     setFavoritesOnly,
     tracking,
     gpsQualityLow,
+    trackingMode,
+    setTrackingMode,
     distanceText,
     elapsedText,
     startTracking,

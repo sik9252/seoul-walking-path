@@ -52,6 +52,8 @@ function AppContent() {
     favoritesOnly,
     setFavoritesOnly,
     tracking,
+    trackingMode,
+    setTrackingMode,
     gpsQualityLow,
     distanceText,
     elapsedText,
@@ -254,7 +256,7 @@ function AppContent() {
       ) : null}
       {tab === "routes" ? renderRouteFlow() : null}
       {tab === "records" ? renderRecordFlow() : null}
-      {tab === "my" ? <SettingsScreen /> : null}
+      {tab === "my" ? <SettingsScreen trackingMode={trackingMode} onChangeTrackingMode={setTrackingMode} /> : null}
       {!(tab === "routes" && routeFlow === "tracking") ? (
         <TabBar
           tabs={tabs}
