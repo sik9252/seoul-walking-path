@@ -31,3 +31,35 @@ export type SessionItem = {
   distanceMeters: number;
   kcal: number;
 };
+
+export type CourseCheckpoint = {
+  id: string;
+  routeId: string;
+  order: number;
+  name: string;
+  lat: number;
+  lng: number;
+};
+
+export type AttemptStatus = "in_progress" | "completed" | "abandoned";
+
+export type AttemptItem = {
+  id: string;
+  userId: string;
+  routeId: string;
+  status: AttemptStatus;
+  startedAt: string;
+  completedAt?: string;
+  totalCount: number;
+  visitedCheckpointIds: string[];
+};
+
+export type AttemptCheckpointVisit = {
+  id: string;
+  attemptId: string;
+  checkpointId: string;
+  visitedAt: string;
+  distanceM: number;
+  lat: number;
+  lng: number;
+};

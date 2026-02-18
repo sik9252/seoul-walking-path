@@ -14,4 +14,9 @@ export class RoutesController {
   detail(@Param("routeId") routeId: string) {
     return this.store.getRouteById(routeId);
   }
+
+  @Get(":routeId/checkpoints")
+  checkpoints(@Param("routeId") routeId: string) {
+    return this.store.getRouteCheckpoints(routeId);
+  }
 }
