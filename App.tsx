@@ -1,7 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { BackHandler, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
 import { Course, WalkRecord, initialCourses, records } from "./src/mocks/walkingData";
@@ -47,11 +47,78 @@ function AppContent() {
   const [elapsedSec, setElapsedSec] = React.useState(2535);
   const [paused, setPaused] = React.useState(false);
 
+  const handleBackInIntro = React.useCallback(() => {
+    if (introFlow === "permission") {
+      setIntroFlow("onboarding");
+      return true;
+    }
+    if (introFlow === "onboarding") {
+      setIntroFlow("splash");
+      return true;
+    }
+    return false;
+  }, [introFlow]);
+
+  const handleBackInMain = React.useCallback(() => {
+    if (tab === "routes") {
+      if (routeFlow === "reportIssue") {
+        setRouteFlow("courseDetail");
+        return true;
+      }
+      if (routeFlow === "walkSummary") {
+        setRouteFlow("tracking");
+        return true;
+      }
+      if (routeFlow === "tracking") {
+        setRouteFlow("courseDetail");
+        return true;
+      }
+      if (routeFlow === "preStartCheck") {
+        setRouteFlow("courseDetail");
+        return true;
+      }
+      if (routeFlow === "courseDetail") {
+        setRouteFlow("courseList");
+        return true;
+      }
+      if (routeFlow === "courseList") {
+        setTab("home");
+        return true;
+      }
+    }
+
+    if (tab === "records") {
+      if (recordFlow === "recordDetail") {
+        setRecordFlow("recordList");
+        return true;
+      }
+      setTab("home");
+      return true;
+    }
+
+    if (tab === "my") {
+      setTab("home");
+      return true;
+    }
+
+    return false;
+  }, [recordFlow, routeFlow, tab]);
+
   React.useEffect(() => {
     if (routeFlow !== "tracking" || paused) return;
     const timer = setInterval(() => setElapsedSec((prev) => prev + 1), 1000);
     return () => clearInterval(timer);
   }, [paused, routeFlow]);
+
+  React.useEffect(() => {
+    const onHardwareBack = () => {
+      if (introFlow !== "main") return handleBackInIntro();
+      return handleBackInMain();
+    };
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", onHardwareBack);
+    return () => subscription.remove();
+  }, [handleBackInIntro, handleBackInMain, introFlow]);
 
   const elapsedText = React.useMemo(() => {
     const hh = String(Math.floor(elapsedSec / 3600)).padStart(2, "0");
