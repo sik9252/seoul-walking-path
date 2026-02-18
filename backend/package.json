@@ -6,7 +6,8 @@
     "start": "node dist/main.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:checkpoint-seed": "ts-node scripts/build-checkpoint-seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
