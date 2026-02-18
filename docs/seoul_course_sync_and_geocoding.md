@@ -45,6 +45,11 @@
 - `KAKAO_REST_API_KEY`
 - `SYNC_FAILURE_WEBHOOK_URL` (선택)
 
+## 앱 연동(프론트)
+- Expo 환경변수 `EXPO_PUBLIC_API_BASE_URL`에 백엔드 API 베이스 URL을 설정한다.
+- 예시: `http://<내-PC-LAN-IP>:4000/api`
+- 현재 앱은 `/routes` 호출 실패 시 mock 데이터로 자동 fallback한다.
+
 ## 비용 메모
 - 운영 기준으로는 초기 전체 지오코딩 1회 + 이후 일 1회 증분 호출이면 호출량이 매우 작아 무료 쿼터 내 운용 가능성이 높다.
 - 단, 무료 쿼터/정책은 변경될 수 있으므로 월 1회 점검한다.
