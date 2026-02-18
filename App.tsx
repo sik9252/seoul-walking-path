@@ -23,9 +23,14 @@ import {
   WalkSummaryScreen,
 } from "./src/screens";
 import { useWalkingAppState } from "./src/hooks/useWalkingAppState";
+import { initSentry } from "./src/monitoring/sentry";
 import { colors } from "./src/theme/tokens";
 
 export default function App() {
+  React.useEffect(() => {
+    initSentry();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <AppContent />
