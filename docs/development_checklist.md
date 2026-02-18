@@ -103,6 +103,15 @@
 - [x] 프론트 체크포인트 UI/진행도 연동 구현
 - [x] QA 시나리오(경계 반경/재도전/복원) 작성 및 검증
 
+## 14. 서울둘레길 운영 데이터 파이프라인 (신규)
+- [x] 서울 코스정보 일 1회 동기화 전략 확정(앱 직접 호출 금지, 서버 DB 서빙)
+- [x] 동기화/정규화 스크립트 초안 구현(`backend/scripts/sync-seoul-courses.ts`)
+- [x] Kakao Local 기반 체크포인트 지오코딩 스크립트 초안 구현(`backend/scripts/geocode-checkpoints-kakao.ts`)
+- [ ] DB upsert 스크립트 구현(코스/체크포인트)
+- [ ] 동기화 스케줄러(cron) 연결 및 실패 알림 추가
+- [ ] 프론트 코스 목록/상세 API를 서버 실데이터로 교체
+- [ ] 좌표 검수(admin 또는 수동 검수 파일) 프로세스 확정
+
 ## 메모
 - 지도 라이브러리 결정 보류: `react-native-maps` 우선 검토, 지도 작업(섹션 6) 시작 시 최종 결정.
 - 비용/운영 조건: 무료 또는 무료구간 내 운용 가능한 옵션 우선.
@@ -142,3 +151,4 @@
 - 비용 산정 문서 추가: `docs/deployment_cost_estimate.md`에 스토어/빌드/지도 비용 기준 정리.
 - 체크포인트 UX 보강: 시작/종료 지점 포함, 통과 시 진동, 완주 시 성공 다이얼로그 후 요약 화면 전환.
 - 완주 알림 UI 커스터마이징: 시스템 Alert 대신 앱 테마 기반 `CompletionDialog` 모달 적용.
+- 운영 데이터 파이프라인 초안: `docs/seoul_course_sync_and_geocoding.md`, `sync:seoul-courses`, `geocode:checkpoints:kakao` 스크립트 추가.

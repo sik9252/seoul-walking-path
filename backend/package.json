@@ -7,7 +7,9 @@
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "build:checkpoint-seed": "ts-node scripts/build-checkpoint-seed.ts"
+    "build:checkpoint-seed": "ts-node scripts/build-checkpoint-seed.ts",
+    "sync:seoul-courses": "ts-node scripts/sync-seoul-courses.ts",
+    "geocode:checkpoints:kakao": "ts-node scripts/geocode-checkpoints-kakao.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
