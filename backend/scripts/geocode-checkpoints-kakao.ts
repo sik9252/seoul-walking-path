@@ -37,6 +37,7 @@ type CourseCheckpoint = {
 const rootDir = path.resolve(__dirname, "..");
 const normalizedInputPath = path.join(rootDir, "data/generated/seoul-courses.normalized.json");
 const geocodedOutputPath = path.join(rootDir, "data/generated/course-checkpoints.geocoded.json");
+const manualOverridesPath = path.join(rootDir, "data/manual/checkpoint-overrides.json");
 
 function normalizeName(input: string): string {
   return input
@@ -140,6 +141,12 @@ async function main() {
   const rateLimitMs = Number(process.env.KAKAO_RATE_LIMIT_MS ?? 120);
   const parsed = JSON.parse(fs.readFileSync(normalizedInputPath, "utf8")) as NormalizedSnapshot;
   const cache = new Map<string, { lat: number | null; lng: number | null; confidenceScore: number }>();
+  const manualOverrides = fs.existsSync(manualOverridesPath)
+    ? (JSON.parse(fs.readFileSync(manualOverridesPath, "utf8")) as Record<
+        string,
+        { lat: number; lng: number; confidenceScore?: number }
+      >)
+    : {};
 
   const checkpoints: CourseCheckpoint[] = [];
 
@@ -151,9 +158,18 @@ async function main() {
       let result = cache.get(cacheKey);
 
       if (!result) {
-        result = await geocodeWithKakao(`서울 ${canonicalName}`, kakaoKey);
+        const manual = manualOverrides[cacheKey];
+        if (manual && Number.isFinite(manual.lat) && Number.isFinite(manual.lng)) {
+          result = {
+            lat: manual.lat,
+            lng: manual.lng,
+            confidenceScore: manual.confidenceScore ?? 1,
+          };
+        } else {
+          result = await geocodeWithKakao(`서울 ${canonicalName}`, kakaoKey);
+          await sleep(Number.isFinite(rateLimitMs) ? rateLimitMs : 120);
+        }
         cache.set(cacheKey, result);
-        await sleep(Number.isFinite(rateLimitMs) ? rateLimitMs : 120);
       }
 
       checkpoints.push({
@@ -165,7 +181,12 @@ async function main() {
         lng: result.lng,
         confidenceScore: result.confidenceScore,
         needsReview: result.lat === null || result.lng === null || result.confidenceScore < 0.7,
-        source: result.lat === null || result.lng === null ? "manual_fix" : "auto_geocode",
+        source:
+          manualOverrides[cacheKey] && result.lat !== null && result.lng !== null
+            ? "manual_fix"
+            : result.lat === null || result.lng === null
+              ? "manual_fix"
+              : "auto_geocode",
       });
     }
   }

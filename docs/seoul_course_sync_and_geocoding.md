@@ -21,12 +21,19 @@
   - `cd backend && KAKAO_REST_API_KEY="<kakao-rest-key>" npm run geocode:checkpoints:kakao`
   - 출력:
     - `backend/data/generated/course-checkpoints.geocoded.json`
+  - 수동 보정:
+    - `backend/data/manual/checkpoint-overrides.json` 파일이 있으면 해당 좌표를 우선 적용
+    - 예시 파일: `backend/data/manual/checkpoint-overrides.example.json`
 - DB upsert SQL 생성
   - `cd backend && npm run build:checkpoint-upsert-sql`
   - 입력:
     - `backend/data/generated/course-checkpoints.geocoded.json`
   - 출력:
     - `backend/data/generated/course-checkpoints.upsert.sql`
+- 미해결 체크포인트 검수용 CSV 생성
+  - `cd backend && npm run export:unresolved-checkpoints`
+  - 출력:
+    - `backend/data/generated/unresolved-checkpoints.csv`
 - 일일 파이프라인 실행(오케스트레이션)
   - `cd backend && npm run sync:daily`
   - 내부 실행 순서:
@@ -57,3 +64,4 @@
 ## 주의사항
 - Kakao REST API 키는 서버 환경변수로만 주입하고 Git에 커밋하지 않는다.
 - 지오코딩 결과는 오차가 있을 수 있으므로 `confidenceScore`, `needsReview` 기반 검수 단계가 필요하다.
+- 수동 보정 파일(`checkpoint-overrides.json`)은 민감정보가 없지만 운영 오버라이드 값이므로 별도 관리 정책을 둔다.

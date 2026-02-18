@@ -111,7 +111,7 @@
 - [x] 동기화 스케줄러(cron) 연결 및 실패 알림 추가(`.github/workflows/daily-course-sync.yml`, `sync:daily`)
 - [x] 백엔드 `/routes`, `/routes/:id/checkpoints`를 생성 데이터 우선 서빙으로 전환(파일 fallback 포함)
 - [x] 프론트 코스 목록/상세 API를 서버 실데이터 우선 호출로 교체(`EXPO_PUBLIC_API_BASE_URL` 기반, 실패 시 mock fallback)
-- [ ] 좌표 검수(admin 또는 수동 검수 파일) 프로세스 확정
+- [x] 좌표 검수 프로세스 확정(수동 override + unresolved CSV export)
 
 ## 메모
 - 지도 라이브러리 결정 보류: `react-native-maps` 우선 검토, 지도 작업(섹션 6) 시작 시 최종 결정.
@@ -157,3 +157,4 @@
 - 자동 동기화 연결: GitHub Actions 일일 스케줄 + 실패 웹훅 알림 + `sync:daily` 오케스트레이션 추가.
 - 백엔드 데이터 소스 전환: `MockStoreService`가 `data/generated` 산출물을 우선 로드하고 미존재 시 mock fallback.
 - 프론트 데이터 소스 전환: `walkingRepository`가 `/routes` API를 우선 호출하고 실패 시 mock을 사용.
+- 좌표 검수 절차 확정: `checkpoint-overrides.json` 수동 보정 + `export:unresolved-checkpoints` 검수 목록 생성.
