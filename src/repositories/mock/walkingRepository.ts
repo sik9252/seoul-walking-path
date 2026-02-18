@@ -1,5 +1,6 @@
 import { Course, WalkRecord } from "../../domain/types";
 import { initialCourses, records } from "../../mocks/walkingData";
+import { Platform } from "react-native";
 
 type ApiPoi = {
   id: string;
@@ -65,7 +66,11 @@ async function fetchCoursesFromApi(page: number, pageSize: number): Promise<{
   total: number;
   hasNext: boolean;
 } | null> {
-  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+  const platformBaseUrl =
+    Platform.OS === "android"
+      ? process.env.EXPO_PUBLIC_API_BASE_URL_ANDROID
+      : process.env.EXPO_PUBLIC_API_BASE_URL_IOS;
+  const baseUrl = platformBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL;
   if (!baseUrl) return null;
 
   const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;

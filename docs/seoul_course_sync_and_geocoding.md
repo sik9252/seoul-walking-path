@@ -56,6 +56,10 @@
 - Expo 환경변수 `EXPO_PUBLIC_API_BASE_URL`에 백엔드 API 베이스 URL을 설정한다.
 - 예시: `http://<내-PC-LAN-IP>:4000/api`
 - 현재 앱은 `/routes` 호출 실패 시 mock 데이터로 자동 fallback한다.
+- 플랫폼별 분기 사용 가능:
+  - `EXPO_PUBLIC_API_BASE_URL_ANDROID` (예: `http://10.0.2.2:4000/api`)
+  - `EXPO_PUBLIC_API_BASE_URL_IOS` (예: `http://localhost:4000/api`)
+  - 위 2개가 없을 때 `EXPO_PUBLIC_API_BASE_URL` 공통값 사용
 
 ## 로컬 환경변수 로딩
 - 백엔드는 실행 시 `backend/.env`를 자동 로드한다.
