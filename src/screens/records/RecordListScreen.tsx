@@ -1,19 +1,29 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Card, Chip } from "../../components/ui";
 import { WalkRecord } from "../../domain/types";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type RecordListScreenProps = { records: WalkRecord[]; onOpenRecord: (record: WalkRecord) => void };
+type RecordListScreenProps = {
+  records: WalkRecord[];
+  onOpenRecord: (record: WalkRecord) => void;
+  onClearAll: () => void;
+};
 
-export function RecordListScreen({ records, onOpenRecord }: RecordListScreenProps) {
+export function RecordListScreen({ records, onOpenRecord, onClearAll }: RecordListScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader
         title="나의 기록"
-        rightIcon={<Ionicons name="calendar-outline" size={21} color={colors.base.text} />}
+        rightIcon={<Ionicons name="trash-outline" size={20} color={colors.base.text} />}
+        onPressRight={() =>
+          Alert.alert("전체 삭제", "모든 기록을 삭제할까요?", [
+            { text: "취소", style: "cancel" },
+            { text: "삭제", style: "destructive", onPress: onClearAll },
+          ])
+        }
       />
       <ScrollView contentContainerStyle={styles.content}>
         <Card style={styles.weekCard}>
@@ -33,6 +43,7 @@ export function RecordListScreen({ records, onOpenRecord }: RecordListScreenProp
           <Chip label="트레킹" />
           <Chip label="등산" />
         </View>
+        {records.length === 0 ? <Text style={styles.emptyText}>저장된 산책 기록이 없어요.</Text> : null}
         {records.map((record) => (
           <Card key={record.id} style={styles.recordCard}>
             <Pressable onPress={() => onOpenRecord(record)} style={styles.recordRow}>
@@ -70,6 +81,7 @@ const styles = StyleSheet.create({
   weekDays: { marginTop: "auto", flexDirection: "row", justifyContent: "space-between" },
   weekDayText: { color: colors.base.textSubtle, fontSize: typography.size.caption },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  emptyText: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd },
   recordCard: { borderRadius: radius.lg },
   recordRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   recordIconTile: {

@@ -6,9 +6,10 @@ import { colors, spacing, typography } from "../../theme/tokens";
 type PermissionScreenProps = {
   onAllow: () => void;
   onLater: () => void;
+  onOpenPrivacyNotice: () => void;
 };
 
-export function PermissionScreen({ onAllow, onLater }: PermissionScreenProps) {
+export function PermissionScreen({ onAllow, onLater, onOpenPrivacyNotice }: PermissionScreenProps) {
   return (
     <View style={styles.screen}>
       <View style={styles.hero}>
@@ -30,6 +31,7 @@ export function PermissionScreen({ onAllow, onLater }: PermissionScreenProps) {
 
       <View style={styles.bottom}>
         <Button label="위치 권한 허용하기" onPress={onAllow} style={{ width: "100%" }} />
+        <Button label="개인정보 고지 보기" variant="secondary" onPress={onOpenPrivacyNotice} style={{ width: "100%" }} />
         <Button label="나중에 하기" variant="ghost" onPress={onLater} style={{ width: "100%" }} />
       </View>
     </View>

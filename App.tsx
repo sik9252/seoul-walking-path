@@ -12,6 +12,7 @@ import {
   HomeScreen,
   OnboardingScreen,
   PermissionScreen,
+  PrivacyNoticeScreen,
   PreStartCheckScreen,
   RecordDetailScreen,
   RecordListScreen,
@@ -59,6 +60,8 @@ function AppContent() {
     finishTracking,
     saveCurrentSessionAsRecord,
     toggleFavorite,
+    deleteRecord,
+    clearRecords,
   } = useWalkingAppState();
 
   const tabs: TabItem[] = [
@@ -180,11 +183,21 @@ function AppContent() {
   const renderRecordFlow = () => {
     if (!selectedRecord && recordFlow === "recordDetail") return null;
     if (recordFlow === "recordDetail") {
-      return <RecordDetailScreen record={selectedRecord!} onBack={() => setRecordFlow("recordList")} />;
+      return (
+        <RecordDetailScreen
+          record={selectedRecord!}
+          onBack={() => setRecordFlow("recordList")}
+          onDelete={() => {
+            deleteRecord(selectedRecord!.id);
+            setRecordFlow("recordList");
+          }}
+        />
+      );
     }
     return (
       <RecordListScreen
         records={recordItems}
+        onClearAll={clearRecords}
         onOpenRecord={(record) => {
           setSelectedRecord(record);
           setRecordFlow("recordDetail");
@@ -213,11 +226,15 @@ function AppContent() {
             trackEvent("permission_location_granted");
             setIntroFlow("main");
           }}
+          onOpenPrivacyNotice={() => setIntroFlow("privacyNotice")}
           onLater={() => {
             trackEvent("permission_location_denied");
             setIntroFlow("main");
           }}
         />
+      ) : null}
+      {introFlow === "privacyNotice" ? (
+        <PrivacyNoticeScreen onBack={() => setIntroFlow("permission")} />
       ) : null}
       {introFlow === "main" ? (
         <>

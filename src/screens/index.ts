@@ -1,6 +1,7 @@
 export * from "./home/HomeScreen";
 export * from "./onboarding/OnboardingScreen";
 export * from "./onboarding/PermissionScreen";
+export * from "./onboarding/PrivacyNoticeScreen";
 export * from "./onboarding/SplashScreen";
 export * from "./records/RecordDetailScreen";
 export * from "./records/RecordListScreen";

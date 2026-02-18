@@ -1,20 +1,27 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Button } from "../../components/ui";
 import { WalkRecord } from "../../domain/types";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type RecordDetailScreenProps = { record: WalkRecord; onBack: () => void };
+type RecordDetailScreenProps = { record: WalkRecord; onBack: () => void; onDelete: () => void };
 
-export function RecordDetailScreen({ record, onBack }: RecordDetailScreenProps) {
+export function RecordDetailScreen({ record, onBack, onDelete }: RecordDetailScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader
         title="기록 상세"
         leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />}
-        rightIcon={<Ionicons name="ellipsis-vertical" size={20} color={colors.base.text} />}
+        rightIcon={<Ionicons name="trash-outline" size={20} color={colors.base.text} />}
         onPressLeft={onBack}
+        onPressRight={() =>
+          Alert.alert("기록 삭제", "이 기록을 삭제할까요?", [
+            { text: "취소", style: "cancel" },
+            { text: "삭제", style: "destructive", onPress: onDelete },
+          ])
+        }
       />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.mapBox}>
@@ -40,6 +47,7 @@ export function RecordDetailScreen({ record, onBack }: RecordDetailScreenProps) 
             <Text style={styles.metricValue}>09:30 AM</Text>
           </View>
         </View>
+        <Button label="이 기록 삭제" variant="destructive" onPress={onDelete} />
       </ScrollView>
     </View>
   );

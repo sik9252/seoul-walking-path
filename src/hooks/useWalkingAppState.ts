@@ -124,6 +124,10 @@ export function useWalkingAppState() {
   }, [courseItems, hydrated]);
 
   const handleBackInIntro = React.useCallback(() => {
+    if (introFlow === "privacyNotice") {
+      setIntroFlow("permission");
+      return true;
+    }
     if (introFlow === "permission") {
       setIntroFlow("onboarding");
       return true;
@@ -318,6 +322,16 @@ export function useWalkingAppState() {
     });
   }, [courseItems]);
 
+  const deleteRecord = React.useCallback((recordId: string) => {
+    setRecordItems((prev) => prev.filter((record) => record.id !== recordId));
+    setSelectedRecord((prev) => (prev?.id === recordId ? null : prev));
+  }, []);
+
+  const clearRecords = React.useCallback(() => {
+    setRecordItems([]);
+    setSelectedRecord(null);
+  }, []);
+
   return {
     introFlow,
     setIntroFlow,
@@ -344,5 +358,7 @@ export function useWalkingAppState() {
     finishTracking,
     saveCurrentSessionAsRecord,
     toggleFavorite,
+    deleteRecord,
+    clearRecords,
   };
 }

@@ -37,4 +37,4 @@ export type WalkRecord = {
 export type MainTab = "home" | "routes" | "records" | "my";
 export type RouteFlow = "courseList" | "courseDetail" | "preStartCheck" | "tracking" | "walkSummary" | "reportIssue";
 export type RecordFlow = "recordList" | "recordDetail";
-export type IntroFlow = "splash" | "onboarding" | "permission" | "main";
+export type IntroFlow = "splash" | "onboarding" | "permission" | "privacyNotice" | "main";
