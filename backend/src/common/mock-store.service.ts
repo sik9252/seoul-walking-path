@@ -1,15 +1,94 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import {
   AttemptCheckpointVisit,
   AttemptItem,
   AttemptStatus,
   CourseCheckpoint,
+  Poi,
   PoiCategory,
   RouteItem,
   SessionItem,
 } from "./models";
 
 const CHECKPOINT_RADIUS_M = 40;
+
+const DEFAULT_ROUTES: RouteItem[] = [
+  {
+    id: "c1",
+    name: "남산 둘레길 (북측순환로)",
+    district: "중구 예장동",
+    distanceKm: 3.5,
+    durationMin: 80,
+    difficulty: "쉬움",
+    rating: 4.8,
+    reviewCount: 1240,
+    description: "서울의 역사와 자연을 함께 느낄 수 있는 대표 산책로입니다.",
+    pois: [
+      { id: "c1-p1", routeId: "c1", title: "창의문", detail: "코스 시작점 · 화장실 있음", category: "landmark", mapQuery: "서울 창의문" },
+      { id: "c1-p2", routeId: "c1", title: "백악마루", detail: "포토 스팟 · 1.2km 지점", category: "photo", mapQuery: "북악산 백악마루" },
+      { id: "c1-p3", routeId: "c1", title: "말바위 안내소", detail: "휴식 공간 · 물 보충 가능", category: "rest", mapQuery: "말바위 안내소" },
+    ],
+  },
+  {
+    id: "c2",
+    name: "서울숲 힐링 코스",
+    district: "성동구 성수동",
+    distanceKm: 4.2,
+    durationMin: 100,
+    difficulty: "보통",
+    rating: 4.7,
+    reviewCount: 892,
+    description: "계절 식물과 열린 공원을 따라 걷는 평탄한 코스입니다.",
+    pois: [
+      { id: "c2-p1", routeId: "c2", title: "나비정원", detail: "초반 포인트 · 포토 스팟", category: "photo", mapQuery: "서울숲 나비정원" },
+      { id: "c2-p2", routeId: "c2", title: "수변 산책로", detail: "중반 · 벤치 다수", category: "rest", mapQuery: "서울숲 수변 산책로" },
+    ],
+  },
+];
+
+const DEFAULT_CHECKPOINTS: CourseCheckpoint[] = [
+  { id: "cp-c1-1", routeId: "c1", order: 1, name: "도봉산역", lat: 37.6894, lng: 127.0466 },
+  { id: "cp-c1-2", routeId: "c1", order: 2, name: "서울창포원", lat: 37.6854, lng: 127.0452 },
+  { id: "cp-c1-3", routeId: "c1", order: 3, name: "채석장 전망대", lat: 37.6801, lng: 127.0523 },
+  { id: "cp-c1-4", routeId: "c1", order: 4, name: "당고개공원 갈림길", lat: 37.6678, lng: 127.0796 },
+  { id: "cp-c2-1", routeId: "c2", order: 1, name: "당고개공원 갈림길", lat: 37.6678, lng: 127.0796 },
+  { id: "cp-c2-2", routeId: "c2", order: 2, name: "복천암", lat: 37.6694, lng: 127.0848 },
+  { id: "cp-c2-3", routeId: "c2", order: 3, name: "덕릉고개", lat: 37.6515, lng: 127.0913 },
+  { id: "cp-c2-4", routeId: "c2", order: 4, name: "상계동 나들이 철쭉동산", lat: 37.6496, lng: 127.0828 },
+];
+
+type SeoulCourse = {
+  roadNo: number;
+  roadNm: string;
+  roadExpln: string;
+  roadDtlNm: string;
+  reqHr: string;
+  roadLenKm: number;
+  lvKorn: string;
+  bgngPstn: string;
+  endPstn: string;
+  stmpPstn1: string | null;
+  stmpPstn2: string | null;
+  stmpPstn3: string | null;
+};
+
+type SeoulCoursesSnapshot = {
+  courses: SeoulCourse[];
+};
+
+type GeocodedCheckpoint = {
+  courseId: string;
+  checkpointOrder: number;
+  canonicalName: string;
+  lat: number | null;
+  lng: number | null;
+};
+
+type GeocodedCheckpointSnapshot = {
+  checkpoints: GeocodedCheckpoint[];
+};
 
 function toRadians(value: number) {
   return (value * Math.PI) / 180;
@@ -26,93 +105,118 @@ function distanceInMeters(lat1: number, lng1: number, lat2: number, lng2: number
   return earthRadius * c;
 }
 
+function parseDurationMinutes(text: string): number {
+  const hourMatch = text.match(/(\d+)\s*시간/);
+  const minuteMatch = text.match(/(\d+)\s*분/);
+  const hours = hourMatch ? Number(hourMatch[1]) : 0;
+  const minutes = minuteMatch ? Number(minuteMatch[1]) : 0;
+  const total = hours * 60 + minutes;
+  return total > 0 ? total : 60;
+}
+
+function mapDifficulty(value: string): "쉬움" | "보통" | "어려움" {
+  if (value.includes("상")) return "어려움";
+  if (value.includes("중")) return "보통";
+  return "쉬움";
+}
+
+function parseDetailNames(text: string): string[] {
+  const seen = new Set<string>();
+  return text
+    .split(",")
+    .map((name) => name.replace(/<br\s*\/?>/gi, " ").replace(/\s+/g, " ").trim())
+    .filter((name) => name.length > 0)
+    .filter((name) => {
+      if (seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    });
+}
+
+function buildPois(routeId: string, course: SeoulCourse): Poi[] {
+  const categories: PoiCategory[] = ["landmark", "photo", "rest"];
+  const candidates = [
+    course.stmpPstn1,
+    course.stmpPstn2,
+    course.stmpPstn3,
+    ...parseDetailNames(course.roadDtlNm),
+  ].filter((item): item is string => !!item && item.trim().length > 0);
+  const deduped = [...new Set(candidates)].slice(0, 4);
+
+  return deduped.map((name, index) => ({
+    id: `${routeId}-poi-${index + 1}`,
+    routeId,
+    title: name,
+    detail: "서울둘레길 주요 포인트",
+    category: categories[index % categories.length],
+    mapQuery: `서울 ${name}`,
+  }));
+}
+
 @Injectable()
 export class MockStoreService {
-  private readonly routes: RouteItem[] = [
-    {
-      id: "c1",
-      name: "남산 둘레길 (북측순환로)",
-      district: "중구 예장동",
-      distanceKm: 3.5,
-      durationMin: 80,
-      difficulty: "쉬움",
-      rating: 4.8,
-      reviewCount: 1240,
-      description: "서울의 역사와 자연을 함께 느낄 수 있는 대표 산책로입니다.",
-      pois: [
-        {
-          id: "c1-p1",
-          routeId: "c1",
-          title: "창의문",
-          detail: "코스 시작점 · 화장실 있음",
-          category: "landmark",
-          mapQuery: "서울 창의문",
-        },
-        {
-          id: "c1-p2",
-          routeId: "c1",
-          title: "백악마루",
-          detail: "포토 스팟 · 1.2km 지점",
-          category: "photo",
-          mapQuery: "북악산 백악마루",
-        },
-        {
-          id: "c1-p3",
-          routeId: "c1",
-          title: "말바위 안내소",
-          detail: "휴식 공간 · 물 보충 가능",
-          category: "rest",
-          mapQuery: "말바위 안내소",
-        },
-      ],
-    },
-    {
-      id: "c2",
-      name: "서울숲 힐링 코스",
-      district: "성동구 성수동",
-      distanceKm: 4.2,
-      durationMin: 100,
-      difficulty: "보통",
-      rating: 4.7,
-      reviewCount: 892,
-      description: "계절 식물과 열린 공원을 따라 걷는 평탄한 코스입니다.",
-      pois: [
-        {
-          id: "c2-p1",
-          routeId: "c2",
-          title: "나비정원",
-          detail: "초반 포인트 · 포토 스팟",
-          category: "photo",
-          mapQuery: "서울숲 나비정원",
-        },
-        {
-          id: "c2-p2",
-          routeId: "c2",
-          title: "수변 산책로",
-          detail: "중반 · 벤치 다수",
-          category: "rest",
-          mapQuery: "서울숲 수변 산책로",
-        },
-      ],
-    },
-  ];
-
-  private readonly checkpoints: CourseCheckpoint[] = [
-    { id: "cp-c1-1", routeId: "c1", order: 1, name: "도봉산역", lat: 37.6894, lng: 127.0466 },
-    { id: "cp-c1-2", routeId: "c1", order: 2, name: "서울창포원", lat: 37.6854, lng: 127.0452 },
-    { id: "cp-c1-3", routeId: "c1", order: 3, name: "채석장 전망대", lat: 37.6801, lng: 127.0523 },
-    { id: "cp-c1-4", routeId: "c1", order: 4, name: "당고개공원 갈림길", lat: 37.6678, lng: 127.0796 },
-
-    { id: "cp-c2-1", routeId: "c2", order: 1, name: "당고개공원 갈림길", lat: 37.6678, lng: 127.0796 },
-    { id: "cp-c2-2", routeId: "c2", order: 2, name: "복천암", lat: 37.6694, lng: 127.0848 },
-    { id: "cp-c2-3", routeId: "c2", order: 3, name: "덕릉고개", lat: 37.6515, lng: 127.0913 },
-    { id: "cp-c2-4", routeId: "c2", order: 4, name: "상계동 나들이 철쭉동산", lat: 37.6496, lng: 127.0828 },
-  ];
-
+  private routes: RouteItem[] = DEFAULT_ROUTES;
+  private checkpoints: CourseCheckpoint[] = DEFAULT_CHECKPOINTS;
   private sessions: SessionItem[] = [];
   private attempts: AttemptItem[] = [];
   private visits: AttemptCheckpointVisit[] = [];
   private favoriteRouteIds = new Set<string>();
+
+  constructor() {
+    this.bootstrapRouteData();
+  }
+
+  private bootstrapRouteData() {
+    const backendRoot = process.cwd();
+    const coursesPath = path.join(backendRoot, "data/generated/seoul-courses.normalized.json");
+    const checkpointsPath = path.join(backendRoot, "data/generated/course-checkpoints.geocoded.json");
+
+    if (!fs.existsSync(coursesPath)) return;
+
+    try {
+      const coursesSnapshot = JSON.parse(fs.readFileSync(coursesPath, "utf8")) as SeoulCoursesSnapshot;
+      const courses = Array.isArray(coursesSnapshot.courses) ? coursesSnapshot.courses : [];
+      if (courses.length === 0) return;
+
+      const nextRoutes: RouteItem[] = courses.map((course) => {
+        const routeId = `road-${course.roadNo}`;
+        return {
+          id: routeId,
+          name: `${course.roadNo}코스 ${course.roadNm}`,
+          district: `${course.bgngPstn} → ${course.endPstn}`,
+          distanceKm: course.roadLenKm || 0,
+          durationMin: parseDurationMinutes(course.reqHr ?? ""),
+          difficulty: mapDifficulty(course.lvKorn ?? ""),
+          rating: 4.7,
+          reviewCount: 0,
+          description: course.roadExpln || `${course.roadNm} 코스`,
+          pois: buildPois(routeId, course),
+        };
+      });
+
+      this.routes = nextRoutes;
+
+      if (fs.existsSync(checkpointsPath)) {
+        const geocodedSnapshot = JSON.parse(fs.readFileSync(checkpointsPath, "utf8")) as GeocodedCheckpointSnapshot;
+        const cps = Array.isArray(geocodedSnapshot.checkpoints) ? geocodedSnapshot.checkpoints : [];
+        const resolved = cps
+          .filter((cp) => Number.isFinite(cp.lat) && Number.isFinite(cp.lng))
+          .map((cp) => ({
+            id: `cp-${cp.courseId}-${cp.checkpointOrder}`,
+            routeId: cp.courseId,
+            order: cp.checkpointOrder,
+            name: cp.canonicalName,
+            lat: cp.lat as number,
+            lng: cp.lng as number,
+          }));
+        if (resolved.length > 0) {
+          this.checkpoints = resolved;
+        }
+      }
+    } catch (error) {
+      console.error("[mock-store] failed to load generated course files, fallback to default mock", error);
+    }
+  }
 
   private toProgress(attempt: AttemptItem) {
     return {
