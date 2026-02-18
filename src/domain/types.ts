@@ -1,3 +1,13 @@
+export type POICategory = "landmark" | "photo" | "rest";
+
+export type POI = {
+  id: string;
+  title: string;
+  detail: string;
+  category: POICategory;
+  mapQuery: string;
+};
+
 export type Course = {
   id: string;
   name: string;
@@ -11,7 +21,7 @@ export type Course = {
   tags: string[];
   isFavorite: boolean;
   description: string;
-  points: Array<{ title: string; detail: string }>;
+  points: POI[];
 };
 
 export type WalkRecord = {

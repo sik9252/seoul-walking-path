@@ -40,6 +40,13 @@ export function TrackingScreen({
       />
       <View style={styles.trackingMap}>
         <View style={styles.routeLineMock} />
+        <View style={styles.walkedTrackMock} />
+        <View style={styles.currentLocationDot} />
+        <View style={styles.currentLocationHalo} />
+        <View style={styles.locationPill}>
+          <Ionicons name="locate" size={12} color={colors.brand[700]} />
+          <Text style={styles.locationPillText}>내 위치</Text>
+        </View>
         <View style={styles.mapControls}>
           <Pressable style={styles.mapBtn}>
             <Ionicons name="layers-outline" size={18} color={colors.base.text} />
@@ -101,13 +108,62 @@ const styles = StyleSheet.create({
   trackingMap: { flex: 1, backgroundColor: colors.map.slate100, overflow: "hidden" },
   routeLineMock: {
     position: "absolute",
-    left: "22%",
-    top: "18%",
-    width: "56%",
-    height: "58%",
-    borderRadius: radius.xl,
-    borderWidth: 4,
-    borderColor: colors.brand[700],
+    left: "18%",
+    top: "20%",
+    width: "62%",
+    height: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.map.routeGreen1,
+    transform: [{ rotate: "-52deg" }],
+  },
+  walkedTrackMock: {
+    position: "absolute",
+    left: "26%",
+    top: "42%",
+    width: "34%",
+    height: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand[700],
+    transform: [{ rotate: "-52deg" }],
+  },
+  currentLocationDot: {
+    position: "absolute",
+    left: "58%",
+    top: "33%",
+    width: 16,
+    height: 16,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand[500],
+    borderWidth: 2,
+    borderColor: colors.base.surface,
+  },
+  currentLocationHalo: {
+    position: "absolute",
+    left: "55%",
+    top: "30%",
+    width: 28,
+    height: 28,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand[200],
+    opacity: 0.6,
+  },
+  locationPill: {
+    position: "absolute",
+    left: spacing.lg,
+    bottom: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: colors.base.surface,
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  locationPillText: {
+    color: colors.base.textSubtle,
+    fontSize: typography.size.labelSm,
   },
   mapControls: { position: "absolute", right: spacing.lg, bottom: spacing.xl, gap: spacing.sm },
   mapBtn: {

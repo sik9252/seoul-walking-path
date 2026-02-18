@@ -1,8 +1,8 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Button, Card } from "../../components/ui";
-import { Course } from "../../domain/types";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Button, Card, Chip } from "../../components/ui";
+import { Course, POICategory } from "../../domain/types";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
@@ -23,6 +23,25 @@ export function CourseDetailScreen({
   onToggleFavorite,
   onPressPoint,
 }: CourseDetailScreenProps) {
+  const [selectedCategory, setSelectedCategory] = React.useState<"all" | POICategory>("all");
+
+  const points = React.useMemo(() => {
+    if (selectedCategory === "all") return course.points;
+    return course.points.filter((point) => point.category === selectedCategory);
+  }, [course.points, selectedCategory]);
+
+  const openDirections = React.useCallback(
+    async (mapQuery: string, pointTitle: string) => {
+      onPressPoint?.(pointTitle);
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    },
+    [onPressPoint],
+  );
+
   return (
     <View style={styles.screen}>
       <ScreenHeader
@@ -33,7 +52,26 @@ export function CourseDetailScreen({
       />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.mapBox}>
-          <Text style={styles.mapPlaceholder}>Map Preview</Text>
+          <View style={styles.routeOutline} />
+          <View style={styles.routeProgress} />
+          {course.points.map((point, index) => (
+            <View
+              key={point.id}
+              style={[
+                styles.poiMarker,
+                point.category === "photo"
+                  ? styles.poiMarkerphoto
+                  : point.category === "rest"
+                    ? styles.poiMarkerrest
+                    : styles.poiMarkerlandmark,
+                {
+                  left: `${18 + index * 26}%`,
+                  top: `${66 - index * 16}%`,
+                },
+              ]}
+            />
+          ))}
+          <Text style={styles.mapPlaceholder}>코스 라인 · POI 미리보기</Text>
         </View>
         <View style={styles.pillMeta}>
           <Text style={styles.pillMetaText}>추천 코스</Text>
@@ -77,12 +115,37 @@ export function CourseDetailScreen({
         <Text style={styles.bodyText}>{course.description}</Text>
 
         <Text style={styles.sectionTitle}>주요 포인트</Text>
-        {course.points.map((point) => (
-          <Pressable key={point.title} style={styles.pointRow} onPress={() => onPressPoint?.(point.title)}>
-            <Text style={styles.pointTitle}>{point.title}</Text>
-            <Text style={styles.pointDetail}>{point.detail}</Text>
-          </Pressable>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <Chip label="전체" selected={selectedCategory === "all"} onPress={() => setSelectedCategory("all")} />
+          <Chip
+            label="랜드마크"
+            selected={selectedCategory === "landmark"}
+            onPress={() => setSelectedCategory("landmark")}
+          />
+          <Chip label="포토" selected={selectedCategory === "photo"} onPress={() => setSelectedCategory("photo")} />
+          <Chip label="휴식" selected={selectedCategory === "rest"} onPress={() => setSelectedCategory("rest")} />
+        </ScrollView>
+        {points.map((point) => (
+          <Card key={point.id} style={styles.pointCard}>
+            <Pressable onPress={() => onPressPoint?.(point.title)}>
+              <View style={styles.pointTop}>
+                <Text style={styles.pointTitle}>{point.title}</Text>
+                <Text style={styles.pointCategory}>{point.category === "photo" ? "포토" : point.category === "rest" ? "휴식" : "랜드마크"}</Text>
+              </View>
+              <Text style={styles.pointDetail}>{point.detail}</Text>
+            </Pressable>
+            <View style={styles.pointActions}>
+              <Button
+                label="길찾기"
+                variant="secondary"
+                style={styles.directionBtn}
+                leftIcon={<Ionicons name="navigate-outline" size={16} color={colors.brand[700]} />}
+                onPress={() => void openDirections(point.mapQuery, point.title)}
+              />
+            </View>
+          </Card>
         ))}
+        {points.length === 0 ? <Text style={styles.emptyPoints}>선택한 카테고리의 포인트가 없어요.</Text> : null}
 
         <Button label="문제 제보" variant="ghost" onPress={onReport} style={styles.reportBtn} />
       </ScrollView>
@@ -107,10 +170,42 @@ const styles = StyleSheet.create({
   mapBox: {
     height: 260,
     borderRadius: radius.xl,
-    backgroundColor: colors.map.slate400,
+    backgroundColor: colors.map.slate300,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  routeOutline: {
+    position: "absolute",
+    left: "14%",
+    top: "16%",
+    width: "68%",
+    height: "54%",
+    borderRadius: radius.xl,
+    borderWidth: 4,
+    borderColor: colors.map.routeGreen2,
+  },
+  routeProgress: {
+    position: "absolute",
+    left: "14%",
+    top: "50%",
+    width: "36%",
+    height: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand[600],
+    transform: [{ rotate: "-23deg" }],
+  },
+  poiMarker: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.base.surface,
+  },
+  poiMarkerlandmark: { backgroundColor: colors.brand[700] },
+  poiMarkerphoto: { backgroundColor: colors.accent.ratingStar },
+  poiMarkerrest: { backgroundColor: colors.semantic.info },
   pillMeta: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   pillMetaText: {
     backgroundColor: colors.brand[100],
@@ -122,7 +217,13 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.caption,
     fontWeight: typography.weight.semibold,
   },
-  mapPlaceholder: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
+  mapPlaceholder: {
+    position: "absolute",
+    bottom: spacing.md,
+    left: spacing.md,
+    color: colors.base.textSubtle,
+    fontSize: typography.size.bodySm,
+  },
   titleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   detailTitle: {
     color: colors.base.text,
@@ -154,9 +255,22 @@ const styles = StyleSheet.create({
     fontSize: typography.size.bodyMd,
     lineHeight: typography.lineHeight.bodyMd,
   },
-  pointRow: { paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.base.border },
+  filterRow: { gap: spacing.sm, paddingBottom: spacing.sm },
+  pointCard: { gap: spacing.sm },
+  pointTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   pointTitle: { color: colors.base.text, fontWeight: typography.weight.bold },
+  pointCategory: {
+    backgroundColor: colors.base.subtle,
+    color: colors.base.textSubtle,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    fontSize: typography.size.labelSm,
+  },
   pointDetail: { color: colors.base.textSubtle, marginTop: 2 },
+  pointActions: { flexDirection: "row", justifyContent: "flex-end" },
+  directionBtn: { minHeight: 40, paddingHorizontal: spacing.lg },
+  emptyPoints: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
   reportBtn: { alignSelf: "flex-start", paddingHorizontal: 0, minHeight: 40 },
   bottomCta: {
     position: "absolute",

@@ -16,9 +16,27 @@ export const initialCourses: Course[] = [
     description:
       "서울의 역사와 자연을 함께 느낄 수 있는 대표 산책로입니다. 경사가 완만해 누구나 즐길 수 있어요.",
     points: [
-      { title: "창의문", detail: "코스 시작점 · 화장실 있음" },
-      { title: "백악마루", detail: "포토 스팟 · 1.2km 지점" },
-      { title: "말바위 안내소", detail: "휴식 공간 · 물 보충 가능" },
+      {
+        id: "c1-p1",
+        title: "창의문",
+        detail: "코스 시작점 · 화장실 있음",
+        category: "landmark",
+        mapQuery: "서울 창의문",
+      },
+      {
+        id: "c1-p2",
+        title: "백악마루",
+        detail: "포토 스팟 · 1.2km 지점",
+        category: "photo",
+        mapQuery: "북악산 백악마루",
+      },
+      {
+        id: "c1-p3",
+        title: "말바위 안내소",
+        detail: "휴식 공간 · 물 보충 가능",
+        category: "rest",
+        mapQuery: "말바위 안내소",
+      },
     ],
   },
   {
@@ -35,8 +53,20 @@ export const initialCourses: Course[] = [
     isFavorite: false,
     description: "계절 식물과 열린 공원을 따라 걷는 평탄한 코스입니다.",
     points: [
-      { title: "나비정원", detail: "초반 포인트 · 포토 스팟" },
-      { title: "수변 산책로", detail: "중반 · 벤치 다수" },
+      {
+        id: "c2-p1",
+        title: "나비정원",
+        detail: "초반 포인트 · 포토 스팟",
+        category: "photo",
+        mapQuery: "서울숲 나비정원",
+      },
+      {
+        id: "c2-p2",
+        title: "수변 산책로",
+        detail: "중반 · 벤치 다수",
+        category: "rest",
+        mapQuery: "서울숲 수변 산책로",
+      },
     ],
   },
   {
@@ -52,7 +82,15 @@ export const initialCourses: Course[] = [
     tags: ["문화유산", "야경"],
     isFavorite: true,
     description: "해질 무렵 출발하면 성곽 너머 서울 야경이 아름답게 펼쳐집니다.",
-    points: [{ title: "이화벽화마을", detail: "시작점 · 카페 다수" }],
+    points: [
+      {
+        id: "c3-p1",
+        title: "이화벽화마을",
+        detail: "시작점 · 카페 다수",
+        category: "landmark",
+        mapQuery: "이화벽화마을",
+      },
+    ],
   },
 ];
 
