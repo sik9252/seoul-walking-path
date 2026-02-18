@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info:
+  title: 서울걷길 MVP API
+  version: 0.1.0
+servers:
+  - url: http://localhost:4000/api
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /routes:
+    get:
+      summary: 코스 목록
+      responses:
+        '200':
+          description: 코스 목록 반환
+  /routes/{routeId}:
+    get:
+      summary: 코스 상세
+      parameters:
+        - in: path
+          name: routeId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 코스 상세 반환
+        '404':
+          description: 코스 없음
+  /pois:
+    get:
+      summary: POI 목록
+      parameters:
+        - in: query
+          name: routeId
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [landmark, photo, rest]
+      responses:
+        '200':
+          description: 필터링된 POI 목록
+  /sessions:
+    get:
+      summary: 산책 세션 목록
+      responses:
+        '200':
+          description: 세션 목록
+    post:
+      summary: 산책 세션 저장
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [routeId, title, startedAt, durationSec, distanceMeters, kcal]
+              properties:
+                routeId:
+                  type: string
+                title:
+                  type: string
+                startedAt:
+                  type: string
+                durationSec:
+                  type: integer
+                distanceMeters:
+                  type: number
+                kcal:
+                  type: integer
+      responses:
+        '201':
+          description: 저장 완료
+  /favorites:
+    get:
+      summary: 즐겨찾기 코스 목록
+      responses:
+        '200':
+          description: 즐겨찾기 목록
+  /favorites/{routeId}/toggle:
+    post:
+      summary: 즐겨찾기 토글
+      parameters:
+        - in: path
+          name: routeId
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: 토글 완료

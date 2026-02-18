@@ -66,10 +66,10 @@
 - [x] 이벤트 트래킹 커밋
 
 ## 10. 백엔드 준비 및 API 계약
-- [ ] OpenAPI 초안(Route/POI/Session/Favorite)
-- [ ] NestJS 서버 부트스트랩
-- [ ] 프론트 mock -> API 교체 계획 수립
-- [ ] API 계약/서버 초기화 커밋
+- [x] OpenAPI 초안(Route/POI/Session/Favorite)
+- [x] NestJS 서버 부트스트랩
+- [x] 프론트 mock -> API 교체 계획 수립
+- [x] API 계약/서버 초기화 커밋
 
 ## 11. Android 배포 준비
 - [ ] EAS build 설정
@@ -104,3 +104,4 @@
 - 지도/POI 1차 구현: 코스 상세 POI 카테고리/길찾기 액션, 트래킹 화면 코스/트랙/현재 위치 시각화.
 - 영속화 적용: `@react-native-async-storage/async-storage`로 기록/즐겨찾기 상태 저장 및 복원 연결.
 - 안정성 보강(영속화): 저장 예외를 `try/catch` 처리해 저장 실패 시에도 앱 흐름이 중단되지 않도록 보호.
+- 백엔드 1차: `backend/`에 NestJS 부트스트랩, `backend/openapi.seoul-walking-path-mvp.yaml` 초안, `docs/mock_to_api_migration_plan.md` 작성.
