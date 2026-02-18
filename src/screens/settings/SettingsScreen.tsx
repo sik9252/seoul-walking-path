@@ -12,7 +12,9 @@ export function SettingsScreen() {
       <ScreenHeader title="설정" leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.profileWrap}>
-          <View style={styles.avatar} />
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={40} color={colors.base.textSubtle} />
+          </View>
           <Text style={styles.title}>김서울</Text>
           <Text style={styles.sub}>seoul_walker@email.com</Text>
         </View>
@@ -23,19 +25,41 @@ export function SettingsScreen() {
         </View>
 
         <Text style={styles.section}>계정</Text>
-        {["내 정보 수정", "알림 설정", "개인정보 및 보안"].map((label) => (
-          <View key={label} style={styles.settingRow}><Text style={styles.body}>{label}</Text><Text>›</Text></View>
+        {[
+          { label: "내 정보 수정", icon: "person-outline" },
+          { label: "알림 설정", icon: "notifications-outline" },
+          { label: "개인정보 및 보안", icon: "lock-closed-outline" },
+        ].map((item) => (
+          <View key={item.label} style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name={item.icon as any} size={20} color={colors.base.textSubtle} />
+              <Text style={styles.body}>{item.label}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.base.textSubtle} />
+          </View>
         ))}
 
         <Text style={styles.section}>앱 설정</Text>
         <View style={styles.settingRow}>
-          <Text style={styles.body}>음성 안내</Text>
+          <View style={styles.settingLeft}>
+            <Ionicons name="volume-high-outline" size={20} color={colors.base.textSubtle} />
+            <Text style={styles.body}>음성 안내</Text>
+          </View>
           <Switch value={voice} onValueChange={setVoice} trackColor={{ true: colors.brand[600] }} />
         </View>
 
         <Text style={styles.section}>지원</Text>
-        {["도움말", "앱 정보"].map((label) => (
-          <View key={label} style={styles.settingRow}><Text style={styles.body}>{label}</Text><Text>›</Text></View>
+        {[
+          { label: "도움말", icon: "help-circle-outline" },
+          { label: "앱 정보", icon: "information-circle-outline" },
+        ].map((item) => (
+          <View key={item.label} style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name={item.icon as any} size={20} color={colors.base.textSubtle} />
+              <Text style={styles.body}>{item.label}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.base.textSubtle} />
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -46,7 +70,14 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.base.background },
   content: { padding: spacing.lg, gap: spacing.md, paddingBottom: 110 },
   profileWrap: { alignItems: "center", gap: spacing.sm },
-  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.base.subtleAlt },
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.base.subtleAlt,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   title: {
     color: colors.base.text,
     fontSize: typography.size.titleLg,
@@ -66,6 +97,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   body: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd, lineHeight: typography.lineHeight.bodyMd },
+  settingLeft: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   settingRow: {
     flexDirection: "row",
     justifyContent: "space-between",

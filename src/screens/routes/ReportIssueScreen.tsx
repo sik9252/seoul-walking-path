@@ -21,7 +21,11 @@ export function ReportIssueScreen({ onBack }: ReportIssueScreenProps) {
       />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.body}>트레킹 중 발견한 문제나 잘못된 정보를 알려주세요.</Text>
+        <Text style={styles.body}>서울걷길을 더 좋게 만드는 데 큰 도움이 됩니다.</Text>
         <Card style={{ padding: 0 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText}>신고 유형 선택</Text>
+          </View>
           {reasons.map((item) => (
             <Pressable key={item} style={styles.radioRow} onPress={() => setReason(item)}>
               <Text style={styles.body}>{item}</Text>
@@ -56,6 +60,19 @@ const styles = StyleSheet.create({
     color: colors.base.textSubtle,
     fontSize: typography.size.bodyMd,
     lineHeight: typography.lineHeight.bodyMd,
+  },
+  sectionHeader: {
+    minHeight: 56,
+    paddingHorizontal: spacing.lg,
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.base.border,
+  },
+  sectionHeaderText: {
+    color: colors.base.text,
+    fontSize: typography.size.labelLg,
+    lineHeight: typography.lineHeight.labelLg,
+    fontWeight: typography.weight.bold,
   },
   radioRow: {
     minHeight: 56,

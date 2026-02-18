@@ -59,6 +59,9 @@ export function CourseListScreen({
 
         {favoritesOnly && filtered.length === 0 ? (
           <View style={styles.emptyWrap}>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="heart" size={28} color={colors.brand[600]} />
+            </View>
             <Text style={styles.emptyTitle}>저장된 코스가 없어요</Text>
             <Text style={styles.emptyBody}>마음에 드는 코스를 하트로 저장해보세요.</Text>
             <Button label="코스 탐색하기" onPress={() => onToggleFavoritesOnly(false)} />
@@ -161,6 +164,14 @@ const styles = StyleSheet.create({
   routeInfo: { color: colors.base.textSubtle, fontSize: typography.size.caption, marginRight: spacing.sm },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   emptyWrap: { paddingTop: 80, gap: spacing.md, alignItems: "center" },
+  emptyIconCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: colors.brand[100],
+    alignItems: "center",
+    justifyContent: "center",
+  },
   emptyTitle: { color: colors.base.text, fontSize: typography.size.titleSm, fontWeight: typography.weight.bold },
   emptyBody: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd },
 });
