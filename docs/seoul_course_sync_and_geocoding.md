@@ -27,6 +27,23 @@
     - `backend/data/generated/course-checkpoints.geocoded.json`
   - 출력:
     - `backend/data/generated/course-checkpoints.upsert.sql`
+- 일일 파이프라인 실행(오케스트레이션)
+  - `cd backend && npm run sync:daily`
+  - 내부 실행 순서:
+    1. `sync:seoul-courses`
+    2. `geocode:checkpoints:kakao`
+    3. `build:checkpoint-upsert-sql`
+
+## 자동 스케줄
+- GitHub Actions: `.github/workflows/daily-course-sync.yml`
+- 실행 시각: 매일 KST 01:00 (`cron: 0 16 * * *`, UTC 기준)
+- 수동 실행: `workflow_dispatch`
+- 실패 알림: `SYNC_FAILURE_WEBHOOK_URL` 환경변수 설정 시 웹훅 POST
+
+필요한 GitHub Secrets
+- `SEOUL_COURSE_INFO_URL`
+- `KAKAO_REST_API_KEY`
+- `SYNC_FAILURE_WEBHOOK_URL` (선택)
 
 ## 비용 메모
 - 운영 기준으로는 초기 전체 지오코딩 1회 + 이후 일 1회 증분 호출이면 호출량이 매우 작아 무료 쿼터 내 운용 가능성이 높다.
