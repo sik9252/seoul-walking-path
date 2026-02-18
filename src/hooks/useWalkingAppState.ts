@@ -1,9 +1,41 @@
 import React from "react";
-import { BackHandler } from "react-native";
+import { AppState, BackHandler } from "react-native";
 import { trackEvent } from "../analytics/tracker";
 import { Course, IntroFlow, MainTab, RecordFlow, RouteFlow, WalkRecord } from "../domain/types";
 import { calculateMetrics, filterDistanceIncrementMeters, TrackingMetrics } from "../domain/tracking";
 import { walkingRepository } from "../repositories/mock/walkingRepository";
+
+const DEFAULT_DISTANCE_PER_SEC_METERS = 1.4;
+
+function advanceTracking(
+  prev: TrackingMetrics,
+  elapsedIncrementSec: number,
+  withNoise: boolean,
+): TrackingMetrics {
+  const safeElapsedIncrement = Math.max(0, elapsedIncrementSec);
+  if (safeElapsedIncrement === 0) return prev;
+
+  let distanceIncrementMeters = 0;
+  if (withNoise) {
+    for (let index = 0; index < safeElapsedIncrement; index += 1) {
+      const rawMeters = 1.2 + Math.random() * 0.8;
+      distanceIncrementMeters += filterDistanceIncrementMeters(rawMeters);
+    }
+  } else {
+    distanceIncrementMeters = filterDistanceIncrementMeters(DEFAULT_DISTANCE_PER_SEC_METERS) * safeElapsedIncrement;
+  }
+
+  const nextElapsed = prev.elapsedSec + safeElapsedIncrement;
+  const nextDistance = prev.distanceMeters + distanceIncrementMeters;
+  const calculated = calculateMetrics(nextDistance, nextElapsed);
+  return {
+    ...prev,
+    elapsedSec: nextElapsed,
+    distanceMeters: nextDistance,
+    steps: calculated.steps,
+    kcal: calculated.kcal,
+  };
+}
 
 export function useWalkingAppState() {
   const [introFlow, setIntroFlow] = React.useState<IntroFlow>("splash");
@@ -25,6 +57,7 @@ export function useWalkingAppState() {
     status: "idle",
   });
   const [gpsQualityLow, setGpsQualityLow] = React.useState(false);
+  const backgroundAtMsRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     const bootstrap = async () => {
@@ -100,22 +133,33 @@ export function useWalkingAppState() {
   React.useEffect(() => {
     if (routeFlow !== "tracking" || tracking.status !== "running") return;
     const timer = setInterval(() => {
-      setTracking((prev) => {
-        const rawMeters = 1.2 + Math.random() * 0.8;
-        const deltaMeters = filterDistanceIncrementMeters(rawMeters);
-        const nextElapsed = prev.elapsedSec + 1;
-        const nextDistance = prev.distanceMeters + deltaMeters;
-        const calculated = calculateMetrics(nextDistance, nextElapsed);
-        return {
-          ...prev,
-          elapsedSec: nextElapsed,
-          distanceMeters: nextDistance,
-          steps: calculated.steps,
-          kcal: calculated.kcal,
-        };
-      });
+      setTracking((prev) => advanceTracking(prev, 1, true));
     }, 1000);
     return () => clearInterval(timer);
+  }, [routeFlow, tracking.status]);
+
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      const isBackground = nextState === "background" || nextState === "inactive";
+      if (isBackground) {
+        if (routeFlow === "tracking" && tracking.status === "running") {
+          backgroundAtMsRef.current = Date.now();
+        }
+        return;
+      }
+
+      if (nextState === "active" && backgroundAtMsRef.current) {
+        if (routeFlow === "tracking" && tracking.status === "running") {
+          const elapsedSecWhileBackground = Math.floor((Date.now() - backgroundAtMsRef.current) / 1000);
+          if (elapsedSecWhileBackground > 0) {
+            setTracking((prev) => advanceTracking(prev, elapsedSecWhileBackground, false));
+          }
+        }
+        backgroundAtMsRef.current = null;
+      }
+    });
+
+    return () => subscription.remove();
   }, [routeFlow, tracking.status]);
 
   React.useEffect(() => {
