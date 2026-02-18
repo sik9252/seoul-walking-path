@@ -5,11 +5,11 @@
 
 ## 0. 진행 규칙
 - [x] 기능 단위(feature)로 커밋/푸시
-- [ ] 각 단계 완료 후 체크박스 업데이트
-- [ ] 이슈/버그 발생 시 "메모" 섹션에 즉시 기록
+- [x] 각 단계 완료 후 체크박스 업데이트
+- [x] 이슈/버그 발생 시 "메모" 섹션에 즉시 기록
 
 ## 1. UI 정합성 고정
-- [ ] S0~S13 화면 Figma 대비 1차 정합
+- [x] S0~S13 화면 Figma 대비 1차 정합
 - [ ] 토큰(색/타입/간격) 최종 고정
 - [ ] 공통 컴포넌트 API 정리(Button/Input/Chip/Card/BottomSheet/TabBar)
 - [ ] UI freeze 커밋
@@ -21,10 +21,10 @@
 - [x] 내비게이션 구조 커밋
 
 ## 3. 도메인 타입/상태관리 정리
-- [ ] Route/POI/WalkSession/Favorite 타입 고정
-- [ ] mock repository 계층 분리
-- [ ] 화면 상태와 도메인 상태 분리(store 정리)
-- [ ] 타입/스토어 정리 커밋
+- [x] Route/POI/WalkSession/Favorite 타입 고정
+- [x] mock repository 계층 분리
+- [x] 화면 상태와 도메인 상태 분리(store 정리)
+- [x] 타입/스토어 정리 커밋
 
 ## 4. 코스 탐색 완성 (FR-1, FR-2)
 - [ ] 검색 기능
@@ -91,3 +91,4 @@
 - UI 정합성 진행 중: S4(코스 목록), S5(코스 상세) 1차 정합 패치 완료.
 - UI 정합성 진행 중: S7(트래킹), S8(요약) 1차 정합 패치 완료.
 - UI 정합성 진행 중: S9/S10/S11/S12/S13 1차 정합 패치 완료.
+- 아키텍처 정리: `src/domain/types.ts`, `src/repositories/mock`, `src/hooks/useWalkingAppState.ts` 도입.

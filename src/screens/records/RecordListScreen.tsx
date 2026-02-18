@@ -2,7 +2,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Card, Chip } from "../../components/ui";
-import { WalkRecord } from "../../mocks/walkingData";
+import { WalkRecord } from "../../domain/types";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 

@@ -1,10 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { BackHandler, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
-import { Course, WalkRecord, initialCourses, records } from "./src/mocks/walkingData";
+import { MainTab } from "./src/domain/types";
 import {
   CourseDetailScreen,
   CourseListScreen,
@@ -20,12 +20,8 @@ import {
   TrackingScreen,
   WalkSummaryScreen,
 } from "./src/screens";
+import { useWalkingAppState } from "./src/hooks/useWalkingAppState";
 import { colors } from "./src/theme/tokens";
-
-type MainTab = "home" | "routes" | "records" | "my";
-type RouteFlow = "courseList" | "courseDetail" | "preStartCheck" | "tracking" | "walkSummary" | "reportIssue";
-type RecordFlow = "recordList" | "recordDetail";
-type IntroFlow = "splash" | "onboarding" | "permission" | "main";
 
 export default function App() {
   return (
@@ -36,107 +32,28 @@ export default function App() {
 }
 
 function AppContent() {
-  const [introFlow, setIntroFlow] = React.useState<IntroFlow>("splash");
-  const [tab, setTab] = React.useState<MainTab>("home");
-  const [routeFlow, setRouteFlow] = React.useState<RouteFlow>("courseList");
-  const [recordFlow, setRecordFlow] = React.useState<RecordFlow>("recordList");
-  const [selectedCourse, setSelectedCourse] = React.useState<Course>(initialCourses[0]);
-  const [selectedRecord, setSelectedRecord] = React.useState<WalkRecord>(records[0]);
-  const [courseItems, setCourseItems] = React.useState<Course[]>(initialCourses);
-  const [favoritesOnly, setFavoritesOnly] = React.useState(false);
-  const [elapsedSec, setElapsedSec] = React.useState(2535);
-  const [paused, setPaused] = React.useState(false);
-
-  const handleBackInIntro = React.useCallback(() => {
-    if (introFlow === "permission") {
-      setIntroFlow("onboarding");
-      return true;
-    }
-    if (introFlow === "onboarding") {
-      setIntroFlow("splash");
-      return true;
-    }
-    return false;
-  }, [introFlow]);
-
-  const handleBackInMain = React.useCallback(() => {
-    if (tab === "routes") {
-      if (routeFlow === "reportIssue") {
-        setRouteFlow("courseDetail");
-        return true;
-      }
-      if (routeFlow === "walkSummary") {
-        setRouteFlow("tracking");
-        return true;
-      }
-      if (routeFlow === "tracking") {
-        setRouteFlow("courseDetail");
-        return true;
-      }
-      if (routeFlow === "preStartCheck") {
-        setRouteFlow("courseDetail");
-        return true;
-      }
-      if (routeFlow === "courseDetail") {
-        setRouteFlow("courseList");
-        return true;
-      }
-      if (routeFlow === "courseList") {
-        setTab("home");
-        return true;
-      }
-    }
-
-    if (tab === "records") {
-      if (recordFlow === "recordDetail") {
-        setRecordFlow("recordList");
-        return true;
-      }
-      setTab("home");
-      return true;
-    }
-
-    if (tab === "my") {
-      setTab("home");
-      return true;
-    }
-
-    return false;
-  }, [recordFlow, routeFlow, tab]);
-
-  React.useEffect(() => {
-    if (routeFlow !== "tracking" || paused) return;
-    const timer = setInterval(() => setElapsedSec((prev) => prev + 1), 1000);
-    return () => clearInterval(timer);
-  }, [paused, routeFlow]);
-
-  React.useEffect(() => {
-    const onHardwareBack = () => {
-      if (introFlow !== "main") return handleBackInIntro();
-      return handleBackInMain();
-    };
-
-    const subscription = BackHandler.addEventListener("hardwareBackPress", onHardwareBack);
-    return () => subscription.remove();
-  }, [handleBackInIntro, handleBackInMain, introFlow]);
-
-  const elapsedText = React.useMemo(() => {
-    const hh = String(Math.floor(elapsedSec / 3600)).padStart(2, "0");
-    const mm = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, "0");
-    const ss = String(elapsedSec % 60).padStart(2, "0");
-    return `${hh}:${mm}:${ss}`;
-  }, [elapsedSec]);
-
-  const toggleFavorite = (courseId: string) => {
-    setCourseItems((prev) =>
-      prev.map((course) =>
-        course.id === courseId ? { ...course, isFavorite: !course.isFavorite } : course,
-      ),
-    );
-    if (selectedCourse.id === courseId) {
-      setSelectedCourse((prev) => ({ ...prev, isFavorite: !prev.isFavorite }));
-    }
-  };
+  const {
+    introFlow,
+    setIntroFlow,
+    tab,
+    setTab,
+    routeFlow,
+    setRouteFlow,
+    recordFlow,
+    setRecordFlow,
+    selectedCourse,
+    setSelectedCourse,
+    selectedRecord,
+    setSelectedRecord,
+    courseItems,
+    recordItems,
+    favoritesOnly,
+    setFavoritesOnly,
+    paused,
+    setPaused,
+    elapsedText,
+    toggleFavorite,
+  } = useWalkingAppState();
 
   const tabs: TabItem[] = [
     { key: "home", label: "홈", icon: <Ionicons name="home-outline" size={18} color={colors.base.text} /> },
@@ -146,6 +63,7 @@ function AppContent() {
   ];
 
   const renderRouteFlow = () => {
+    if (!selectedCourse) return null;
     switch (routeFlow) {
       case "courseList":
         return (
@@ -210,12 +128,13 @@ function AppContent() {
   };
 
   const renderRecordFlow = () => {
+    if (!selectedRecord && recordFlow === "recordDetail") return null;
     if (recordFlow === "recordDetail") {
-      return <RecordDetailScreen record={selectedRecord} onBack={() => setRecordFlow("recordList")} />;
+      return <RecordDetailScreen record={selectedRecord!} onBack={() => setRecordFlow("recordList")} />;
     }
     return (
       <RecordListScreen
-        records={records}
+        records={recordItems}
         onOpenRecord={(record) => {
           setSelectedRecord(record);
           setRecordFlow("recordDetail");
