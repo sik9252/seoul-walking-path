@@ -114,5 +114,5 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
   },
   metricLabel: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
-  bottomDual: { flexDirection: "row", gap: spacing.sm },
+  bottomDual: { flexDirection: "row", gap: spacing.sm, paddingBottom: 16 },
 });
