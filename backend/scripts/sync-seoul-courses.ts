@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { loadEnvFile } from "../src/common/load-env";
 
 type SeoulCourseRow = {
   menuSn: string;
@@ -94,6 +95,7 @@ async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
 }
 
 async function main() {
+  loadEnvFile();
   const sourceUrl = process.env.SEOUL_COURSE_INFO_URL;
   if (!sourceUrl) {
     throw new Error("Missing SEOUL_COURSE_INFO_URL env. Set the sheet open API URL first.");

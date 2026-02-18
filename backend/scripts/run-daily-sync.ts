@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { loadEnvFile } from "../src/common/load-env";
 
 type Step = {
   name: string;
@@ -64,6 +65,7 @@ async function sendFailureWebhook(message: string): Promise<void> {
 }
 
 async function main() {
+  loadEnvFile();
   const startedAt = new Date().toISOString();
   console.log(`[daily-sync] started: ${startedAt}`);
 

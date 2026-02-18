@@ -158,3 +158,4 @@
 - 백엔드 데이터 소스 전환: `MockStoreService`가 `data/generated` 산출물을 우선 로드하고 미존재 시 mock fallback.
 - 프론트 데이터 소스 전환: `walkingRepository`가 `/routes` API를 우선 호출하고 실패 시 mock을 사용.
 - 좌표 검수 절차 확정: `checkpoint-overrides.json` 수동 보정 + `export:unresolved-checkpoints` 검수 목록 생성.
+- 환경변수 로딩 보강: 백엔드 앱/배치 스크립트에서 `backend/.env` 자동 로드 지원 추가.

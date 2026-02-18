@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { loadEnvFile } from "../src/common/load-env";
 
 type SeoulCourseRow = {
   roadNo: number;
@@ -129,6 +130,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main() {
+  loadEnvFile();
   if (!fs.existsSync(normalizedInputPath)) {
     throw new Error(`Missing normalized course file: ${normalizedInputPath}`);
   }
