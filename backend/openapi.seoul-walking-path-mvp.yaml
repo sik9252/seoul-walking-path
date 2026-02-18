@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: 서울걷길 MVP API
-  version: 0.1.0
+  version: 0.2.0
 servers:
   - url: http://localhost:4000/api
 paths:
@@ -11,12 +11,14 @@ paths:
       responses:
         '200':
           description: OK
+
   /routes:
     get:
       summary: 코스 목록
       responses:
         '200':
           description: 코스 목록 반환
+
   /routes/{routeId}:
     get:
       summary: 코스 상세
@@ -31,6 +33,28 @@ paths:
           description: 코스 상세 반환
         '404':
           description: 코스 없음
+
+  /routes/{routeId}/checkpoints:
+    get:
+      summary: 코스 체크포인트 목록
+      parameters:
+        - in: path
+          name: routeId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 체크포인트 목록
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseCheckpoint'
+        '404':
+          description: 코스 없음
+
   /pois:
     get:
       summary: POI 목록
@@ -47,14 +71,15 @@ paths:
       responses:
         '200':
           description: 필터링된 POI 목록
+
   /sessions:
     get:
-      summary: 산책 세션 목록
+      summary: 산책 세션 목록(레거시)
       responses:
         '200':
           description: 세션 목록
     post:
-      summary: 산책 세션 저장
+      summary: 산책 세션 저장(레거시)
       requestBody:
         required: true
         content:
@@ -78,12 +103,92 @@ paths:
       responses:
         '201':
           description: 저장 완료
+
+  /attempts:
+    post:
+      summary: 체크포인트 도전(Attempt) 시작
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAttemptRequest'
+      responses:
+        '201':
+          description: 도전 생성
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptProgress'
+
+  /attempts/{attemptId}:
+    get:
+      summary: 도전 진행도 조회
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 진행도 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptProgress'
+        '404':
+          description: 도전 없음
+
+  /attempts/{attemptId}/location:
+    post:
+      summary: 위치 샘플 업로드 후 체크포인트 판정
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationSampleRequest'
+      responses:
+        '200':
+          description: 판정 결과
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationSampleResponse'
+        '404':
+          description: 도전 없음
+
+  /attempts/{attemptId}/complete:
+    post:
+      summary: 도전 종료/완주 처리
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 종료 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptProgress'
+
   /favorites:
     get:
       summary: 즐겨찾기 코스 목록
       responses:
         '200':
           description: 즐겨찾기 목록
+
   /favorites/{routeId}/toggle:
     post:
       summary: 즐겨찾기 토글
@@ -96,3 +201,78 @@ paths:
       responses:
         '201':
           description: 토글 완료
+
+components:
+  schemas:
+    CourseCheckpoint:
+      type: object
+      required: [id, routeId, order, name, lat, lng]
+      properties:
+        id:
+          type: string
+        routeId:
+          type: string
+        order:
+          type: integer
+        name:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+
+    CreateAttemptRequest:
+      type: object
+      required: [userId, routeId]
+      properties:
+        userId:
+          type: string
+        routeId:
+          type: string
+
+    AttemptProgress:
+      type: object
+      required: [attemptId, userId, routeId, status, visitedCount, totalCount, completionRate, visitedCheckpointIds]
+      properties:
+        attemptId:
+          type: string
+        userId:
+          type: string
+        routeId:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, completed, abandoned]
+        visitedCount:
+          type: integer
+        totalCount:
+          type: integer
+        completionRate:
+          type: number
+        visitedCheckpointIds:
+          type: array
+          items:
+            type: string
+
+    LocationSampleRequest:
+      type: object
+      required: [lat, lng, recordedAt]
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        recordedAt:
+          type: string
+          format: date-time
+
+    LocationSampleResponse:
+      type: object
+      required: [newlyVisitedCheckpointIds, progress]
+      properties:
+        newlyVisitedCheckpointIds:
+          type: array
+          items:
+            type: string
+        progress:
+          $ref: '#/components/schemas/AttemptProgress'

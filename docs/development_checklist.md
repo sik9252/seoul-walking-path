@@ -96,7 +96,7 @@
 - [x] `BGNG_PSTN`·`END_PSTN` 기준 포인트 순서 보정 규칙 정의
 - [x] 좌표 수집 파이프라인 설계(1회성 변환 + 수동 검수 + DB 저장)
 - [x] DB 스키마 설계(`course_checkpoints`, `course_attempts`, `attempt_checkpoint_visits`)
-- [ ] 체크포인트 진행도 API 계약 초안 작성
+- [x] 체크포인트 진행도 API 계약 초안 작성
 - [ ] 백엔드 판정 로직(반경 체크/중복 체크 방지/완주 계산) 구현
 - [ ] 프론트 체크포인트 UI/진행도 연동 구현
 - [ ] QA 시나리오(경계 반경/재도전/복원) 작성 및 검증
@@ -132,3 +132,4 @@
 - 정규화 규칙 문서화: `docs/checkpoint_normalization_rules.md` (파싱/canonical/순서보정/검수 플래그).
 - 좌표 파이프라인 문서/스크립트 추가: `docs/checkpoint_coordinate_pipeline.md`, `backend/scripts/build-checkpoint-seed.ts`.
 - DB 스키마 초안 추가: `docs/checkpoint_db_schema.md`, `backend/sql/checkpoint_schema.sql`.
+- 체크포인트 API 계약 초안 추가: `backend/openapi.seoul-walking-path-mvp.yaml`, `docs/checkpoint_api_contract.md`.
