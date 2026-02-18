@@ -22,12 +22,25 @@ export const colors = {
   },
   accent: {
     lime100: "#B7F397",
+    favoriteActive: "#E53935",
+    ratingStar: "#F59E0B",
+  },
+  map: {
+    slate100: "#D4DDD0",
+    slate200: "#CED4CA",
+    slate300: "#CBD0C0",
+    slate400: "#C7D2BF",
+    routeGreen1: "#7CA06E",
+    routeGreen2: "#6A8F58",
+    routeGreen3: "#7C8C60",
   },
   semantic: {
     success: "#2E7D32",
     warning: "#B26A00",
     error: "#C62828",
     info: "#1565C0",
+    errorBackground: "#FDE8E8",
+    errorText: "#7F1D1D",
   },
 } as const;
 

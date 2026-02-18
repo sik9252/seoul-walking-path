@@ -79,7 +79,7 @@ export function CourseListScreen({
                       <Ionicons
                         name={course.isFavorite ? "heart" : "heart-outline"}
                         size={22}
-                        color={course.isFavorite ? "#E53935" : colors.base.surface}
+                        color={course.isFavorite ? colors.accent.favoriteActive : colors.base.surface}
                       />
                     </Pressable>
                   </View>
@@ -100,7 +100,7 @@ export function CourseListScreen({
                   <View style={styles.ratingRow}>
                     <Ionicons name="location-outline" size={13} color={colors.base.textSubtle} />
                     <Text style={styles.routeInfo}>{course.district}</Text>
-                    <Ionicons name="star" size={12} color="#F59E0B" />
+                    <Ionicons name="star" size={12} color={colors.accent.ratingStar} />
                     <Text style={styles.routeInfo}>
                       {course.rating} ({course.reviewCount})
                     </Text>
@@ -176,4 +176,4 @@ const styles = StyleSheet.create({
   emptyBody: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd },
 });
 
-const heroBackgrounds = ["#7CA06E", "#6A8F58", "#7C8C60"];
+const heroBackgrounds = [colors.map.routeGreen1, colors.map.routeGreen2, colors.map.routeGreen3];

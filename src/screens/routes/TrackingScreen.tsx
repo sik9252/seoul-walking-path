@@ -90,7 +90,7 @@ export function TrackingScreen({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.base.background },
-  trackingMap: { flex: 1, backgroundColor: "#D4DDD0", overflow: "hidden" },
+  trackingMap: { flex: 1, backgroundColor: colors.map.slate100, overflow: "hidden" },
   routeLineMock: {
     position: "absolute",
     left: "22%",

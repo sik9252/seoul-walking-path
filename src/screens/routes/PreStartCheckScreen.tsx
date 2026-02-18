@@ -95,12 +95,12 @@ const styles = StyleSheet.create({
   checkSub: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
   warnBox: {
     marginTop: spacing.md,
-    backgroundColor: "#FDE8E8",
+    backgroundColor: colors.semantic.errorBackground,
     borderRadius: radius.lg,
     padding: spacing.lg,
   },
   warnTitle: { color: colors.semantic.error, fontWeight: typography.weight.bold, marginBottom: 4 },
-  warnText: { color: "#7F1D1D" },
+  warnText: { color: colors.semantic.errorText },
   bottomDual: {
     flexDirection: "row",
     gap: spacing.sm,

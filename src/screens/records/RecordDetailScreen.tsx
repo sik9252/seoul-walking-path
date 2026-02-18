@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   mapBox: {
     height: 220,
     borderRadius: radius.xl,
-    backgroundColor: "#CED4CA",
+    backgroundColor: colors.map.slate200,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",

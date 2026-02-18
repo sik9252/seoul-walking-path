@@ -37,13 +37,13 @@ export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggle
             <Ionicons
               name={course.isFavorite ? "heart" : "heart-outline"}
               size={22}
-              color={course.isFavorite ? "#E53935" : colors.base.textSubtle}
+              color={course.isFavorite ? colors.accent.favoriteActive : colors.base.textSubtle}
             />
           </Pressable>
         </View>
         <Text style={styles.detailSub}>{course.district}</Text>
         <View style={styles.ratingRow}>
-          <Ionicons name="star" size={14} color="#F59E0B" />
+          <Ionicons name="star" size={14} color={colors.accent.ratingStar} />
           <Text style={styles.detailSub}>
             {" "}
             {course.rating} ({course.reviewCount})
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   mapBox: {
     height: 260,
     borderRadius: radius.xl,
-    backgroundColor: "#C7D2BF",
+    backgroundColor: colors.map.slate400,
     alignItems: "center",
     justifyContent: "center",
   },
