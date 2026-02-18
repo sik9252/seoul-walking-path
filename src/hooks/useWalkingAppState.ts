@@ -315,11 +315,12 @@ export function useWalkingAppState() {
     if (selectedCourse) {
       const baseLat = 37.5665;
       const baseLng = 126.978;
-      const checkpoints: CourseCheckpoint[] = selectedCourse.points.map((point, index) => ({
+      const checkpointNames = ["시작 지점", ...selectedCourse.points.map((point) => point.title), "종료 지점"];
+      const checkpoints: CourseCheckpoint[] = checkpointNames.map((name, index) => ({
         id: `${selectedCourse.id}-cp-${index + 1}`,
         routeId: selectedCourse.id,
         order: index + 1,
-        name: point.title,
+        name,
         lat: baseLat + index * 0.0024,
         lng: baseLng + index * 0.0021,
       }));

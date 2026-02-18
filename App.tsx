@@ -1,7 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Alert, StyleSheet, Vibration } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
 import { trackEvent } from "./src/analytics/tracker";
@@ -72,6 +72,38 @@ function AppContent() {
     deleteRecord,
     clearRecords,
   } = useWalkingAppState();
+  const visitedCountRef = React.useRef(0);
+  const completionHandledAttemptRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    if (routeFlow !== "tracking") {
+      visitedCountRef.current = 0;
+      return;
+    }
+    const visitedCount = attemptProgress?.visitedCheckpointIds.length ?? 0;
+    if (visitedCount > visitedCountRef.current) {
+      Vibration.vibrate(60);
+    }
+    visitedCountRef.current = visitedCount;
+  }, [attemptProgress?.visitedCheckpointIds.length, routeFlow]);
+
+  React.useEffect(() => {
+    if (routeFlow !== "tracking") return;
+    if (!attemptProgress || attemptProgress.status !== "completed") return;
+    if (completionHandledAttemptRef.current === attemptProgress.attemptId) return;
+
+    completionHandledAttemptRef.current = attemptProgress.attemptId;
+    Vibration.vibrate([0, 80, 60, 120]);
+    Alert.alert("완주에 성공했어요", "모든 체크포인트를 경유했습니다.", [
+      {
+        text: "확인",
+        onPress: () => {
+          finishTracking();
+          setRouteFlow("walkSummary");
+        },
+      },
+    ]);
+  }, [attemptProgress, finishTracking, routeFlow, setRouteFlow]);
 
   const tabs: TabItem[] = [
     {

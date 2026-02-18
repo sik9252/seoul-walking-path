@@ -140,3 +140,4 @@
 - QA 1차: `backend/scripts/verify-checkpoint-flow.ts` 자동 검증 통과, `docs/checkpoint_qa_validation.md` 작성.
 - 지도 실제화: `react-native-maps` 적용으로 트래킹 화면에 실제 지도/마커/경로 폴리라인 렌더링.
 - 비용 산정 문서 추가: `docs/deployment_cost_estimate.md`에 스토어/빌드/지도 비용 기준 정리.
+- 체크포인트 UX 보강: 시작/종료 지점 포함, 통과 시 진동, 완주 시 성공 다이얼로그 후 요약 화면 전환.
