@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Card, Chip, Input } from "../../components/ui";
 import { Course } from "../../mocks/walkingData";
@@ -68,16 +69,25 @@ export function CourseListScreen({
                   <View style={styles.routeTopRow}>
                     <Text style={styles.routeTitle}>{course.name}</Text>
                     <Pressable onPress={() => onToggleFavorite(course.id)}>
-                      <Text style={styles.favoriteIcon}>{course.isFavorite ? "♥" : "♡"}</Text>
+                      <Ionicons
+                        name={course.isFavorite ? "heart" : "heart-outline"}
+                        size={22}
+                        color={course.isFavorite ? "#E53935" : colors.base.textSubtle}
+                      />
                     </Pressable>
                   </View>
                   <Text style={styles.routeSubtitle}>{course.subtitle}</Text>
                   <Text style={styles.routeInfo}>
                     {course.distanceKm}km · {course.durationMin}분 · {course.difficulty}
                   </Text>
-                  <Text style={styles.routeInfo}>
-                    {course.district} · ★ {course.rating} ({course.reviewCount})
-                  </Text>
+                  <View style={styles.ratingRow}>
+                    <Text style={styles.routeInfo}>{course.district} · </Text>
+                    <Ionicons name="star" size={12} color="#F59E0B" />
+                    <Text style={styles.routeInfo}>
+                      {" "}
+                      {course.rating} ({course.reviewCount})
+                    </Text>
+                  </View>
                 </View>
               </Pressable>
             </Card>
@@ -114,9 +124,9 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     flex: 1,
   },
-  favoriteIcon: { color: colors.brand[600], fontSize: 22 },
   routeSubtitle: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
   routeInfo: { color: colors.base.textSubtle, fontSize: typography.size.caption },
+  ratingRow: { flexDirection: "row", alignItems: "center" },
   emptyWrap: { paddingTop: 80, gap: spacing.md, alignItems: "center" },
   emptyTitle: { color: colors.base.text, fontSize: typography.size.titleSm, fontWeight: typography.weight.bold },
   emptyBody: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd },

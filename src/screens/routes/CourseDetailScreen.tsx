@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Card } from "../../components/ui";
 import { Course } from "../../mocks/walkingData";
@@ -16,7 +17,12 @@ type CourseDetailScreenProps = {
 export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggleFavorite }: CourseDetailScreenProps) {
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="코스 상세" leftLabel="←" rightLabel="공유" onPressLeft={onBack} />
+      <ScreenHeader
+        title="코스 상세"
+        leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />}
+        rightIcon={<Ionicons name="share-social-outline" size={21} color={colors.base.text} />}
+        onPressLeft={onBack}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.mapBox}>
           <Text style={styles.mapPlaceholder}>Map Preview</Text>
@@ -24,11 +30,21 @@ export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggle
         <View style={styles.titleRow}>
           <Text style={styles.detailTitle}>{course.name}</Text>
           <Pressable onPress={onToggleFavorite}>
-            <Text style={styles.favoriteIcon}>{course.isFavorite ? "♥" : "♡"}</Text>
+            <Ionicons
+              name={course.isFavorite ? "heart" : "heart-outline"}
+              size={22}
+              color={course.isFavorite ? "#E53935" : colors.base.textSubtle}
+            />
           </Pressable>
         </View>
         <Text style={styles.detailSub}>{course.district}</Text>
-        <Text style={styles.detailSub}>★ {course.rating} ({course.reviewCount})</Text>
+        <View style={styles.ratingRow}>
+          <Ionicons name="star" size={14} color="#F59E0B" />
+          <Text style={styles.detailSub}>
+            {" "}
+            {course.rating} ({course.reviewCount})
+          </Text>
+        </View>
 
         <View style={styles.metricRow}>
           <Card style={styles.metricCard}>
@@ -86,7 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   detailSub: { color: colors.base.textSubtle, fontSize: typography.size.bodyMd },
-  favoriteIcon: { color: colors.brand[600], fontSize: 22 },
+  ratingRow: { flexDirection: "row", alignItems: "center" },
   metricRow: { flexDirection: "row", gap: spacing.sm },
   metricCard: { flex: 1, alignItems: "center" },
   metricLabel: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },

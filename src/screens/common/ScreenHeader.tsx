@@ -4,30 +4,27 @@ import { colors, spacing, typography } from "../../theme/tokens";
 
 type ScreenHeaderProps = {
   title: string;
-  leftLabel?: string;
-  rightLabel?: string;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
   onPressLeft?: () => void;
   onPressRight?: () => void;
 };
 
 export function ScreenHeader({
   title,
-  leftLabel,
-  rightLabel,
+  leftIcon,
+  rightIcon,
   onPressLeft,
   onPressRight,
 }: ScreenHeaderProps) {
-  const isLeftIcon = leftLabel === "←" || leftLabel === "✕";
-  const isRightIcon = rightLabel === "⋮" || rightLabel === "공유";
-
   return (
     <View style={styles.header}>
       <Pressable onPress={onPressLeft} style={styles.side} hitSlop={8}>
-        <Text style={[styles.sideText, isLeftIcon && styles.iconText]}>{leftLabel ?? ""}</Text>
+        {leftIcon}
       </Pressable>
       <Text style={styles.title}>{title}</Text>
       <Pressable onPress={onPressRight} style={styles.side} hitSlop={8}>
-        <Text style={[styles.sideText, isRightIcon && styles.rightIconText]}>{rightLabel ?? ""}</Text>
+        {rightIcon}
       </Pressable>
     </View>
   );
@@ -43,21 +40,8 @@ const styles = StyleSheet.create({
   },
   side: {
     width: 48,
-  },
-  sideText: {
-    color: colors.base.text,
-    fontSize: typography.size.labelMd,
-    lineHeight: typography.lineHeight.labelMd,
-    fontWeight: typography.weight.semibold,
-  },
-  iconText: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: typography.weight.bold,
-  },
-  rightIconText: {
-    fontSize: typography.size.labelLg,
-    lineHeight: typography.lineHeight.labelLg,
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     color: colors.base.text,

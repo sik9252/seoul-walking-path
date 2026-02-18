@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Card } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
@@ -13,26 +14,57 @@ export function PreStartCheckScreen({ onBack, onStart }: PreStartCheckScreenProp
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="출발 전 체크리스트" leftLabel="←" onPressLeft={onBack} />
+      <ScreenHeader
+        title="출발 전 체크리스트"
+        leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />}
+        onPressLeft={onBack}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Card>
-          <Text style={styles.checkItem}>✅ 현재 날씨 맑음</Text>
+          <View style={styles.row}>
+            <Ionicons name="checkmark-circle" size={18} color={colors.brand[600]} />
+            <Text style={styles.checkItem}>현재 날씨 맑음</Text>
+          </View>
           <Text style={styles.checkSub}>기온 21°C · 미세먼지 좋음</Text>
         </Card>
         <Card>
-          <Text style={styles.checkItem}>✅ GPS 신호 양호</Text>
+          <View style={styles.row}>
+            <Ionicons name="checkmark-circle" size={18} color={colors.brand[600]} />
+            <Text style={styles.checkItem}>GPS 신호 양호</Text>
+          </View>
           <Text style={styles.checkSub}>위치 정확도 높음</Text>
         </Card>
 
         <Text style={styles.sectionTitle}>준비물 확인</Text>
         <Pressable onPress={() => setShoeChecked((v) => !v)}>
-          <Text style={styles.checkItem}>{shoeChecked ? "☑" : "☐"} 편안한 운동화 착용</Text>
+          <View style={styles.row}>
+            <Ionicons
+              name={shoeChecked ? "checkbox" : "square-outline"}
+              size={18}
+              color={shoeChecked ? colors.brand[600] : colors.base.textSubtle}
+            />
+            <Text style={styles.checkItem}>편안한 운동화 착용</Text>
+          </View>
         </Pressable>
         <Pressable onPress={() => setWaterChecked((v) => !v)}>
-          <Text style={styles.checkItem}>{waterChecked ? "☑" : "☐"} 충분한 식수 준비</Text>
+          <View style={styles.row}>
+            <Ionicons
+              name={waterChecked ? "checkbox" : "square-outline"}
+              size={18}
+              color={waterChecked ? colors.brand[600] : colors.base.textSubtle}
+            />
+            <Text style={styles.checkItem}>충분한 식수 준비</Text>
+          </View>
         </Pressable>
         <Pressable onPress={() => setBatteryChecked((v) => !v)}>
-          <Text style={styles.checkItem}>{batteryChecked ? "☑" : "☐"} 보조 배터리(권장)</Text>
+          <View style={styles.row}>
+            <Ionicons
+              name={batteryChecked ? "checkbox" : "square-outline"}
+              size={18}
+              color={batteryChecked ? colors.brand[600] : colors.base.textSubtle}
+            />
+            <Text style={styles.checkItem}>보조 배터리(권장)</Text>
+          </View>
         </Pressable>
 
         <View style={styles.warnBox}>
@@ -58,7 +90,8 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.labelLg,
     fontWeight: typography.weight.bold,
   },
-  checkItem: { color: colors.base.text, fontSize: typography.size.labelLg, marginBottom: spacing.sm },
+  checkItem: { color: colors.base.text, fontSize: typography.size.labelLg },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   checkSub: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
   warnBox: {
     marginTop: spacing.md,

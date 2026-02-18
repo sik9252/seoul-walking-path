@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Card, Chip } from "../../components/ui";
 import { WalkRecord } from "../../mocks/walkingData";
@@ -10,7 +11,10 @@ type RecordListScreenProps = { records: WalkRecord[]; onOpenRecord: (record: Wal
 export function RecordListScreen({ records, onOpenRecord }: RecordListScreenProps) {
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="나의 기록" rightLabel="달력" />
+      <ScreenHeader
+        title="나의 기록"
+        rightIcon={<Ionicons name="calendar-outline" size={21} color={colors.base.text} />}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Card style={styles.weekCard}>
           <Text style={styles.metricLabel}>이번 주 활동</Text>

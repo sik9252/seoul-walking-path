@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Card, Chip, Input } from "../../components/ui";
 import { Course } from "../../mocks/walkingData";
@@ -16,7 +17,10 @@ export function HomeScreen({ courses, onOpenRoutes, onOpenCourse }: HomeScreenPr
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="서울걷길" rightLabel="설정" />
+      <ScreenHeader
+        title="서울걷길"
+        rightIcon={<Ionicons name="settings-outline" size={22} color={colors.base.text} />}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Input placeholder="산책로, 코스, 지역 검색" />
         <View style={styles.chips}>

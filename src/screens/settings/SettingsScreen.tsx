@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { Card } from "../../components/ui";
 import { colors, spacing, typography } from "../../theme/tokens";
@@ -8,7 +9,7 @@ export function SettingsScreen() {
   const [voice, setVoice] = React.useState(true);
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="설정" leftLabel="←" />
+      <ScreenHeader title="설정" leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.profileWrap}>
           <View style={styles.avatar} />

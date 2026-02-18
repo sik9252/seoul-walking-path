@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Button, Card } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
@@ -13,16 +14,22 @@ export function ReportIssueScreen({ onBack }: ReportIssueScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="문제 신고" leftLabel="←" onPressLeft={onBack} />
+      <ScreenHeader
+        title="문제 신고"
+        leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />}
+        onPressLeft={onBack}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.body}>트레킹 중 발견한 문제나 잘못된 정보를 알려주세요.</Text>
         <Card style={{ padding: 0 }}>
           {reasons.map((item) => (
             <Pressable key={item} style={styles.radioRow} onPress={() => setReason(item)}>
               <Text style={styles.body}>{item}</Text>
-              <Text style={{ color: reason === item ? colors.brand[600] : colors.base.textSubtle }}>
-                {reason === item ? "●" : "○"}
-              </Text>
+              <Ionicons
+                name={reason === item ? "radio-button-on" : "radio-button-off"}
+                size={20}
+                color={reason === item ? colors.brand[600] : colors.base.textSubtle}
+              />
             </Pressable>
           ))}
         </Card>

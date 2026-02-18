@@ -65,12 +65,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   iconWrap: {
-    minWidth: 32,
-    minHeight: 32,
-    borderRadius: radius.pill,
+    width: 36,
+    height: 36,
+    minWidth: 36,
+    minHeight: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.sm,
+    overflow: "hidden",
   },
   iconWrapActive: {
     backgroundColor: colors.accent.lime100,

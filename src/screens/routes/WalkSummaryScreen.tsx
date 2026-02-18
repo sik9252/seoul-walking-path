@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
@@ -10,7 +11,12 @@ export function WalkSummaryScreen({ onConfirm, onBack }: WalkSummaryScreenProps)
   const [mood, setMood] = React.useState(2);
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="산책 완료" leftLabel="✕" rightLabel="공유" onPressLeft={onBack} />
+      <ScreenHeader
+        title="산책 완료"
+        leftIcon={<Ionicons name="close" size={24} color={colors.base.text} />}
+        rightIcon={<Ionicons name="share-social-outline" size={21} color={colors.base.text} />}
+        onPressLeft={onBack}
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sub}>2023년 10월 24일 (화) 오전 10:30</Text>
         <Text style={styles.title}>남산 둘레길 아침 산책</Text>

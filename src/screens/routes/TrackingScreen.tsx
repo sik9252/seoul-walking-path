@@ -1,4 +1,5 @@
 import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
@@ -29,7 +30,12 @@ export function TrackingScreen({
 }: TrackingScreenProps) {
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={courseName} leftLabel="←" rightLabel="⋯" onPressLeft={onBack} />
+      <ScreenHeader
+        title={courseName}
+        leftIcon={<Ionicons name="arrow-back" size={22} color={colors.base.text} />}
+        rightIcon={<Ionicons name="ellipsis-vertical" size={20} color={colors.base.text} />}
+        onPressLeft={onBack}
+      />
       <View style={styles.trackingMap}>
         <Text style={styles.mapPlaceholder}>Live Map</Text>
       </View>
