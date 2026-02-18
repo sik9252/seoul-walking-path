@@ -22,6 +22,14 @@ async function loadJson<T>(key: string): Promise<T | null> {
   }
 }
 
+async function persistJson<T>(key: string, value: T): Promise<void> {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // MVP에서는 저장 실패 시 앱 동작 유지 우선. 추후 에러 로깅(Sentry) 연동 예정.
+  }
+}
+
 function advanceTracking(
   prev: TrackingMetrics,
   elapsedIncrementSec: number,
@@ -106,13 +114,13 @@ export function useWalkingAppState() {
 
   React.useEffect(() => {
     if (!hydrated) return;
-    void AsyncStorage.setItem(STORAGE_KEYS.records, JSON.stringify(recordItems));
+    void persistJson(STORAGE_KEYS.records, recordItems);
   }, [hydrated, recordItems]);
 
   React.useEffect(() => {
     if (!hydrated) return;
     const favoriteIds = courseItems.filter((course) => course.isFavorite).map((course) => course.id);
-    void AsyncStorage.setItem(STORAGE_KEYS.favoriteCourseIds, JSON.stringify(favoriteIds));
+    void persistJson(STORAGE_KEYS.favoriteCourseIds, favoriteIds);
   }, [courseItems, hydrated]);
 
   const handleBackInIntro = React.useCallback(() => {
