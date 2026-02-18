@@ -1,6 +1,6 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
@@ -37,24 +37,39 @@ export function TrackingScreen({
         onPressLeft={onBack}
       />
       <View style={styles.trackingMap}>
-        <Text style={styles.mapPlaceholder}>Live Map</Text>
+        <View style={styles.routeLineMock} />
+        <View style={styles.mapControls}>
+          <Pressable style={styles.mapBtn}>
+            <Ionicons name="layers-outline" size={18} color={colors.base.text} />
+          </Pressable>
+          <Pressable style={styles.mapBtn}>
+            <Ionicons name="locate-outline" size={18} color={colors.base.text} />
+          </Pressable>
+        </View>
       </View>
       <View style={styles.hud}>
         <View style={styles.hudTop}>
-          <Text style={styles.recordingTag}>RECORDING</Text>
+          <View style={styles.hudMetaRow}>
+            <Text style={styles.recordingTag}>RECORDING</Text>
+            <Text style={styles.courseLabel}>{courseName}</Text>
+          </View>
           <Text style={styles.hudTime}>{elapsedText}</Text>
         </View>
         <Text style={styles.hudTitle}>오후 산책 중</Text>
+        <View style={styles.separator} />
         <View style={styles.metricRow}>
           <View style={styles.metric}>
+            <Ionicons name="walk-outline" size={18} color={colors.base.textSubtle} />
             <Text style={styles.metricValue}>{distanceText}</Text>
             <Text style={styles.metricLabel}>거리</Text>
           </View>
           <View style={styles.metric}>
+            <Ionicons name="footsteps-outline" size={18} color={colors.base.textSubtle} />
             <Text style={styles.metricValue}>{steps.toLocaleString()}</Text>
             <Text style={styles.metricLabel}>걸음</Text>
           </View>
           <View style={styles.metric}>
+            <Ionicons name="flame-outline" size={18} color={colors.base.textSubtle} />
             <Text style={styles.metricValue}>{kcal}kcal</Text>
             <Text style={styles.metricLabel}>소모량</Text>
           </View>
@@ -75,8 +90,28 @@ export function TrackingScreen({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.base.background },
-  trackingMap: { flex: 1, backgroundColor: colors.base.subtle, alignItems: "center", justifyContent: "center" },
-  mapPlaceholder: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
+  trackingMap: { flex: 1, backgroundColor: "#D4DDD0", overflow: "hidden" },
+  routeLineMock: {
+    position: "absolute",
+    left: "22%",
+    top: "18%",
+    width: "56%",
+    height: "58%",
+    borderRadius: radius.xl,
+    borderWidth: 4,
+    borderColor: colors.brand[700],
+  },
+  mapControls: { position: "absolute", right: spacing.lg, bottom: spacing.xl, gap: spacing.sm },
+  mapBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.base.surface,
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   hud: {
     backgroundColor: colors.base.surface,
     borderTopLeftRadius: radius.xl,
@@ -85,6 +120,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   hudTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  hudMetaRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  courseLabel: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
   recordingTag: {
     backgroundColor: colors.accent.lime100,
     color: colors.base.text,
@@ -105,8 +142,9 @@ const styles = StyleSheet.create({
     fontSize: typography.size.titleMd,
     fontWeight: typography.weight.bold,
   },
+  separator: { height: 1, backgroundColor: colors.base.border },
   metricRow: { flexDirection: "row", justifyContent: "space-between" },
-  metric: { alignItems: "center", flex: 1 },
+  metric: { alignItems: "center", flex: 1, gap: 2 },
   metricValue: {
     color: colors.base.text,
     fontSize: typography.size.titleSm,

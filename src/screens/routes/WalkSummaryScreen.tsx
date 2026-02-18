@@ -20,12 +20,38 @@ export function WalkSummaryScreen({ onConfirm, onBack }: WalkSummaryScreenProps)
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.sub}>2023년 10월 24일 (화) 오전 10:30</Text>
         <Text style={styles.title}>남산 둘레길 아침 산책</Text>
-        <View style={styles.mapBox} />
+        <View style={styles.mapBox}>
+          <View style={styles.summaryRoute} />
+        </View>
         <View style={styles.grid}>
-          <View><Text style={styles.metricLabel}>총 거리</Text><Text style={styles.metricValue}>4.2km</Text></View>
-          <View><Text style={styles.metricLabel}>시간</Text><Text style={styles.metricValue}>58분</Text></View>
-          <View><Text style={styles.metricLabel}>칼로리</Text><Text style={styles.metricValue}>245kcal</Text></View>
-          <View><Text style={styles.metricLabel}>평균 페이스</Text><Text style={styles.metricValue}>13'20"</Text></View>
+          <View style={styles.metricBlock}>
+            <View style={styles.metricTitleRow}>
+              <Ionicons name="walk-outline" size={16} color={colors.base.textSubtle} />
+              <Text style={styles.metricLabel}>총 거리</Text>
+            </View>
+            <Text style={styles.metricValue}>4.2km</Text>
+          </View>
+          <View style={styles.metricBlock}>
+            <View style={styles.metricTitleRow}>
+              <Ionicons name="time-outline" size={16} color={colors.base.textSubtle} />
+              <Text style={styles.metricLabel}>시간</Text>
+            </View>
+            <Text style={styles.metricValue}>58분</Text>
+          </View>
+          <View style={styles.metricBlock}>
+            <View style={styles.metricTitleRow}>
+              <Ionicons name="flame-outline" size={16} color={colors.base.textSubtle} />
+              <Text style={styles.metricLabel}>칼로리</Text>
+            </View>
+            <Text style={styles.metricValue}>245kcal</Text>
+          </View>
+          <View style={styles.metricBlock}>
+            <View style={styles.metricTitleRow}>
+              <Ionicons name="speedometer-outline" size={16} color={colors.base.textSubtle} />
+              <Text style={styles.metricLabel}>평균 페이스</Text>
+            </View>
+            <Text style={styles.metricValue}>13'20"</Text>
+          </View>
         </View>
         <Text style={styles.section}>오늘 산책은 어땠나요?</Text>
         <View style={styles.moodRow}>
@@ -57,10 +83,31 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.titleLg,
     fontWeight: typography.weight.bold,
   },
-  mapBox: { height: 220, borderRadius: radius.xl, backgroundColor: colors.base.subtle },
+  mapBox: {
+    height: 220,
+    borderRadius: radius.xl,
+    backgroundColor: "#CBD0C0",
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  summaryRoute: {
+    width: "70%",
+    height: "45%",
+    borderRadius: radius.xl,
+    borderWidth: 4,
+    borderColor: colors.brand[700],
+  },
   grid: { flexDirection: "row", flexWrap: "wrap", rowGap: spacing.lg, columnGap: spacing.x4 },
+  metricBlock: { minWidth: "40%", gap: 2 },
+  metricTitleRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   metricLabel: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
-  metricValue: { color: colors.base.text, fontSize: 40, lineHeight: 44, fontWeight: typography.weight.bold },
+  metricValue: {
+    color: colors.base.text,
+    fontSize: 36,
+    lineHeight: 40,
+    fontWeight: typography.weight.bold,
+  },
   section: {
     color: colors.base.text,
     fontSize: typography.size.labelLg,
