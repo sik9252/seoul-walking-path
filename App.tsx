@@ -1,9 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Alert, StyleSheet, Vibration } from "react-native";
+import { StyleSheet, Vibration } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { TabBar, TabItem } from "./src/components/ui";
+import { CompletionDialog, TabBar, TabItem } from "./src/components/ui";
 import { trackEvent } from "./src/analytics/tracker";
 import { MainTab } from "./src/domain/types";
 import {
@@ -74,6 +74,7 @@ function AppContent() {
   } = useWalkingAppState();
   const visitedCountRef = React.useRef(0);
   const completionHandledAttemptRef = React.useRef<string | null>(null);
+  const [completionDialogVisible, setCompletionDialogVisible] = React.useState(false);
 
   React.useEffect(() => {
     if (routeFlow !== "tracking") {
@@ -94,16 +95,8 @@ function AppContent() {
 
     completionHandledAttemptRef.current = attemptProgress.attemptId;
     Vibration.vibrate([0, 80, 60, 120]);
-    Alert.alert("완주에 성공했어요", "모든 체크포인트를 경유했습니다.", [
-      {
-        text: "확인",
-        onPress: () => {
-          finishTracking();
-          setRouteFlow("walkSummary");
-        },
-      },
-    ]);
-  }, [attemptProgress, finishTracking, routeFlow, setRouteFlow]);
+    setCompletionDialogVisible(true);
+  }, [attemptProgress, routeFlow]);
 
   const tabs: TabItem[] = [
     {
@@ -313,6 +306,16 @@ function AppContent() {
       ) : null}
         </>
       ) : null}
+      <CompletionDialog
+        visible={completionDialogVisible}
+        title="완주에 성공했어요"
+        message="모든 체크포인트를 경유했습니다."
+        onConfirm={() => {
+          setCompletionDialogVisible(false);
+          finishTracking();
+          setRouteFlow("walkSummary");
+        }}
+      />
     </SafeAreaView>
   );
 }
