@@ -1,6 +1,7 @@
 import React from "react";
 import { BackHandler } from "react-native";
 import { Course, IntroFlow, MainTab, RecordFlow, RouteFlow, WalkRecord } from "../domain/types";
+import { calculateMetrics, filterDistanceIncrementMeters, TrackingMetrics } from "../domain/tracking";
 import { walkingRepository } from "../repositories/mock/walkingRepository";
 
 export function useWalkingAppState() {
@@ -15,8 +16,13 @@ export function useWalkingAppState() {
   const [recordItems, setRecordItems] = React.useState<WalkRecord[]>([]);
 
   const [favoritesOnly, setFavoritesOnly] = React.useState(false);
-  const [elapsedSec, setElapsedSec] = React.useState(2535);
-  const [paused, setPaused] = React.useState(false);
+  const [tracking, setTracking] = React.useState<TrackingMetrics>({
+    elapsedSec: 0,
+    distanceMeters: 0,
+    steps: 0,
+    kcal: 0,
+    status: "idle",
+  });
 
   React.useEffect(() => {
     const bootstrap = async () => {
@@ -90,10 +96,25 @@ export function useWalkingAppState() {
   }, [recordFlow, routeFlow, tab]);
 
   React.useEffect(() => {
-    if (routeFlow !== "tracking" || paused) return;
-    const timer = setInterval(() => setElapsedSec((prev) => prev + 1), 1000);
+    if (routeFlow !== "tracking" || tracking.status !== "running") return;
+    const timer = setInterval(() => {
+      setTracking((prev) => {
+        const rawMeters = 1.2 + Math.random() * 0.8;
+        const deltaMeters = filterDistanceIncrementMeters(rawMeters);
+        const nextElapsed = prev.elapsedSec + 1;
+        const nextDistance = prev.distanceMeters + deltaMeters;
+        const calculated = calculateMetrics(nextDistance, nextElapsed);
+        return {
+          ...prev,
+          elapsedSec: nextElapsed,
+          distanceMeters: nextDistance,
+          steps: calculated.steps,
+          kcal: calculated.kcal,
+        };
+      });
+    }, 1000);
     return () => clearInterval(timer);
-  }, [paused, routeFlow]);
+  }, [routeFlow, tracking.status]);
 
   React.useEffect(() => {
     const onHardwareBack = () => {
@@ -106,11 +127,34 @@ export function useWalkingAppState() {
   }, [handleBackInIntro, handleBackInMain, introFlow]);
 
   const elapsedText = React.useMemo(() => {
-    const hh = String(Math.floor(elapsedSec / 3600)).padStart(2, "0");
-    const mm = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, "0");
-    const ss = String(elapsedSec % 60).padStart(2, "0");
+    const hh = String(Math.floor(tracking.elapsedSec / 3600)).padStart(2, "0");
+    const mm = String(Math.floor((tracking.elapsedSec % 3600) / 60)).padStart(2, "0");
+    const ss = String(tracking.elapsedSec % 60).padStart(2, "0");
     return `${hh}:${mm}:${ss}`;
-  }, [elapsedSec]);
+  }, [tracking.elapsedSec]);
+
+  const distanceText = React.useMemo(() => `${(tracking.distanceMeters / 1000).toFixed(2)}km`, [tracking.distanceMeters]);
+
+  const startTracking = React.useCallback(() => {
+    setTracking({
+      elapsedSec: 0,
+      distanceMeters: 0,
+      steps: 0,
+      kcal: 0,
+      status: "running",
+    });
+  }, []);
+
+  const toggleTrackingPause = React.useCallback(() => {
+    setTracking((prev) => ({
+      ...prev,
+      status: prev.status === "running" ? "paused" : "running",
+    }));
+  }, []);
+
+  const finishTracking = React.useCallback(() => {
+    setTracking((prev) => ({ ...prev, status: "finished" }));
+  }, []);
 
   const toggleFavorite = React.useCallback((courseId: string) => {
     setCourseItems((prev) =>
@@ -141,9 +185,12 @@ export function useWalkingAppState() {
     recordItems,
     favoritesOnly,
     setFavoritesOnly,
-    paused,
-    setPaused,
+    tracking,
+    distanceText,
     elapsedText,
+    startTracking,
+    toggleTrackingPause,
+    finishTracking,
     toggleFavorite,
   };
 }

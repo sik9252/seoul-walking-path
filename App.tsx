@@ -49,9 +49,12 @@ function AppContent() {
     recordItems,
     favoritesOnly,
     setFavoritesOnly,
-    paused,
-    setPaused,
+    tracking,
+    distanceText,
     elapsedText,
+    startTracking,
+    toggleTrackingPause,
+    finishTracking,
     toggleFavorite,
   } = useWalkingAppState();
 
@@ -120,7 +123,10 @@ function AppContent() {
         return (
           <PreStartCheckScreen
             onBack={() => setRouteFlow("courseDetail")}
-            onStart={() => setRouteFlow("tracking")}
+            onStart={() => {
+              startTracking();
+              setRouteFlow("tracking");
+            }}
           />
         );
       case "tracking":
@@ -128,12 +134,15 @@ function AppContent() {
           <TrackingScreen
             courseName={selectedCourse.name}
             elapsedText={elapsedText}
-            distanceText="3.2km"
-            steps={4521}
-            kcal={185}
-            isPaused={paused}
-            onTogglePause={() => setPaused((v) => !v)}
-            onFinish={() => setRouteFlow("walkSummary")}
+            distanceText={distanceText}
+            steps={tracking.steps}
+            kcal={tracking.kcal}
+            isPaused={tracking.status === "paused"}
+            onTogglePause={toggleTrackingPause}
+            onFinish={() => {
+              finishTracking();
+              setRouteFlow("walkSummary");
+            }}
             onBack={() => setRouteFlow("courseDetail")}
           />
         );
@@ -141,6 +150,9 @@ function AppContent() {
         return (
           <WalkSummaryScreen
             onBack={() => setRouteFlow("tracking")}
+            distanceText={distanceText}
+            elapsedText={elapsedText}
+            kcal={tracking.kcal}
             onConfirm={() => {
               setTab("records");
               setRecordFlow("recordList");

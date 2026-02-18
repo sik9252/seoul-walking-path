@@ -5,9 +5,15 @@ import { Button } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type WalkSummaryScreenProps = { onConfirm: () => void; onBack: () => void };
+type WalkSummaryScreenProps = {
+  onConfirm: () => void;
+  onBack: () => void;
+  distanceText: string;
+  elapsedText: string;
+  kcal: number;
+};
 
-export function WalkSummaryScreen({ onConfirm, onBack }: WalkSummaryScreenProps) {
+export function WalkSummaryScreen({ onConfirm, onBack, distanceText, elapsedText, kcal }: WalkSummaryScreenProps) {
   const [mood, setMood] = React.useState(2);
   return (
     <View style={styles.screen}>
@@ -29,21 +35,21 @@ export function WalkSummaryScreen({ onConfirm, onBack }: WalkSummaryScreenProps)
               <Ionicons name="walk-outline" size={16} color={colors.base.textSubtle} />
               <Text style={styles.metricLabel}>총 거리</Text>
             </View>
-            <Text style={styles.metricValue}>4.2km</Text>
+            <Text style={styles.metricValue}>{distanceText}</Text>
           </View>
           <View style={styles.metricBlock}>
             <View style={styles.metricTitleRow}>
               <Ionicons name="time-outline" size={16} color={colors.base.textSubtle} />
               <Text style={styles.metricLabel}>시간</Text>
             </View>
-            <Text style={styles.metricValue}>58분</Text>
+            <Text style={styles.metricValue}>{elapsedText}</Text>
           </View>
           <View style={styles.metricBlock}>
             <View style={styles.metricTitleRow}>
               <Ionicons name="flame-outline" size={16} color={colors.base.textSubtle} />
               <Text style={styles.metricLabel}>칼로리</Text>
             </View>
-            <Text style={styles.metricValue}>245kcal</Text>
+            <Text style={styles.metricValue}>{kcal}kcal</Text>
           </View>
           <View style={styles.metricBlock}>
             <View style={styles.metricTitleRow}>
