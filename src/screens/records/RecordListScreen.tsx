@@ -5,9 +5,9 @@ import { WalkRecord } from "../../mocks/walkingData";
 import { colors, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S9Props = { records: WalkRecord[]; onOpenRecord: (record: WalkRecord) => void };
+type RecordListScreenProps = { records: WalkRecord[]; onOpenRecord: (record: WalkRecord) => void };
 
-export function S9RecordListScreen({ records, onOpenRecord }: S9Props) {
+export function RecordListScreen({ records, onOpenRecord }: RecordListScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader title="나의 기록" rightLabel="달력" />

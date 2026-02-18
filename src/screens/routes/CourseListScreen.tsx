@@ -5,7 +5,7 @@ import { Course } from "../../mocks/walkingData";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S4Props = {
+type CourseListScreenProps = {
   courses: Course[];
   favoritesOnly: boolean;
   onToggleFavoritesOnly: (value: boolean) => void;
@@ -13,13 +13,13 @@ type S4Props = {
   onOpenCourse: (course: Course) => void;
 };
 
-export function S4CourseListScreen({
+export function CourseListScreen({
   courses,
   favoritesOnly,
   onToggleFavoritesOnly,
   onToggleFavorite,
   onOpenCourse,
-}: S4Props) {
+}: CourseListScreenProps) {
   const [query, setQuery] = React.useState("");
   const filtered = courses.filter((course) => {
     const passFavorite = !favoritesOnly || course.isFavorite;

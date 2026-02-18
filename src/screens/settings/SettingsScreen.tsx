@@ -4,7 +4,7 @@ import { Card } from "../../components/ui";
 import { colors, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-export function S11SettingsScreen() {
+export function SettingsScreen() {
   const [voice, setVoice] = React.useState(true);
   return (
     <View style={styles.screen}>

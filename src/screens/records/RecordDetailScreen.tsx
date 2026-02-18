@@ -4,9 +4,9 @@ import { WalkRecord } from "../../mocks/walkingData";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S10Props = { record: WalkRecord; onBack: () => void };
+type RecordDetailScreenProps = { record: WalkRecord; onBack: () => void };
 
-export function S10RecordDetailScreen({ record, onBack }: S10Props) {
+export function RecordDetailScreen({ record, onBack }: RecordDetailScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader title="기록 상세" leftLabel="←" rightLabel="⋮" onPressLeft={onBack} />

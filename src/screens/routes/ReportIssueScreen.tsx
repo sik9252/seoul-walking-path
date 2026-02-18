@@ -4,9 +4,9 @@ import { Button, Card } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S13Props = { onBack: () => void };
+type ReportIssueScreenProps = { onBack: () => void };
 
-export function S13ReportScreen({ onBack }: S13Props) {
+export function ReportIssueScreen({ onBack }: ReportIssueScreenProps) {
   const [reason, setReason] = React.useState("길이 막혔어요");
   const [detail, setDetail] = React.useState("");
   const reasons = ["길이 막혔어요", "정보가 틀려요", "시설물이 없어요", "기타"];

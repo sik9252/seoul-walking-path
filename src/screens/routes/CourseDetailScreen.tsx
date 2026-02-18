@@ -5,7 +5,7 @@ import { Course } from "../../mocks/walkingData";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S5Props = {
+type CourseDetailScreenProps = {
   course: Course;
   onBack: () => void;
   onStart: () => void;
@@ -13,7 +13,7 @@ type S5Props = {
   onToggleFavorite: () => void;
 };
 
-export function S5CourseDetailScreen({ course, onBack, onStart, onReport, onToggleFavorite }: S5Props) {
+export function CourseDetailScreen({ course, onBack, onStart, onReport, onToggleFavorite }: CourseDetailScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader title="코스 상세" leftLabel="←" rightLabel="공유" onPressLeft={onBack} />

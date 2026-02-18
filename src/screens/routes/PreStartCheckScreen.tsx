@@ -4,9 +4,9 @@ import { Button, Card } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S6Props = { onBack: () => void; onStart: () => void };
+type PreStartCheckScreenProps = { onBack: () => void; onStart: () => void };
 
-export function S6PreStartCheckScreen({ onBack, onStart }: S6Props) {
+export function PreStartCheckScreen({ onBack, onStart }: PreStartCheckScreenProps) {
   const [shoeChecked, setShoeChecked] = React.useState(true);
   const [waterChecked, setWaterChecked] = React.useState(true);
   const [batteryChecked, setBatteryChecked] = React.useState(false);

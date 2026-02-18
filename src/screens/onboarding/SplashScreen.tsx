@@ -2,11 +2,11 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { colors, spacing, typography } from "../../theme/tokens";
 
-type S0SplashScreenProps = {
+type SplashScreenProps = {
   onDone: () => void;
 };
 
-export function S0SplashScreen({ onDone }: S0SplashScreenProps) {
+export function SplashScreen({ onDone }: SplashScreenProps) {
   React.useEffect(() => {
     const timer = setTimeout(onDone, 1200);
     return () => clearTimeout(timer);

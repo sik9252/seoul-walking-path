@@ -5,13 +5,13 @@ import { Course } from "../../mocks/walkingData";
 import { colors, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S3HomeScreenProps = {
+type HomeScreenProps = {
   courses: Course[];
   onOpenRoutes: () => void;
   onOpenCourse: (course: Course) => void;
 };
 
-export function S3HomeScreen({ courses, onOpenRoutes, onOpenCourse }: S3HomeScreenProps) {
+export function HomeScreen({ courses, onOpenRoutes, onOpenCourse }: HomeScreenProps) {
   const featured = courses.slice(0, 2);
 
   return (

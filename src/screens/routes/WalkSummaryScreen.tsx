@@ -4,9 +4,9 @@ import { Button } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S8Props = { onConfirm: () => void; onBack: () => void };
+type WalkSummaryScreenProps = { onConfirm: () => void; onBack: () => void };
 
-export function S8SummaryScreen({ onConfirm, onBack }: S8Props) {
+export function WalkSummaryScreen({ onConfirm, onBack }: WalkSummaryScreenProps) {
   const [mood, setMood] = React.useState(2);
   return (
     <View style={styles.screen}>

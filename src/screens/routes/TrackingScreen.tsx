@@ -4,7 +4,7 @@ import { Button } from "../../components/ui";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
-type S7Props = {
+type TrackingScreenProps = {
   courseName: string;
   elapsedText: string;
   distanceText: string;
@@ -16,7 +16,7 @@ type S7Props = {
   onBack: () => void;
 };
 
-export function S7TrackingScreen({
+export function TrackingScreen({
   courseName,
   elapsedText,
   distanceText,
@@ -26,7 +26,7 @@ export function S7TrackingScreen({
   onTogglePause,
   onFinish,
   onBack,
-}: S7Props) {
+}: TrackingScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader title={courseName} leftLabel="←" rightLabel="⋯" onPressLeft={onBack} />
