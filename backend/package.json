@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "build:checkpoint-seed": "ts-node scripts/build-checkpoint-seed.ts",
+    "build:checkpoint-upsert-sql": "ts-node scripts/build-checkpoint-upsert-sql.ts",
     "sync:seoul-courses": "ts-node scripts/sync-seoul-courses.ts",
     "geocode:checkpoints:kakao": "ts-node scripts/geocode-checkpoints-kakao.ts"
   },

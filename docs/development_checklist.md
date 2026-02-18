@@ -107,7 +107,7 @@
 - [x] 서울 코스정보 일 1회 동기화 전략 확정(앱 직접 호출 금지, 서버 DB 서빙)
 - [x] 동기화/정규화 스크립트 초안 구현(`backend/scripts/sync-seoul-courses.ts`)
 - [x] Kakao Local 기반 체크포인트 지오코딩 스크립트 초안 구현(`backend/scripts/geocode-checkpoints-kakao.ts`)
-- [ ] DB upsert 스크립트 구현(코스/체크포인트)
+- [x] DB upsert 스크립트 구현(체크포인트: `backend/scripts/build-checkpoint-upsert-sql.ts`)
 - [ ] 동기화 스케줄러(cron) 연결 및 실패 알림 추가
 - [ ] 프론트 코스 목록/상세 API를 서버 실데이터로 교체
 - [ ] 좌표 검수(admin 또는 수동 검수 파일) 프로세스 확정
@@ -152,3 +152,4 @@
 - 체크포인트 UX 보강: 시작/종료 지점 포함, 통과 시 진동, 완주 시 성공 다이얼로그 후 요약 화면 전환.
 - 완주 알림 UI 커스터마이징: 시스템 Alert 대신 앱 테마 기반 `CompletionDialog` 모달 적용.
 - 운영 데이터 파이프라인 초안: `docs/seoul_course_sync_and_geocoding.md`, `sync:seoul-courses`, `geocode:checkpoints:kakao` 스크립트 추가.
+- 체크포인트 DB 반영 준비: `build:checkpoint-upsert-sql` 스크립트로 SQL upsert 파일 생성.

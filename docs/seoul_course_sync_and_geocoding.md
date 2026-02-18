@@ -21,6 +21,12 @@
   - `cd backend && KAKAO_REST_API_KEY="<kakao-rest-key>" npm run geocode:checkpoints:kakao`
   - 출력:
     - `backend/data/generated/course-checkpoints.geocoded.json`
+- DB upsert SQL 생성
+  - `cd backend && npm run build:checkpoint-upsert-sql`
+  - 입력:
+    - `backend/data/generated/course-checkpoints.geocoded.json`
+  - 출력:
+    - `backend/data/generated/course-checkpoints.upsert.sql`
 
 ## 비용 메모
 - 운영 기준으로는 초기 전체 지오코딩 1회 + 이후 일 1회 증분 호출이면 호출량이 매우 작아 무료 쿼터 내 운용 가능성이 높다.
