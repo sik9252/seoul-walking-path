@@ -53,6 +53,8 @@ function AppContent() {
     selectedRecord,
     setSelectedRecord,
     courseItems,
+    hasMoreCourses,
+    loadingCourses,
     recordItems,
     favoritesOnly,
     setFavoritesOnly,
@@ -71,6 +73,7 @@ function AppContent() {
     toggleFavorite,
     deleteRecord,
     clearRecords,
+    loadMoreCourses,
   } = useWalkingAppState();
   const visitedCountRef = React.useRef(0);
   const completionHandledAttemptRef = React.useRef<string | null>(null);
@@ -140,6 +143,8 @@ function AppContent() {
         return (
           <CourseListScreen
             courses={courseItems}
+            hasMore={hasMoreCourses}
+            loadingMore={loadingCourses}
             favoritesOnly={favoritesOnly}
             onToggleFavoritesOnly={setFavoritesOnly}
             onToggleFavorite={toggleFavorite}
@@ -147,6 +152,7 @@ function AppContent() {
               setSelectedCourse(course);
               setRouteFlow("courseDetail");
             }}
+            onLoadMore={loadMoreCourses}
           />
         );
       case "courseDetail":

@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { loadEnvFile } from "../src/common/load-env";
 
 type SeoulCourseRow = {
@@ -24,11 +24,13 @@ type SeoulCourseRow = {
 type RawPayload = {
   DATA?: unknown[];
   data?: unknown[];
+  [key: string]: unknown;
 };
 
 const rootDir = path.resolve(__dirname, "..");
 const rawOutputPath = path.join(rootDir, "data/raw/seoul-course-info.json");
 const normalizedOutputPath = path.join(rootDir, "data/generated/seoul-courses.normalized.json");
+const DEFAULT_PAGE_SIZE = 1000;
 
 function pickString(row: Record<string, unknown>, keys: string[]): string {
   for (const key of keys) {
@@ -94,6 +96,79 @@ async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
   }
 }
 
+function parseServiceUrl(sourceUrl: string) {
+  const parsed = new URL(sourceUrl);
+  const segments = parsed.pathname.split("/").filter((item) => item.length > 0);
+  if (segments.length < 5) {
+    throw new Error("Invalid SEOUL_COURSE_INFO_URL format.");
+  }
+
+  const [key, type, service, start, end, ...rest] = segments;
+  const startIndex = Number(start);
+  const endIndex = Number(end);
+  const tail = rest.length > 0 ? `/${rest.join("/")}` : "";
+
+  return {
+    origin: parsed.origin,
+    key,
+    type,
+    service,
+    startIndex: Number.isFinite(startIndex) ? startIndex : 1,
+    endIndex: Number.isFinite(endIndex) ? endIndex : DEFAULT_PAGE_SIZE,
+    tail,
+  };
+}
+
+function buildServiceUrl(
+  base: ReturnType<typeof parseServiceUrl>,
+  startIndex: number,
+  endIndex: number,
+) {
+  return `${base.origin}/${base.key}/${base.type}/${base.service}/${startIndex}/${endIndex}${base.tail}`;
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function extractRowsAndTotal(payload: unknown, serviceName?: string): { rows: unknown[]; totalCount: number | null } {
+  if (!payload || typeof payload !== "object") return { rows: [], totalCount: null };
+  const obj = payload as RawPayload;
+
+  if (Array.isArray(obj.DATA)) return { rows: obj.DATA, totalCount: toNumber((obj as Record<string, unknown>).list_total_count) };
+  if (Array.isArray(obj.data)) return { rows: obj.data, totalCount: toNumber((obj as Record<string, unknown>).list_total_count) };
+
+  const serviceKeyCandidates = serviceName
+    ? [serviceName, serviceName.toLowerCase(), serviceName.toUpperCase()]
+    : [];
+
+  for (const key of serviceKeyCandidates) {
+    const candidate = (obj as Record<string, unknown>)[key];
+    if (!candidate || typeof candidate !== "object") continue;
+    const nested = candidate as Record<string, unknown>;
+    const row = nested.row;
+    if (Array.isArray(row)) {
+      return { rows: row, totalCount: toNumber(nested.list_total_count) };
+    }
+  }
+
+  for (const value of Object.values(obj)) {
+    if (!value || typeof value !== "object") continue;
+    const nested = value as Record<string, unknown>;
+    const row = nested.row;
+    if (Array.isArray(row)) {
+      return { rows: row, totalCount: toNumber(nested.list_total_count) };
+    }
+  }
+
+  return { rows: [], totalCount: null };
+}
+
 async function main() {
   loadEnvFile();
   const sourceUrl = process.env.SEOUL_COURSE_INFO_URL;
@@ -102,10 +177,36 @@ async function main() {
   }
 
   const timeoutMs = Number(process.env.SEOUL_API_TIMEOUT_MS ?? 15000);
-  const rawJson = await fetchJson(sourceUrl, Number.isFinite(timeoutMs) ? timeoutMs : 15000);
-  const payload = rawJson as RawPayload;
-  const rows = Array.isArray(payload.DATA) ? payload.DATA : Array.isArray(payload.data) ? payload.data : [];
-  const normalizedRows = normalizeRows(rows);
+  const safeTimeout = Number.isFinite(timeoutMs) ? timeoutMs : 15000;
+  const base = parseServiceUrl(sourceUrl);
+  const pageSize = Math.max(1, base.endIndex - base.startIndex + 1);
+
+  let start = base.startIndex;
+  let end = base.endIndex;
+  let totalCount: number | null = null;
+  const allRows: unknown[] = [];
+  const rawPages: unknown[] = [];
+
+  while (true) {
+    const pageUrl = buildServiceUrl(base, start, end);
+    const pageJson = await fetchJson(pageUrl, safeTimeout);
+    rawPages.push(pageJson);
+
+    const { rows, totalCount: extractedTotal } = extractRowsAndTotal(pageJson, base.service);
+    if (totalCount === null && extractedTotal !== null) {
+      totalCount = extractedTotal;
+    }
+    allRows.push(...rows);
+
+    if (rows.length === 0) break;
+    if (totalCount !== null && allRows.length >= totalCount) break;
+    if (rows.length < pageSize) break;
+
+    start = end + 1;
+    end = start + pageSize - 1;
+  }
+
+  const normalizedRows = normalizeRows(allRows);
 
   if (normalizedRows.length === 0) {
     throw new Error("No valid rows found in Seoul course payload.");
@@ -114,11 +215,15 @@ async function main() {
   const rawSnapshot = {
     fetchedAt: new Date().toISOString(),
     sourceUrl,
-    payload: rawJson,
+    totalCount,
+    pageSize,
+    pages: rawPages.length,
+    payload: rawPages,
   };
   const normalizedSnapshot = {
     fetchedAt: new Date().toISOString(),
     sourceUrl,
+    totalCount,
     count: normalizedRows.length,
     courses: normalizedRows,
   };
@@ -128,7 +233,7 @@ async function main() {
   fs.writeFileSync(rawOutputPath, JSON.stringify(rawSnapshot, null, 2), "utf8");
   fs.writeFileSync(normalizedOutputPath, JSON.stringify(normalizedSnapshot, null, 2), "utf8");
 
-  console.log(`Synced ${normalizedRows.length} courses from Seoul Open API`);
+  console.log(`Synced ${normalizedRows.length} courses from Seoul Open API (list_total_count=${totalCount ?? "unknown"})`);
   console.log(`- raw snapshot: ${rawOutputPath}`);
   console.log(`- normalized: ${normalizedOutputPath}`);
 }

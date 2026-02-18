@@ -16,6 +16,7 @@ import { calculateMetrics, filterDistanceIncrementMeters, TrackingMetrics } from
 import { walkingRepository } from "../repositories/mock/walkingRepository";
 
 const DEFAULT_DISTANCE_PER_SEC_METERS = 1.4;
+const COURSE_PAGE_SIZE = 20;
 const STORAGE_KEYS = {
   records: "@seoul-walking-path/records",
   favoriteCourseIds: "@seoul-walking-path/favorite-course-ids",
@@ -83,6 +84,9 @@ export function useWalkingAppState() {
   const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
   const [selectedRecord, setSelectedRecord] = React.useState<WalkRecord | null>(null);
   const [courseItems, setCourseItems] = React.useState<Course[]>([]);
+  const [currentCoursePage, setCurrentCoursePage] = React.useState(1);
+  const [hasMoreCourses, setHasMoreCourses] = React.useState(false);
+  const [loadingCourses, setLoadingCourses] = React.useState(false);
   const [recordItems, setRecordItems] = React.useState<WalkRecord[]>([]);
 
   const [favoritesOnly, setFavoritesOnly] = React.useState(false);
@@ -102,30 +106,33 @@ export function useWalkingAppState() {
 
   React.useEffect(() => {
     const bootstrap = async () => {
-      const [courses, records] = await Promise.all([
-        walkingRepository.getCourses(),
-        walkingRepository.getRecords(),
-      ]);
-
       const [savedRecords, favoriteCourseIds, savedTrackingMode] = await Promise.all([
         loadJson<WalkRecord[]>(STORAGE_KEYS.records),
         loadJson<string[]>(STORAGE_KEYS.favoriteCourseIds),
         loadJson<"balanced" | "accurate">(STORAGE_KEYS.trackingMode),
       ]);
 
+      const [coursePage, records] = await Promise.all([
+        walkingRepository.getCoursesPage(1, COURSE_PAGE_SIZE),
+        walkingRepository.getRecords(),
+      ]);
+
       const nextTrackingMode =
         savedTrackingMode && (savedTrackingMode === "balanced" || savedTrackingMode === "accurate")
           ? savedTrackingMode
           : "balanced";
+      const pageCourses = coursePage.items;
       const nextCourses = favoriteCourseIds
-        ? courses.map((course) => ({
+        ? pageCourses.map((course) => ({
             ...course,
             isFavorite: favoriteCourseIds.includes(course.id),
           }))
-        : courses;
+        : pageCourses;
       const nextRecords = savedRecords ?? records;
 
       setCourseItems(nextCourses);
+      setCurrentCoursePage(coursePage.page);
+      setHasMoreCourses(coursePage.hasNext);
       setRecordItems(nextRecords);
       setSelectedCourse(nextCourses[0] ?? null);
       setSelectedRecord(nextRecords[0] ?? null);
@@ -134,6 +141,41 @@ export function useWalkingAppState() {
     };
     void bootstrap();
   }, []);
+
+  const loadMoreCourses = React.useCallback(async () => {
+    if (loadingCourses || !hasMoreCourses) return;
+    const nextPage = currentCoursePage + 1;
+    setLoadingCourses(true);
+    try {
+      const page = await walkingRepository.getCoursesPage(nextPage, COURSE_PAGE_SIZE);
+      const favoriteIds = new Set(
+        courseItems.filter((course) => course.isFavorite).map((course) => course.id),
+      );
+
+      const mapped = page.items.map((course) => ({
+        ...course,
+        isFavorite: favoriteIds.has(course.id),
+      }));
+
+      setCourseItems((prev) => {
+        const seen = new Set(prev.map((course) => course.id));
+        const merged = [...prev];
+        mapped.forEach((item) => {
+          if (!seen.has(item.id)) {
+            seen.add(item.id);
+            merged.push(item);
+          }
+        });
+        return merged;
+      });
+      setCurrentCoursePage(page.page);
+      setHasMoreCourses(page.hasNext);
+    } catch (error) {
+      console.warn("[useWalkingAppState] loadMoreCourses failed:", error);
+    } finally {
+      setLoadingCourses(false);
+    }
+  }, [courseItems, currentCoursePage, hasMoreCourses, loadingCourses]);
 
   React.useEffect(() => {
     if (!hydrated) return;
@@ -431,6 +473,8 @@ export function useWalkingAppState() {
     setSelectedRecord,
     courseItems,
     recordItems,
+    hasMoreCourses,
+    loadingCourses,
     favoritesOnly,
     setFavoritesOnly,
     tracking,
@@ -448,5 +492,6 @@ export function useWalkingAppState() {
     toggleFavorite,
     deleteRecord,
     clearRecords,
+    loadMoreCourses,
   };
 }

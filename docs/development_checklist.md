@@ -130,6 +130,7 @@
 - [x] 백엔드 `/routes`, `/routes/:id/checkpoints`를 생성 데이터 우선 서빙으로 전환(파일 fallback 포함)
 - [x] 프론트 코스 목록/상세 API를 서버 실데이터 우선 호출로 교체(`EXPO_PUBLIC_API_BASE_URL` 기반, 실패 시 mock fallback)
 - [x] 좌표 검수 프로세스 확정(수동 override + unresolved CSV export)
+- [x] `/routes` 페이징 + 프론트 무한스크롤 적용
 
 ## 메모
 
@@ -178,4 +179,5 @@
 - 프론트 데이터 소스 전환: `walkingRepository`가 `/routes` API를 우선 호출하고 실패 시 mock을 사용.
 - 좌표 검수 절차 확정: `checkpoint-overrides.json` 수동 보정 + `export:unresolved-checkpoints` 검수 목록 생성.
 - 환경변수 로딩 보강: 백엔드 앱/배치 스크립트에서 `backend/.env` 자동 로드 지원 추가.
+- 서울 OpenAPI 실데이터 확인: `viewGil.list_total_count=21` (동기화 스크립트 실행 기준).
 - 상용 배포 TODO: 백엔드 플랫폼/DB 배포를 확정해야 실제 앱 사용자가 API 접근 가능.

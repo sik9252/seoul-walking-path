@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import {
   AttemptCheckpointVisit,
@@ -228,6 +228,24 @@ export class MockStoreService {
       totalCount: attempt.totalCount,
       completionRate: attempt.totalCount > 0 ? attempt.visitedCheckpointIds.length / attempt.totalCount : 0,
       visitedCheckpointIds: attempt.visitedCheckpointIds,
+    };
+  }
+
+  getRoutesPage(page = 1, pageSize = 20) {
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.min(100, Math.max(1, Math.floor(pageSize)));
+    const routes = this.getRoutes();
+    const total = routes.length;
+    const startIndex = (safePage - 1) * safePageSize;
+    const items = routes.slice(startIndex, startIndex + safePageSize);
+    const hasNext = startIndex + items.length < total;
+
+    return {
+      items,
+      page: safePage,
+      pageSize: safePageSize,
+      total,
+      hasNext,
     };
   }
 

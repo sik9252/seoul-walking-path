@@ -24,7 +24,13 @@ type ApiRoute = {
 };
 
 export type WalkingRepository = {
-  getCourses: () => Promise<Course[]>;
+  getCoursesPage: (page: number, pageSize: number) => Promise<{
+    items: Course[];
+    page: number;
+    pageSize: number;
+    total: number;
+    hasNext: boolean;
+  }>;
   getRecords: () => Promise<WalkRecord[]>;
 };
 
@@ -52,32 +58,60 @@ function mapApiRouteToCourse(route: ApiRoute): Course {
   };
 }
 
-async function fetchCoursesFromApi(): Promise<Course[] | null> {
+async function fetchCoursesFromApi(page: number, pageSize: number): Promise<{
+  items: Course[];
+  page: number;
+  pageSize: number;
+  total: number;
+  hasNext: boolean;
+} | null> {
   const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
   if (!baseUrl) return null;
 
   const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-  const response = await fetch(`${normalizedBaseUrl}/routes`);
+  const response = await fetch(`${normalizedBaseUrl}/routes?page=${page}&pageSize=${pageSize}`);
   if (!response.ok) {
     throw new Error(`failed_to_fetch_routes_${response.status}`);
   }
 
-  const payload = (await response.json()) as ApiRoute[];
-  if (!Array.isArray(payload)) return null;
-  return payload.map(mapApiRouteToCourse);
+  const payload = (await response.json()) as {
+    items?: ApiRoute[];
+    page?: number;
+    pageSize?: number;
+    total?: number;
+    hasNext?: boolean;
+  };
+  if (!Array.isArray(payload.items)) return null;
+  return {
+    items: payload.items.map(mapApiRouteToCourse),
+    page: payload.page ?? page,
+    pageSize: payload.pageSize ?? pageSize,
+    total: payload.total ?? payload.items.length,
+    hasNext: payload.hasNext ?? false,
+  };
 }
 
 export const walkingRepository: WalkingRepository = {
-  async getCourses() {
+  async getCoursesPage(page, pageSize) {
     try {
-      const apiCourses = await fetchCoursesFromApi();
-      if (apiCourses && apiCourses.length > 0) {
-        return apiCourses;
+      const apiPage = await fetchCoursesFromApi(page, pageSize);
+      if (apiPage) {
+        return apiPage;
       }
     } catch (error) {
       console.warn("[walkingRepository] fallback to mock courses:", error);
     }
-    return initialCourses;
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.max(1, Math.floor(pageSize));
+    const startIndex = (safePage - 1) * safePageSize;
+    const items = initialCourses.slice(startIndex, startIndex + safePageSize);
+    return {
+      items,
+      page: safePage,
+      pageSize: safePageSize,
+      total: initialCourses.length,
+      hasNext: startIndex + items.length < initialCourses.length,
+    };
   },
   async getRecords() {
     return records;

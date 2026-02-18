@@ -13,6 +13,8 @@ pnpm-debug.log*
 .env.*
 !.env.example
 backend/data/manual/checkpoint-overrides.json
+backend/data/raw/
+backend/data/generated/
 *.pem
 *.key
 *.p12
