@@ -57,6 +57,8 @@ function AppContent() {
     favoritesOnly,
     setFavoritesOnly,
     tracking,
+    activeCheckpoints,
+    attemptProgress,
     trackingMode,
     setTrackingMode,
     gpsQualityLow,
@@ -155,6 +157,9 @@ function AppContent() {
             kcal={tracking.kcal}
             isPaused={tracking.status === "paused"}
             showGpsWarning={gpsQualityLow}
+            checkpoints={activeCheckpoints}
+            visitedCheckpointIds={attemptProgress?.visitedCheckpointIds ?? []}
+            attemptStatus={attemptProgress?.status ?? "in_progress"}
             onTogglePause={toggleTrackingPause}
             onFinish={() => {
               finishTracking();

@@ -34,6 +34,23 @@ export type WalkRecord = {
   paceText: string;
 };
 
+export type CourseCheckpoint = {
+  id: string;
+  routeId: string;
+  order: number;
+  name: string;
+};
+
+export type AttemptStatus = "in_progress" | "completed" | "abandoned";
+
+export type AttemptProgress = {
+  attemptId: string;
+  routeId: string;
+  status: AttemptStatus;
+  visitedCheckpointIds: string[];
+  totalCount: number;
+};
+
 export type MainTab = "home" | "routes" | "records" | "my";
 export type RouteFlow = "courseList" | "courseDetail" | "preStartCheck" | "tracking" | "walkSummary" | "reportIssue";
 export type RecordFlow = "recordList" | "recordDetail";

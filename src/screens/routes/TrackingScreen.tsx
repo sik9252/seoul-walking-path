@@ -2,6 +2,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button, TopBanner } from "../../components/ui";
+import { AttemptStatus, CourseCheckpoint } from "../../domain/types";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 import { ScreenHeader } from "../common/ScreenHeader";
 
@@ -13,6 +14,9 @@ type TrackingScreenProps = {
   kcal: number;
   isPaused: boolean;
   showGpsWarning: boolean;
+  checkpoints: CourseCheckpoint[];
+  visitedCheckpointIds: string[];
+  attemptStatus: AttemptStatus;
   onTogglePause: () => void;
   onFinish: () => void;
   onBack: () => void;
@@ -26,10 +30,15 @@ export function TrackingScreen({
   kcal,
   isPaused,
   showGpsWarning,
+  checkpoints,
+  visitedCheckpointIds,
+  attemptStatus,
   onTogglePause,
   onFinish,
   onBack,
 }: TrackingScreenProps) {
+  const progressText = `${visitedCheckpointIds.length}/${checkpoints.length}`;
+
   return (
     <View style={styles.screen}>
       <ScreenHeader
@@ -71,6 +80,30 @@ export function TrackingScreen({
           <Text style={styles.hudTime}>{elapsedText}</Text>
         </View>
         <Text style={styles.hudTitle}>오후 산책 중</Text>
+        <View style={styles.separator} />
+        <View style={styles.checkpointHeader}>
+          <Text style={styles.checkpointTitle}>체크포인트</Text>
+          <Text style={styles.checkpointMeta}>
+            {progressText} · {attemptStatus === "completed" ? "완주" : attemptStatus === "abandoned" ? "중단" : "진행중"}
+          </Text>
+        </View>
+        <View style={styles.checkpointList}>
+          {checkpoints.map((checkpoint) => {
+            const visited = visitedCheckpointIds.includes(checkpoint.id);
+            return (
+              <View key={checkpoint.id} style={styles.checkpointRow}>
+                <Ionicons
+                  name={visited ? "checkmark-circle" : "ellipse-outline"}
+                  size={18}
+                  color={visited ? colors.brand[600] : colors.base.textSubtle}
+                />
+                <Text style={[styles.checkpointName, visited && styles.checkpointVisited]}>
+                  {checkpoint.order}. {checkpoint.name}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
         <View style={styles.separator} />
         <View style={styles.metricRow}>
           <View style={styles.metric}>
@@ -207,6 +240,13 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
   },
   separator: { height: 1, backgroundColor: colors.base.border },
+  checkpointHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  checkpointTitle: { color: colors.base.text, fontSize: typography.size.bodyMd, fontWeight: typography.weight.bold },
+  checkpointMeta: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
+  checkpointList: { gap: spacing.xs },
+  checkpointRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  checkpointName: { color: colors.base.textSubtle, fontSize: typography.size.bodySm },
+  checkpointVisited: { color: colors.base.text, fontWeight: typography.weight.medium },
   metricRow: { flexDirection: "row", justifyContent: "space-between" },
   metric: { alignItems: "center", flex: 1, gap: 2 },
   metricValue: {

@@ -2,7 +2,16 @@ import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState, BackHandler } from "react-native";
 import { trackEvent } from "../analytics/tracker";
-import { Course, IntroFlow, MainTab, RecordFlow, RouteFlow, WalkRecord } from "../domain/types";
+import {
+  AttemptProgress,
+  Course,
+  CourseCheckpoint,
+  IntroFlow,
+  MainTab,
+  RecordFlow,
+  RouteFlow,
+  WalkRecord,
+} from "../domain/types";
 import { calculateMetrics, filterDistanceIncrementMeters, TrackingMetrics } from "../domain/tracking";
 import { walkingRepository } from "../repositories/mock/walkingRepository";
 
@@ -85,6 +94,8 @@ export function useWalkingAppState() {
     status: "idle",
   });
   const [gpsQualityLow, setGpsQualityLow] = React.useState(false);
+  const [activeCheckpoints, setActiveCheckpoints] = React.useState<CourseCheckpoint[]>([]);
+  const [attemptProgress, setAttemptProgress] = React.useState<AttemptProgress | null>(null);
   const [trackingMode, setTrackingMode] = React.useState<"balanced" | "accurate">("balanced");
   const [hydrated, setHydrated] = React.useState(false);
   const backgroundAtMsRef = React.useRef<number | null>(null);
@@ -246,6 +257,30 @@ export function useWalkingAppState() {
   }, [routeFlow, tracking.status]);
 
   React.useEffect(() => {
+    if (routeFlow !== "tracking" || tracking.status !== "running") return;
+    if (activeCheckpoints.length === 0) return;
+    const interval = setInterval(() => {
+      setAttemptProgress((prev) => {
+        if (!prev || prev.status !== "in_progress") return prev;
+        const nextCheckpoint = activeCheckpoints.find(
+          (checkpoint) => !prev.visitedCheckpointIds.includes(checkpoint.id),
+        );
+        if (!nextCheckpoint) {
+          return { ...prev, status: "completed" };
+        }
+        const shouldMarkVisited = Math.random() < 0.45;
+        if (!shouldMarkVisited) return prev;
+
+        const visitedCheckpointIds = [...prev.visitedCheckpointIds, nextCheckpoint.id];
+        const status = visitedCheckpointIds.length >= prev.totalCount ? "completed" : "in_progress";
+        return { ...prev, visitedCheckpointIds, status };
+      });
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [activeCheckpoints, routeFlow, tracking.status]);
+
+  React.useEffect(() => {
     const onHardwareBack = () => {
       if (introFlow !== "main") return handleBackInIntro();
       return handleBackInMain();
@@ -277,6 +312,25 @@ export function useWalkingAppState() {
       kcal: 0,
       status: "running",
     });
+    if (selectedCourse) {
+      const checkpoints: CourseCheckpoint[] = selectedCourse.points.map((point, index) => ({
+        id: `${selectedCourse.id}-cp-${index + 1}`,
+        routeId: selectedCourse.id,
+        order: index + 1,
+        name: point.title,
+      }));
+      setActiveCheckpoints(checkpoints);
+      setAttemptProgress({
+        attemptId: `attempt-${Date.now()}`,
+        routeId: selectedCourse.id,
+        status: "in_progress",
+        visitedCheckpointIds: [],
+        totalCount: checkpoints.length,
+      });
+    } else {
+      setActiveCheckpoints([]);
+      setAttemptProgress(null);
+    }
   }, [selectedCourse]);
 
   const toggleTrackingPause = React.useCallback(() => {
@@ -296,6 +350,14 @@ export function useWalkingAppState() {
       distance_m: Math.round(tracking.distanceMeters),
     });
     setTracking((prev) => ({ ...prev, status: "finished" }));
+    setAttemptProgress((prev) => {
+      if (!prev) return prev;
+      const isCompleted = prev.totalCount > 0 && prev.visitedCheckpointIds.length >= prev.totalCount;
+      return {
+        ...prev,
+        status: isCompleted ? "completed" : "abandoned",
+      };
+    });
   }, [tracking.distanceMeters, tracking.elapsedSec]);
 
   const saveCurrentSessionAsRecord = React.useCallback(async (): Promise<boolean> => {
@@ -368,6 +430,8 @@ export function useWalkingAppState() {
     setFavoritesOnly,
     tracking,
     gpsQualityLow,
+    activeCheckpoints,
+    attemptProgress,
     trackingMode,
     setTrackingMode,
     distanceText,
