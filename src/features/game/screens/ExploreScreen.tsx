@@ -17,7 +17,7 @@ type Props = {
   onLoadMore: () => void;
 };
 
-export function ExploreList({
+export function ExploreScreen({
   places,
   loading,
   hasNext,

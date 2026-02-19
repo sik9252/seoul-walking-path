@@ -11,7 +11,7 @@ type Props = {
   onBack: () => void;
 };
 
-export function PlaceDetailView({ place, onBack }: Props) {
+export function PlaceDetailScreen({ place, onBack }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.screen}>
       <Pressable style={styles.backBtn} onPress={onBack}>

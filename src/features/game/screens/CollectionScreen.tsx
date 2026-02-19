@@ -11,7 +11,7 @@ type Props = {
   isError: boolean;
 };
 
-export function CollectionList({ cards, loading, isError }: Props) {
+export function CollectionScreen({ cards, loading, isError }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.screen}>
       <Text style={styles.title}>컬렉션</Text>

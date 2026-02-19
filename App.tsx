@@ -6,9 +6,9 @@ import { Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
 import { getApiBaseUrl } from "./src/features/game/api";
-import { CollectionList } from "./src/features/game/components/CollectionList";
-import { ExploreList } from "./src/features/game/components/ExploreList";
-import { PlaceDetailView } from "./src/features/game/components/PlaceDetailView";
+import { CollectionScreen } from "./src/features/game/screens/CollectionScreen";
+import { ExploreScreen } from "./src/features/game/screens/ExploreScreen";
+import { PlaceDetailScreen } from "./src/features/game/screens/PlaceDetailScreen";
 import { gameStyles as styles } from "./src/features/game/styles";
 import { GameTab, PlaceItem } from "./src/features/game/types";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/features/game/useGameData";
@@ -69,7 +69,7 @@ function AppShell() {
       <StatusBar style="dark" />
 
       {tab === "explore" && selectedPlace === null ? (
-        <ExploreList
+        <ExploreScreen
           places={places}
           loading={placesQuery.isPending || placesQuery.isFetchingNextPage}
           hasNext={Boolean(placesQuery.hasNextPage)}
@@ -81,10 +81,16 @@ function AppShell() {
         />
       ) : null}
 
-      {tab === "explore" && selectedPlace !== null ? <PlaceDetailView place={selectedPlace} onBack={() => setSelectedPlace(null)} /> : null}
+      {tab === "explore" && selectedPlace !== null ? (
+        <PlaceDetailScreen place={selectedPlace} onBack={() => setSelectedPlace(null)} />
+      ) : null}
 
       {tab === "collection" ? (
-        <CollectionList cards={cardsQuery.data ?? []} loading={cardsQuery.isPending || cardsQuery.isFetching} isError={cardsQuery.isError} />
+        <CollectionScreen
+          cards={cardsQuery.data ?? []}
+          loading={cardsQuery.isPending || cardsQuery.isFetching}
+          isError={cardsQuery.isError}
+        />
       ) : null}
 
       {tab === "my" ? (
