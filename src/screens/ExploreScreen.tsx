@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import { WebView } from "react-native-webview";
+import type { WebViewMessageEvent } from "react-native-webview";
 import { Button, Card } from "../components/ui";
 import { colors } from "../theme/tokens";
 import { gameStyles as styles } from "../styles/gameStyles";
@@ -37,12 +38,97 @@ export function ExploreScreen({
   onLoadMore,
 }: Props) {
   const markerPlaces = places.slice(0, 200);
-  const initialRegion = {
+  const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
     longitude: userLocation?.longitude ?? 126.978,
-    latitudeDelta: 0.12,
-    longitudeDelta: 0.12,
   };
+  const kakaoJavascriptKey = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
+
+  const mapHtml = React.useMemo(() => {
+    if (!kakaoJavascriptKey) return "";
+
+    const placesJson = JSON.stringify(
+      markerPlaces.map((place) => ({
+        id: place.id,
+        name: place.name,
+        address: place.address,
+        lat: place.lat,
+        lng: place.lng,
+      })),
+    );
+    const userLocationJson = JSON.stringify(userLocation);
+    const centerJson = JSON.stringify(mapCenter);
+
+    return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <style>
+      html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; background: #f6f7f4; }
+    </style>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJavascriptKey}&autoload=false"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      (function () {
+        const places = ${placesJson};
+        const userLocation = ${userLocationJson};
+        const center = ${centerJson};
+
+        function postMessage(payload) {
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+          }
+        }
+
+        function init() {
+          const mapContainer = document.getElementById("map");
+          const map = new kakao.maps.Map(mapContainer, {
+            center: new kakao.maps.LatLng(center.latitude, center.longitude),
+            level: 7,
+          });
+
+          if (userLocation && userLocation.latitude && userLocation.longitude) {
+            const userMarker = new kakao.maps.Marker({
+              map,
+              position: new kakao.maps.LatLng(userLocation.latitude, userLocation.longitude),
+            });
+            userMarker.setMap(map);
+          }
+
+          places.forEach(function (place) {
+            const marker = new kakao.maps.Marker({
+              map,
+              position: new kakao.maps.LatLng(place.lat, place.lng),
+            });
+            kakao.maps.event.addListener(marker, "click", function () {
+              postMessage({ type: "markerPress", placeId: place.id });
+            });
+          });
+        }
+
+        kakao.maps.load(init);
+      })();
+    </script>
+  </body>
+</html>`;
+  }, [kakaoJavascriptKey, markerPlaces, mapCenter, userLocation]);
+
+  const handleMapMessage = React.useCallback(
+    (event: WebViewMessageEvent) => {
+      try {
+        const payload = JSON.parse(event.nativeEvent.data) as { type?: string; placeId?: string };
+        if (payload.type !== "markerPress" || !payload.placeId) return;
+        const selected = markerPlaces.find((place) => place.id === payload.placeId);
+        if (selected) onOpenDetail(selected);
+      } catch (error) {
+        console.warn("[kakao-map] invalid postMessage payload", error);
+      }
+    },
+    [markerPlaces, onOpenDetail],
+  );
 
   return (
     <FlatList
@@ -60,24 +146,20 @@ export function ExploreScreen({
           <Text style={styles.title}>탐험</Text>
           <Text style={styles.description}>근처 관광지에 도달해 카드를 수집하세요.</Text>
           <View style={styles.mapWrap}>
-            <MapView style={styles.map} initialRegion={initialRegion} region={initialRegion} showsUserLocation>
-              {userLocation ? (
-                <Marker
-                  coordinate={{ latitude: userLocation.latitude, longitude: userLocation.longitude }}
-                  title="내 위치"
-                  pinColor={colors.brand[700]}
-                />
-              ) : null}
-              {markerPlaces.map((place) => (
-                <Marker
-                  key={place.id}
-                  coordinate={{ latitude: place.lat, longitude: place.lng }}
-                  title={place.name}
-                  description={place.address}
-                  onPress={() => onOpenDetail(place)}
-                />
-              ))}
-            </MapView>
+            {kakaoJavascriptKey ? (
+              <WebView
+                style={styles.map}
+                source={{ html: mapHtml }}
+                onMessage={handleMapMessage}
+                javaScriptEnabled
+                domStorageEnabled
+                originWhitelist={["*"]}
+              />
+            ) : (
+              <View style={styles.imageFallback}>
+                <Text style={styles.errorText}>EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY가 필요합니다.</Text>
+              </View>
+            )}
             <View style={styles.mapMetaRow}>
               <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개 (로드된 목록 기준)</Text>
               <Pressable onPress={onRefreshLocation}>
