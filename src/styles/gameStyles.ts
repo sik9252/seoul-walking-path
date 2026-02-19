@@ -46,7 +46,6 @@ export const gameStyles = StyleSheet.create({
   },
   mapScreen: {
     flex: 1,
-    paddingBottom: 110,
   },
   mapBody: {
     flex: 1,
@@ -145,7 +144,7 @@ export const gameStyles = StyleSheet.create({
     position: "absolute",
     left: spacing.xl,
     right: spacing.xl,
-    bottom: spacing.x4,
+    bottom: spacing.lg,
     borderRadius: radius.lg,
     backgroundColor: "rgba(255, 255, 255, 0.96)",
     borderWidth: 1,
@@ -177,6 +176,20 @@ export const gameStyles = StyleSheet.create({
   floatingPlaceTextWrap: {
     flex: 1,
     gap: 2,
+  },
+  locationErrorModal: {
+    position: "absolute",
+    left: spacing.xl,
+    right: spacing.xl,
+    top: "30%",
+    borderRadius: radius.lg,
+    backgroundColor: colors.base.surface,
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    padding: spacing.lg,
+    gap: spacing.md,
+    zIndex: 20,
+    ...shadow.level2,
   },
   listFooter: {
     paddingVertical: spacing.md,

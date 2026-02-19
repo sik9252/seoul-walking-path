@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, Text, View } from "react-native";
 import { WebView } from "react-native-webview";
 import type { WebViewMessageEvent } from "react-native-webview";
 import { Button, Card } from "../components/ui";
@@ -39,6 +39,7 @@ export function ExploreScreen({
 }: Props) {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
+  const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
   const markerPlaces = places.slice(0, 200);
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
@@ -217,6 +218,12 @@ export function ExploreScreen({
 
   const previewPlace = focusedPlace ?? markerPlaces[0] ?? null;
 
+  React.useEffect(() => {
+    if (locationError) {
+      setIsLocationErrorOpen(true);
+    }
+  }, [locationError]);
+
   return (
     <View style={styles.mapScreen}>
       <View style={styles.mapBody}>
@@ -280,8 +287,16 @@ export function ExploreScreen({
 
         {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
         {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
-        {locationError ? <Text style={styles.errorText}>{locationError}</Text> : null}
       </View>
+
+      <Modal visible={isLocationErrorOpen && Boolean(locationError)} transparent animationType="fade">
+        <Pressable style={styles.sheetBackdrop} onPress={() => setIsLocationErrorOpen(false)} />
+        <View style={styles.locationErrorModal}>
+          <Text style={styles.cardTitle}>위치 확인 실패</Text>
+          <Text style={styles.cardBody}>{locationError ?? "현재 위치를 가져오지 못했습니다."}</Text>
+          <Button label="확인" onPress={() => setIsLocationErrorOpen(false)} />
+        </View>
+      </Modal>
 
       {isSheetOpen ? (
         <>
