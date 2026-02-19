@@ -8,7 +8,6 @@ import { TabBar, TabItem } from "./src/components/ui";
 import { getApiBaseUrl } from "./src/apis/gameApi";
 import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
-import { PlaceDetailScreen } from "./src/screens/PlaceDetailScreen";
 import { useUserLocation } from "./src/hooks/useUserLocation";
 import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
@@ -71,21 +70,33 @@ function AppShell() {
       key: "explore",
       label: "탐험",
       renderIcon: (active) => (
-        <Ionicons name={active ? "compass" : "compass-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+        <Ionicons
+          name={active ? "compass" : "compass-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
       ),
     },
     {
       key: "collection",
       label: "컬렉션",
       renderIcon: (active) => (
-        <Ionicons name={active ? "albums" : "albums-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+        <Ionicons
+          name={active ? "albums" : "albums-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
       ),
     },
     {
       key: "my",
       label: "마이",
       renderIcon: (active) => (
-        <Ionicons name={active ? "person" : "person-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+        <Ionicons
+          name={active ? "person" : "person-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
       ),
     },
   ];
@@ -113,10 +124,6 @@ function AppShell() {
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}
         />
-      ) : null}
-
-      {tab === "explore" && selectedPlace !== null ? (
-        <PlaceDetailScreen place={selectedPlace} onBack={() => setSelectedPlace(null)} />
       ) : null}
 
       {tab === "collection" ? (

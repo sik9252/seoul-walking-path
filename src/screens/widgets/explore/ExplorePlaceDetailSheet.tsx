@@ -12,11 +12,7 @@ type ExplorePlaceDetailSheetProps = {
   onOpenDetail: (place: PlaceItem) => void;
 };
 
-export function ExplorePlaceDetailSheet({
-  place,
-  onClose,
-  onOpenDetail,
-}: ExplorePlaceDetailSheetProps) {
+export function ExplorePlaceDetailSheet({ place, onClose, onOpenDetail }: ExplorePlaceDetailSheetProps) {
   if (!place) return null;
 
   return (
@@ -60,16 +56,6 @@ export function ExplorePlaceDetailSheet({
               {place.name}는 {place.category} 카테고리 관광지입니다. 방문 반경 안에 들어오면 카드 수집이 가능합니다.
             </Text>
           </Card>
-
-          <Pressable
-            style={styles.moreBtn}
-            onPress={() => {
-              onClose();
-              onOpenDetail(place);
-            }}
-          >
-            <Text style={styles.moreText}>전체 상세 화면으로 열기</Text>
-          </Pressable>
         </ScrollView>
       </View>
     </>
