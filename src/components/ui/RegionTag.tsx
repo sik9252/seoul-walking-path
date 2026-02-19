@@ -40,10 +40,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    minHeight: 24,
+    justifyContent: "center",
     alignSelf: "flex-start",
   },
   label: {
     fontSize: typography.size.labelSm,
+    lineHeight: typography.lineHeight.labelSm,
+    includeFontPadding: false,
     fontWeight: typography.weight.semibold,
   },
 });

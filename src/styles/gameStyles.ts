@@ -267,13 +267,6 @@ export const gameStyles = StyleSheet.create({
     fontSize: typography.size.caption,
     fontWeight: typography.weight.semibold,
   },
-  floatingPlaceTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    minWidth: 0,
-  },
   floatingPlaceTitleLeft: {
     flexDirection: "row",
     alignItems: "center",
@@ -283,6 +276,9 @@ export const gameStyles = StyleSheet.create({
   },
   floatingPlaceTitleText: {
     flexShrink: 1,
+    lineHeight: typography.lineHeight.labelLg,
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
   placeDetailCloseButtonRaised: {
     marginTop: -6,
