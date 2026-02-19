@@ -29,6 +29,7 @@
   - user_id, place_id, first_visited_at, last_position_lat, last_position_lng
 - user_cards
   - user_id, card_id, acquired_at
+- SQL 초안: `backend/sql/tour_collection_schema.sql`
 
 ## 5) API(목표)
 - GET `/places?lat=&lng=&radius=&page=&pageSize=`
