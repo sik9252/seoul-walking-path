@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, PanResponder } from "react-native";
+import { Animated, Easing, PanResponder } from "react-native";
 
 type Params = {
   visible: boolean;
@@ -18,11 +18,11 @@ export function useBottomSheetSnap({ visible, collapsedOffset }: Params) {
 
   const animateTo = React.useCallback(
     (toValue: number) => {
-      Animated.spring(translateY, {
+      Animated.timing(translateY, {
         toValue,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-        damping: 18,
-        stiffness: 180,
       }).start();
     },
     [translateY],
