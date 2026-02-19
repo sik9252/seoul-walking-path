@@ -12,6 +12,7 @@ import {
   ExploreMapView,
   ExplorePlaceListSheet,
   ExplorePlacePreviewCard,
+  ExploreVisitResultModal,
 } from "./widgets/explore";
 
 let hasShownInitialLocationError = false;
@@ -27,6 +28,10 @@ type Props = {
   locationError: string | null;
   onRefreshLocation: () => Promise<RefreshLocationResult>;
   onCheckVisit: () => void;
+  visitDialogVisible: boolean;
+  visitDialogTitle: string;
+  visitDialogMessage: string;
+  onCloseVisitDialog: () => void;
   onOpenDetail: (place: PlaceItem) => void;
   onLoadMore: () => void;
 };
@@ -41,6 +46,10 @@ export function ExploreScreen({
   locationError,
   onRefreshLocation,
   onCheckVisit,
+  visitDialogVisible,
+  visitDialogTitle,
+  visitDialogMessage,
+  onCloseVisitDialog,
   onOpenDetail,
   onLoadMore,
 }: Props) {
@@ -148,6 +157,13 @@ export function ExploreScreen({
         onClose={() => setIsSheetOpen(false)}
         onCheckVisit={onCheckVisit}
         onOpenDetail={onOpenDetail}
+      />
+
+      <ExploreVisitResultModal
+        visible={visitDialogVisible}
+        title={visitDialogTitle}
+        message={visitDialogMessage}
+        onClose={onCloseVisitDialog}
       />
     </View>
   );

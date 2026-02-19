@@ -31,11 +31,27 @@ export default function App() {
 function AppShell() {
   const [tab, setTab] = React.useState<GameTab>("explore");
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
+  const [visitDialog, setVisitDialog] = React.useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+  });
   const apiBaseUrl = getApiBaseUrl();
 
   const placesQuery = usePlacesQuery(apiBaseUrl);
   const cardsQuery = useMyCardsQuery(apiBaseUrl);
-  const visitMutation = useVisitMutation(apiBaseUrl);
+  const visitMutation = useVisitMutation(apiBaseUrl, {
+    onOpenDialog: ({ title, message }) =>
+      setVisitDialog({
+        visible: true,
+        title,
+        message,
+      }),
+  });
   const { location, isLoadingLocation, locationError, refreshLocation } = useUserLocation();
 
   const places = React.useMemo(
@@ -90,6 +106,10 @@ function AppShell() {
           locationError={locationError}
           onRefreshLocation={refreshLocation}
           onCheckVisit={() => visitMutation.mutate()}
+          visitDialogVisible={visitDialog.visible}
+          visitDialogTitle={visitDialog.title}
+          visitDialogMessage={visitDialog.message}
+          onCloseVisitDialog={() => setVisitDialog((prev) => ({ ...prev, visible: false }))}
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}
         />
