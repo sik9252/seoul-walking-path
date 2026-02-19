@@ -4,6 +4,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -24,6 +25,7 @@ type PlaceItem = {
   address: string;
   lat: number;
   lng: number;
+  imageUrl?: string | null;
 };
 
 type PlacePage = {
@@ -64,6 +66,7 @@ export default function App() {
 
 function AppShell() {
   const [tab, setTab] = React.useState<GameTab>("explore");
+  const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
   const [places, setPlaces] = React.useState<PlaceItem[]>([]);
   const [placePage, setPlacePage] = React.useState(1);
   const [hasNextPlaces, setHasNextPlaces] = React.useState(false);
@@ -184,7 +187,7 @@ function AppShell() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
 
-      {tab === "explore" ? (
+      {tab === "explore" && selectedPlace === null ? (
         <ScrollView contentContainerStyle={styles.screen}>
           <Text style={styles.title}>탐험</Text>
           <Text style={styles.description}>근처 관광지에 도달해 카드를 수집하세요.</Text>
@@ -192,10 +195,12 @@ function AppShell() {
           <Button label="현재 위치 방문 판정 (데모)" onPress={checkVisit} />
 
           {places.map((place) => (
-            <Card key={place.id}>
-              <Text style={styles.cardTitle}>{place.name}</Text>
-              <Text style={styles.cardBody}>{place.category} · {place.address}</Text>
-            </Card>
+            <Pressable key={place.id} onPress={() => setSelectedPlace(place)}>
+              <Card>
+                <Text style={styles.cardTitle}>{place.name}</Text>
+                <Text style={styles.cardBody}>{place.category} · {place.address}</Text>
+              </Card>
+            </Pressable>
           ))}
 
           {loadingPlaces ? <ActivityIndicator color={colors.brand[600]} /> : null}
@@ -204,6 +209,47 @@ function AppShell() {
               <Text style={styles.moreText}>더 보기</Text>
             </Pressable>
           ) : null}
+        </ScrollView>
+      ) : null}
+
+      {tab === "explore" && selectedPlace !== null ? (
+        <ScrollView contentContainerStyle={styles.screen}>
+          <Pressable style={styles.backBtn} onPress={() => setSelectedPlace(null)}>
+            <Ionicons name="arrow-back" size={18} color={colors.base.text} />
+            <Text style={styles.backText}>목록으로</Text>
+          </Pressable>
+
+          <Text style={styles.title}>{selectedPlace.name}</Text>
+          <Text style={styles.description}>{selectedPlace.category}</Text>
+
+          {selectedPlace.imageUrl ? (
+            <Image source={{ uri: selectedPlace.imageUrl }} style={styles.placeImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.imageFallback}>
+              <Ionicons name="image-outline" size={22} color={colors.base.textSubtle} />
+              <Text style={styles.cardBody}>이미지가 없습니다.</Text>
+            </View>
+          )}
+
+          <Card>
+            <Text style={styles.detailLabel}>주소</Text>
+            <Text style={styles.cardBody}>{selectedPlace.address || "주소 정보 없음"}</Text>
+          </Card>
+
+          <Card>
+            <Text style={styles.detailLabel}>위치 좌표</Text>
+            <Text style={styles.cardBody}>
+              위도 {selectedPlace.lat.toFixed(6)} / 경도 {selectedPlace.lng.toFixed(6)}
+            </Text>
+          </Card>
+
+          <Card>
+            <Text style={styles.detailLabel}>설명</Text>
+            <Text style={styles.cardBody}>
+              {selectedPlace.name}는 {selectedPlace.category} 카테고리 관광지입니다. 방문 반경 안에 들어오면 카드 수집이
+              가능합니다.
+            </Text>
+          </Card>
         </ScrollView>
       ) : null}
 
@@ -276,5 +322,36 @@ const styles = StyleSheet.create({
   moreText: {
     color: colors.brand[700],
     fontWeight: typography.weight.semibold,
+  },
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    alignSelf: "flex-start",
+  },
+  backText: {
+    color: colors.base.text,
+    fontSize: typography.size.bodySm,
+    fontWeight: typography.weight.medium,
+  },
+  placeImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 14,
+    backgroundColor: colors.base.surface,
+  },
+  imageFallback: {
+    height: 160,
+    borderRadius: 14,
+    backgroundColor: colors.base.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  detailLabel: {
+    color: colors.base.text,
+    fontWeight: typography.weight.semibold,
+    marginBottom: spacing.xs,
+    fontSize: typography.size.bodySm,
   },
 });

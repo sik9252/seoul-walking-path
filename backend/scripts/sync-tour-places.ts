@@ -84,6 +84,15 @@ function normalizeItems(items: TourApiItem[]): PlaceRow[] {
     .filter((item): item is PlaceRow => !!item);
 }
 
+function normalizeServiceKey(raw: string): string {
+  const trimmed = raw.trim();
+  try {
+    return decodeURIComponent(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
+
 async function fetchPage(baseUrl: string, params: URLSearchParams, pageNo: number): Promise<TourApiResponse> {
   params.set("pageNo", String(pageNo));
   const response = await fetch(`${baseUrl}?${params.toString()}`);
@@ -95,7 +104,8 @@ async function fetchPage(baseUrl: string, params: URLSearchParams, pageNo: numbe
 
 async function main() {
   loadEnvFile();
-  const serviceKey = process.env.TOUR_API_SERVICE_KEY;
+  const rawServiceKey = process.env.TOUR_API_SERVICE_KEY;
+  const serviceKey = rawServiceKey ? normalizeServiceKey(rawServiceKey) : "";
   if (!serviceKey) {
     throw new Error("Missing TOUR_API_SERVICE_KEY in env");
   }
