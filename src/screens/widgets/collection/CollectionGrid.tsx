@@ -51,7 +51,7 @@ export function CollectionGrid({ items, loading, hasNext, onLoadMore }: Collecti
               <Text numberOfLines={1} style={[styles.collectionCardName, styles.collectionCardNameLocked]}>
                 {item.title}
               </Text>
-              <Text style={styles.collectionCardStatusLocked}>미수집</Text>
+              <Text style={styles.collectionCardStatusLocked}>잠김</Text>
             </View>
           );
         }
@@ -76,7 +76,7 @@ export function CollectionGrid({ items, loading, hasNext, onLoadMore }: Collecti
               <Text numberOfLines={1} style={[styles.collectionCardName, styles.collectionCardNameLocked]}>
                 {item.card.title}
               </Text>
-              <Text style={styles.collectionCardStatusLocked}>미수집</Text>
+              <Text style={styles.collectionCardStatusLocked}>잠김</Text>
             </View>
           );
         }
