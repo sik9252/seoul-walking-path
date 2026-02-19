@@ -75,9 +75,9 @@ export function useUserLocation() {
     }
   }, []);
 
-  React.useEffect(() => {
-    void refreshLocation();
-  }, [refreshLocation]);
+  const clearLocationError = React.useCallback(() => {
+    setLocationError(null);
+  }, []);
 
   React.useEffect(
     () => () => {
@@ -92,5 +92,6 @@ export function useUserLocation() {
     isLoadingLocation,
     locationError,
     refreshLocation,
+    clearLocationError,
   };
 }
