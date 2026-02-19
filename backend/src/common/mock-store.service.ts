@@ -3,6 +3,8 @@ import * as path from "node:path";
 import { Injectable } from "@nestjs/common";
 import { PlaceCard, PlaceItem, UserVisitItem } from "./models";
 
+const DEMO_USER_ID = "demo-user";
+
 type TourPlaceSnapshot = {
   places: Array<{
     sourceId: string;
@@ -76,6 +78,7 @@ export class MockStoreService {
 
   constructor() {
     this.bootstrapPlaceData();
+    this.bootstrapDemoVisits();
   }
 
   private bootstrapPlaceData() {
@@ -142,6 +145,20 @@ export class MockStoreService {
     } catch (error) {
       console.error("[mock-store] failed to load tour places, fallback sample", error);
     }
+  }
+
+  private bootstrapDemoVisits() {
+    if (this.places.length === 0) return;
+
+    const now = Date.now();
+    const seedPlaces = this.places.slice(0, 4);
+    this.userPlaceVisits = seedPlaces.map((place, index) => ({
+      userId: DEMO_USER_ID,
+      placeId: place.id,
+      firstVisitedAt: new Date(now - (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      lat: place.lat,
+      lng: place.lng,
+    }));
   }
 
   getPlaces(params: {
@@ -247,7 +264,7 @@ export class MockStoreService {
   getCardCatalog(params?: { page?: number; pageSize?: number; userId?: string; region?: string }) {
     const safePage = Math.max(1, Math.floor(params?.page ?? 1));
     const safePageSize = Math.min(100, Math.max(1, Math.floor(params?.pageSize ?? 20)));
-    const userId = params?.userId ?? "demo-user";
+    const userId = params?.userId ?? DEMO_USER_ID;
     const region = params?.region?.trim();
     const acquiredPlaceIds = new Set(
       this.userPlaceVisits.filter((visit) => visit.userId === userId).map((visit) => visit.placeId),
