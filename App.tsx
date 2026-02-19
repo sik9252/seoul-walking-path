@@ -313,7 +313,7 @@ function AppShell() {
   }
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
 
       {tab === "explore" && selectedPlace === null ? (
