@@ -54,21 +54,14 @@ export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsErr
     [catalogQuery.data?.pages],
   );
 
-  const availableRegions = React.useMemo<CollectionCategoryItem[]>(() => {
-    const regionSet = new Set<string>(DEFAULT_REGIONS);
-    catalogItems.forEach((card) => {
-      const region = card.place?.region?.trim();
-      if (region) {
-        regionSet.add(region);
-      }
-    });
-    return [...regionSet]
-      .sort((a, b) => a.localeCompare(b, "ko"))
-      .map((region) => ({
+  const availableRegions = React.useMemo<CollectionCategoryItem[]>(
+    () =>
+      DEFAULT_REGIONS.map((region) => ({
         value: region,
         label: REGION_LABELS[region] ?? region,
-      }));
-  }, [catalogItems]);
+      })),
+    [],
+  );
 
   const gridItems = React.useMemo(() => {
     const items = catalogItems.map((card) => ({
