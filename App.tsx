@@ -57,7 +57,7 @@ function AppShell() {
   const [isRequestingPermission, setIsRequestingPermission] = React.useState(false);
   const [onboardingIndex, setOnboardingIndex] = React.useState(0);
   const [splashProgress, setSplashProgress] = React.useState(0.1);
-  const [splashStatus, setSplashStatus] = React.useState("환경을 확인하고 있어요...");
+  const [splashStatus, setSplashStatus] = React.useState("권한 상태를 확인하는 중...");
   const [tab, setTab] = React.useState<GameTab>("explore");
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
   const [visitDialog, setVisitDialog] = React.useState<{
@@ -105,23 +105,29 @@ function AppShell() {
 
     const runBootstrap = async () => {
       try {
-        setSplashStatus("온보딩 상태를 확인하는 중...");
-        setSplashProgress(0.28);
         const onboardingCompleted = await getOnboardingCompleted();
 
         setSplashStatus("권한 상태를 확인하는 중...");
-        setSplashProgress(0.56);
+        setSplashProgress(0.33);
         const permissionStatus = await getPermissionStatus();
+
+        setSplashStatus("컬렉션 상태를 확인하는 중...");
+        setSplashProgress(0.66);
+        if (apiBaseUrl) {
+          await cardsQuery.refetch();
+        }
 
         let nextStep: StartupStep;
         if (!onboardingCompleted) {
           nextStep = "onboarding";
         } else if (permissionStatus === "granted") {
-          setSplashStatus("위치 정보를 준비하는 중...");
-          setSplashProgress(0.82);
+          setSplashStatus("위치 준비를 확인하는 중...");
+          setSplashProgress(0.9);
           await refreshLocationWithOptions({ requestIfNeeded: false });
           nextStep = "home";
         } else {
+          setSplashStatus("위치 준비를 확인하는 중...");
+          setSplashProgress(0.9);
           nextStep = "permission";
         }
 
@@ -148,7 +154,7 @@ function AppShell() {
     return () => {
       cancelled = true;
     };
-  }, [getPermissionStatus, refreshLocationWithOptions]);
+  }, [apiBaseUrl, cardsQuery.refetch, getPermissionStatus, refreshLocationWithOptions]);
 
   const handlePermissionRequest = React.useCallback(async () => {
     setIsRequestingPermission(true);
