@@ -84,12 +84,12 @@ export function ExploreScreen({
         display: block;
       }
       .user-marker {
-        width: 22px;
-        height: 22px;
-        border-radius: 11px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
         border: 2px solid #ffffff;
         background: #2563eb;
-        box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.25), 0 2px 8px rgba(0, 0, 0, 0.22);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25), 0 2px 8px rgba(0, 0, 0, 0.22);
         position: relative;
       }
       .user-heading {
@@ -105,7 +105,7 @@ export function ExploreScreen({
         transform-origin: 50% 21px;
       }
       .user-heading.idle {
-        opacity: 0.5;
+        opacity: 0.8;
       }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJavascriptKey}&autoload=false"></script>
@@ -272,7 +272,9 @@ export function ExploreScreen({
               <Text style={styles.moreText}>더 보기</Text>
             </Pressable>
           ) : null}
-          {!loading && !hasNext && places.length > 0 ? <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text> : null}
+          {!loading && !hasNext && places.length > 0 ? (
+            <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text>
+          ) : null}
         </View>
       }
       ListEmptyComponent={
