@@ -109,7 +109,7 @@ export class MockStoreService {
       this.cards = this.places.map((place, index) => ({
         cardId: `card-${place.id}`,
         placeId: place.id,
-        title: `${place.name} 카드`,
+        title: `${place.name}`,
         rarity: rarityByIndex(index + 1),
       }));
       console.warn(`[mock-store] places file not found: ${placesPath}. fallback sample loaded.`);
@@ -134,7 +134,7 @@ export class MockStoreService {
       this.cards = this.places.map((place, index) => ({
         cardId: `card-${place.id}`,
         placeId: place.id,
-        title: `${place.name} 카드`,
+        title: `${place.name}`,
         rarity: rarityByIndex(index + 1),
         imageUrl: place.imageUrl ?? null,
       }));
@@ -159,18 +159,9 @@ export class MockStoreService {
     const { lat, lng, radius, minLat, maxLat, minLng, maxLng, limit, page, pageSize } = params;
     let rows = this.places;
 
-    if (
-      minLat !== undefined &&
-      maxLat !== undefined &&
-      minLng !== undefined &&
-      maxLng !== undefined
-    ) {
+    if (minLat !== undefined && maxLat !== undefined && minLng !== undefined && maxLng !== undefined) {
       rows = rows.filter(
-        (place) =>
-          place.lat >= minLat &&
-          place.lat <= maxLat &&
-          place.lng >= minLng &&
-          place.lng <= maxLng,
+        (place) => place.lat >= minLat && place.lat <= maxLat && place.lng >= minLng && place.lng <= maxLng,
       );
     }
 
@@ -220,7 +211,9 @@ export class MockStoreService {
       };
     }
 
-    const existing = this.userPlaceVisits.find((visit) => visit.userId === userId && visit.placeId === candidate.place.id);
+    const existing = this.userPlaceVisits.find(
+      (visit) => visit.userId === userId && visit.placeId === candidate.place.id,
+    );
     if (existing) {
       return {
         matched: true,
