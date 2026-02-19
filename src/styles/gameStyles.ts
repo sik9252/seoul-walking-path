@@ -149,8 +149,8 @@ export const gameStyles = StyleSheet.create({
     gap: spacing.md,
   },
   placeDetailCollapsedContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
   },
   placeDetailSheetHeader: {
     flexDirection: "row",
@@ -250,6 +250,15 @@ export const gameStyles = StyleSheet.create({
   floatingPlaceTextWrap: {
     flex: 1,
     gap: 2,
+  },
+  floatingPlaceTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  placeDetailCloseButtonRaised: {
+    marginTop: -6,
+    alignSelf: "flex-start",
   },
   locationErrorModal: {
     position: "absolute",
