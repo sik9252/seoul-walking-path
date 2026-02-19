@@ -37,6 +37,7 @@ export function ExploreScreen({
   onOpenDetail,
   onLoadMore,
 }: Props) {
+  const [viewMode, setViewMode] = React.useState<"map" | "list">("map");
   const markerPlaces = places.slice(0, 200);
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
@@ -211,6 +212,52 @@ export function ExploreScreen({
     [markerPlaces, onOpenDetail],
   );
 
+  if (viewMode === "map") {
+    return (
+      <View style={styles.mapScreen}>
+        <Text style={styles.title}>탐험</Text>
+        <Text style={styles.description}>지도에서 관광지 마커와 내 위치를 확인하세요.</Text>
+        <View style={styles.segmentWrap}>
+          <Pressable style={[styles.segmentButton, styles.segmentButtonActive]} onPress={() => setViewMode("map")}>
+            <Text style={[styles.segmentLabel, styles.segmentLabelActive]}>지도</Text>
+          </Pressable>
+          <Pressable style={styles.segmentButton} onPress={() => setViewMode("list")}>
+            <Text style={styles.segmentLabel}>목록</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.mapCard}>
+          {kakaoJavascriptKey ? (
+            <WebView
+              style={styles.mapFull}
+              source={{ html: mapHtml }}
+              onMessage={handleMapMessage}
+              javaScriptEnabled
+              domStorageEnabled
+              originWhitelist={["*"]}
+            />
+          ) : (
+            <View style={styles.imageFallback}>
+              <Text style={styles.errorText}>EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY가 필요합니다.</Text>
+            </View>
+          )}
+          <View style={styles.mapPanel}>
+            <View style={styles.mapPanelRow}>
+              <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개</Text>
+              <Pressable onPress={onRefreshLocation}>
+                <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 새로고침"}</Text>
+              </Pressable>
+            </View>
+            <Button label="현재 위치 방문 판정 (데모)" onPress={onCheckVisit} />
+            {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
+            {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
+            {locationError ? <Text style={styles.errorText}>{locationError}</Text> : null}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <FlatList
       data={places}
@@ -225,31 +272,15 @@ export function ExploreScreen({
       ListHeaderComponent={
         <View style={styles.listHeader}>
           <Text style={styles.title}>탐험</Text>
-          <Text style={styles.description}>근처 관광지에 도달해 카드를 수집하세요.</Text>
-          <View style={styles.mapWrap}>
-            {kakaoJavascriptKey ? (
-              <WebView
-                style={styles.map}
-                source={{ html: mapHtml }}
-                onMessage={handleMapMessage}
-                javaScriptEnabled
-                domStorageEnabled
-                originWhitelist={["*"]}
-              />
-            ) : (
-              <View style={styles.imageFallback}>
-                <Text style={styles.errorText}>EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY가 필요합니다.</Text>
-              </View>
-            )}
-            <View style={styles.mapMetaRow}>
-              <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개 (로드된 목록 기준)</Text>
-              <Pressable onPress={onRefreshLocation}>
-                <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 새로고침"}</Text>
-              </Pressable>
-            </View>
-            {locationError ? <Text style={styles.errorText}>{locationError}</Text> : null}
+          <Text style={styles.description}>관광지 목록을 확인하고 상세 정보를 열어보세요.</Text>
+          <View style={styles.segmentWrap}>
+            <Pressable style={styles.segmentButton} onPress={() => setViewMode("map")}>
+              <Text style={styles.segmentLabel}>지도</Text>
+            </Pressable>
+            <Pressable style={[styles.segmentButton, styles.segmentButtonActive]} onPress={() => setViewMode("list")}>
+              <Text style={[styles.segmentLabel, styles.segmentLabelActive]}>목록</Text>
+            </Pressable>
           </View>
-          <Button label="현재 위치 방문 판정 (데모)" onPress={onCheckVisit} />
           {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
           {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
         </View>

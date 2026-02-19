@@ -44,6 +44,65 @@ export const gameStyles = StyleSheet.create({
   listHeader: {
     gap: spacing.md,
   },
+  segmentWrap: {
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    borderRadius: 999,
+    overflow: "hidden",
+    backgroundColor: colors.base.surface,
+  },
+  segmentButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 40,
+    paddingHorizontal: spacing.md,
+  },
+  segmentButtonActive: {
+    backgroundColor: colors.accent.lime100,
+  },
+  segmentLabel: {
+    fontSize: typography.size.labelMd,
+    fontWeight: typography.weight.semibold,
+    color: colors.base.textSubtle,
+  },
+  segmentLabelActive: {
+    color: colors.brand[700],
+    fontWeight: typography.weight.bold,
+  },
+  mapScreen: {
+    flex: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.x2,
+    paddingBottom: 110,
+    gap: spacing.md,
+  },
+  mapCard: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E1E6DE",
+    backgroundColor: colors.base.surface,
+  },
+  mapFull: {
+    flex: 1,
+    width: "100%",
+  },
+  mapPanel: {
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.base.border,
+    backgroundColor: colors.base.surface,
+  },
+  mapPanelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   mapWrap: {
     borderRadius: 14,
     overflow: "hidden",
