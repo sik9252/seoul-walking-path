@@ -217,8 +217,9 @@ function AppShell() {
       {tab === "collection" ? (
         <CollectionScreen
           cards={cardsQuery.data ?? []}
-          loading={cardsQuery.isPending || cardsQuery.isFetching}
-          isError={cardsQuery.isError}
+          apiBaseUrl={apiBaseUrl}
+          loadingMyCards={cardsQuery.isPending || cardsQuery.isFetching}
+          myCardsError={cardsQuery.isError}
         />
       ) : null}
 

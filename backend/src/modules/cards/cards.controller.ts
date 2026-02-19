@@ -6,8 +6,18 @@ export class CardsController {
   constructor(private readonly store: MockStoreService) {}
 
   @Get("catalog")
-  catalog(@Query("page") page?: string, @Query("pageSize") pageSize?: string) {
-    return this.store.getCardCatalog(page ? Number(page) : 1, pageSize ? Number(pageSize) : 20);
+  catalog(
+    @Query("page") page?: string,
+    @Query("pageSize") pageSize?: string,
+    @Query("userId") userId?: string,
+    @Query("region") region?: string,
+  ) {
+    return this.store.getCardCatalog({
+      page: page ? Number(page) : 1,
+      pageSize: pageSize ? Number(pageSize) : 20,
+      userId: userId ?? "demo-user",
+      region,
+    });
   }
 
   @Get("my")

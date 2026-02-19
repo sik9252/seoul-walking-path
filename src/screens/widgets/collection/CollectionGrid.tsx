@@ -1,15 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { FlatList, Image, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
 import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
-import { MyCard } from "../../../types/gameTypes";
+import { CatalogCardItem } from "../../../types/gameTypes";
 
 type CollectionGridItem =
   | {
       id: string;
       locked: false;
-      card: MyCard;
+      card: CatalogCardItem;
     }
   | {
       id: string;
@@ -19,9 +19,12 @@ type CollectionGridItem =
 
 type CollectionGridProps = {
   items: CollectionGridItem[];
+  loading: boolean;
+  hasNext: boolean;
+  onLoadMore: () => void;
 };
 
-export function CollectionGrid({ items }: CollectionGridProps) {
+export function CollectionGrid({ items, loading, hasNext, onLoadMore }: CollectionGridProps) {
   return (
     <FlatList
       data={items}
@@ -30,6 +33,12 @@ export function CollectionGrid({ items }: CollectionGridProps) {
       columnWrapperStyle={styles.collectionGridRow}
       contentContainerStyle={styles.collectionGridContent}
       showsVerticalScrollIndicator={false}
+      onEndReachedThreshold={0.45}
+      onEndReached={() => {
+        if (!loading && hasNext) {
+          onLoadMore();
+        }
+      }}
       renderItem={({ item }) => {
         if (item.locked) {
           return (
@@ -41,6 +50,22 @@ export function CollectionGrid({ items }: CollectionGridProps) {
               </View>
               <Text numberOfLines={1} style={[styles.collectionCardName, styles.collectionCardNameLocked]}>
                 {item.title}
+              </Text>
+              <Text style={styles.collectionCardStatusLocked}>Locked</Text>
+            </View>
+          );
+        }
+
+        if (!item.card.collected) {
+          return (
+            <View style={styles.collectionCardWrap}>
+              <View style={[styles.collectionCardImageWrap, styles.collectionCardImageLocked]}>
+                <View style={styles.collectionCardLockCircle}>
+                  <Ionicons name="lock-closed" size={24} color={colors.base.surface} />
+                </View>
+              </View>
+              <Text numberOfLines={1} style={[styles.collectionCardName, styles.collectionCardNameLocked]}>
+                {item.card.title}
               </Text>
               <Text style={styles.collectionCardStatusLocked}>Locked</Text>
             </View>
@@ -70,6 +95,16 @@ export function CollectionGrid({ items }: CollectionGridProps) {
           </View>
         );
       }}
+      ListFooterComponent={
+        <View style={styles.collectionGridFooter}>
+          {loading ? <ActivityIndicator color={colors.brand[600]} /> : null}
+          {!loading && hasNext ? (
+            <Pressable style={styles.moreBtn} onPress={onLoadMore}>
+              <Text style={styles.moreText}>더 보기</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      }
     />
   );
 }

@@ -424,6 +424,12 @@ export const gameStyles = StyleSheet.create({
     paddingBottom: 120,
     gap: spacing.md,
   },
+  collectionGridFooter: {
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
   collectionGridRow: {
     gap: spacing.md,
   },

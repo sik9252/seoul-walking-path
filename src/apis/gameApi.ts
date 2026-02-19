@@ -1,11 +1,12 @@
 import { Platform } from "react-native";
-import { PlacePage, MyCard, VisitCheckResponse } from "../types/gameTypes";
+import { CatalogCardPage, PlacePage, MyCard, VisitCheckResponse } from "../types/gameTypes";
 
 export const DEMO_USER_ID = "demo-user";
 export const DEMO_LAT = 37.579617;
 export const DEMO_LNG = 126.977041;
 export const PAGE_SIZE = 20;
 export const MAP_PAGE_LIMIT = 300;
+export const CATALOG_PAGE_SIZE = 40;
 
 export type MapViewportBounds = {
   minLat: number;
@@ -54,6 +55,18 @@ export async function fetchPlacesByViewport(
 
 export async function fetchMyCards(apiBaseUrl: string) {
   return fetchJson<MyCard[]>(`${apiBaseUrl}/cards/my?userId=${DEMO_USER_ID}`);
+}
+
+export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, region?: string) {
+  const params = new URLSearchParams({
+    userId: DEMO_USER_ID,
+    page: String(page),
+    pageSize: String(CATALOG_PAGE_SIZE),
+  });
+  if (region) {
+    params.set("region", region);
+  }
+  return fetchJson<CatalogCardPage>(`${apiBaseUrl}/cards/catalog?${params.toString()}`);
 }
 
 export async function checkVisit(apiBaseUrl: string) {

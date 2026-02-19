@@ -27,6 +27,24 @@ export type MyCard = {
   place: PlaceItem | null;
 };
 
+export type CatalogCardItem = {
+  cardId: string;
+  placeId: string;
+  title: string;
+  rarity: "common" | "rare" | "epic";
+  imageUrl?: string | null;
+  place: PlaceItem | null;
+  collected: boolean;
+};
+
+export type CatalogCardPage = {
+  items: CatalogCardItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+  hasNext: boolean;
+};
+
 export type VisitCheckResponse = {
   matched?: boolean;
   collected?: boolean;

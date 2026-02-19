@@ -251,17 +251,36 @@ export class MockStoreService {
     };
   }
 
-  getCardCatalog(page = 1, pageSize = 20) {
-    const safePage = Math.max(1, Math.floor(page));
-    const safePageSize = Math.min(100, Math.max(1, Math.floor(pageSize)));
+  getCardCatalog(params?: { page?: number; pageSize?: number; userId?: string; region?: string }) {
+    const safePage = Math.max(1, Math.floor(params?.page ?? 1));
+    const safePageSize = Math.min(100, Math.max(1, Math.floor(params?.pageSize ?? 20)));
+    const userId = params?.userId ?? "demo-user";
+    const region = params?.region?.trim();
+    const acquiredPlaceIds = new Set(
+      this.userPlaceVisits.filter((visit) => visit.userId === userId).map((visit) => visit.placeId),
+    );
+
+    let rows = this.cards.map((card) => {
+      const place = this.places.find((item) => item.id === card.placeId) ?? null;
+      return {
+        ...card,
+        place,
+        collected: acquiredPlaceIds.has(card.placeId),
+      };
+    });
+
+    if (region) {
+      rows = rows.filter((row) => row.place?.region === region);
+    }
+
     const startIndex = (safePage - 1) * safePageSize;
-    const items = this.cards.slice(startIndex, startIndex + safePageSize);
+    const items = rows.slice(startIndex, startIndex + safePageSize);
     return {
       items,
       page: safePage,
       pageSize: safePageSize,
-      total: this.cards.length,
-      hasNext: startIndex + items.length < this.cards.length,
+      total: rows.length,
+      hasNext: startIndex + items.length < rows.length,
     };
   }
 

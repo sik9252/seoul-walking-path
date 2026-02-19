@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { checkVisit, DEMO_USER_ID, fetchMyCards, fetchPlacesPage, PAGE_SIZE } from "../apis/gameApi";
+import { CATALOG_PAGE_SIZE, checkVisit, DEMO_USER_ID, fetchCardCatalogPage, fetchMyCards, fetchPlacesPage, PAGE_SIZE } from "../apis/gameApi";
 
 export function usePlacesQuery(apiBaseUrl?: string) {
   return useInfiniteQuery({
@@ -16,6 +16,16 @@ export function useMyCardsQuery(apiBaseUrl?: string) {
     queryKey: ["cards", "my", apiBaseUrl, DEMO_USER_ID],
     enabled: Boolean(apiBaseUrl),
     queryFn: () => fetchMyCards(apiBaseUrl as string),
+  });
+}
+
+export function useCardCatalogQuery(apiBaseUrl?: string, region?: string) {
+  return useInfiniteQuery({
+    queryKey: ["cards", "catalog", apiBaseUrl, region ?? "all", CATALOG_PAGE_SIZE],
+    enabled: Boolean(apiBaseUrl),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => fetchCardCatalogPage(apiBaseUrl as string, pageParam, region),
+    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
   });
 }
 

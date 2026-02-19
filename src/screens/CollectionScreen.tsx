@@ -1,5 +1,6 @@
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import { useCardCatalogQuery } from "../hooks/useGameData";
 import { colors } from "../theme/tokens";
 import { gameStyles as styles } from "../styles/gameStyles";
 import { MyCard } from "../types/gameTypes";
@@ -13,45 +14,70 @@ import {
 
 type Props = {
   cards: MyCard[];
-  loading: boolean;
-  isError: boolean;
+  apiBaseUrl?: string;
+  loadingMyCards: boolean;
+  myCardsError: boolean;
 };
 
-export function CollectionScreen({ cards, loading, isError }: Props) {
+const DEFAULT_REGIONS = [
+  "서울",
+  "인천",
+  "대전",
+  "대구",
+  "광주",
+  "부산",
+  "울산",
+  "세종",
+  "경기",
+  "강원",
+  "충북",
+  "충남",
+  "경북",
+  "경남",
+  "전북",
+  "전남",
+  "제주",
+];
+
+export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsError }: Props) {
   const [selectedCategory, setSelectedCategory] = React.useState<CollectionCategory>("all");
+
+  const selectedRegion = selectedCategory === "all" ? undefined : selectedCategory;
+  const catalogQuery = useCardCatalogQuery(apiBaseUrl, selectedRegion);
+  const catalogItems = React.useMemo(
+    () => (catalogQuery.data?.pages ?? []).flatMap((page) => page.items),
+    [catalogQuery.data?.pages],
+  );
 
   const availableRegions = React.useMemo(() => {
     const regionSet = new Set<string>();
-    cards.forEach((card) => {
+    catalogItems.forEach((card) => {
       const region = card.place?.region?.trim();
       if (region) {
         regionSet.add(region);
       }
     });
+    DEFAULT_REGIONS.forEach((region) => regionSet.add(region));
     return [...regionSet].sort((a, b) => a.localeCompare(b, "ko"));
-  }, [cards]);
-
-  const filteredCards = React.useMemo(() => {
-    if (selectedCategory === "all") return cards;
-    return cards.filter((card) => (card.place?.region ?? "").trim() === selectedCategory);
-  }, [cards, selectedCategory]);
+  }, [catalogItems]);
 
   const gridItems = React.useMemo(() => {
-    const collectedItems = filteredCards.map((card) => ({
+    const items = catalogItems.map((card) => ({
       id: card.cardId,
       locked: false as const,
       card,
     }));
-
-    const lockedCount = Math.max(0, 8 - collectedItems.length);
+    const lockedCount = Math.max(0, 8 - items.length);
     const lockedItems = Array.from({ length: lockedCount }, (_, index) => ({
       id: `locked-${selectedCategory}-${index + 1}`,
       locked: true as const,
       title: `Unknown Spot ${index + 1}`,
     }));
+    return [...items, ...lockedItems];
+  }, [catalogItems, selectedCategory]);
 
-    return [...collectedItems, ...lockedItems];
-  }, [filteredCards, selectedCategory]);
+  const loading = loadingMyCards || catalogQuery.isPending;
+  const isError = myCardsError || catalogQuery.isError;
 
   return (
     <View style={styles.collectionScreen}>
@@ -73,7 +99,14 @@ export function CollectionScreen({ cards, loading, isError }: Props) {
           <Text style={styles.errorText}>카드 목록을 불러오지 못했습니다.</Text>
         </View>
       ) : null}
-      {!loading && !isError ? <CollectionGrid items={gridItems} /> : null}
+      {!loading && !isError ? (
+        <CollectionGrid
+          items={gridItems}
+          loading={catalogQuery.isFetchingNextPage}
+          hasNext={Boolean(catalogQuery.hasNextPage)}
+          onLoadMore={() => void catalogQuery.fetchNextPage()}
+        />
+      ) : null}
     </View>
   );
 }
