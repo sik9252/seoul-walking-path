@@ -66,18 +66,11 @@ export function ExplorePlaceDetailSheet({
           )}
           <View style={styles.floatingPlaceTextWrap}>
             <View style={styles.floatingPlaceTitleRow}>
-              <View style={styles.floatingPlaceTitleLeft}>
-                <RegionTag region={place.region} />
-                <Text style={[styles.cardTitle, styles.floatingPlaceTitleText]} numberOfLines={1}>
-                  {place.name}
-                </Text>
-              </View>
-              {isCollected ? (
-                <View style={styles.collectedBadge}>
-                  <Ionicons name="checkmark-circle" size={14} color={colors.brand[700]} />
-                  <Text style={styles.collectedBadgeText}>수집 완료</Text>
-                </View>
-              ) : null}
+              <RegionTag region={place.region} />
+              <Text style={styles.cardTitle} numberOfLines={1}>
+                {place.name}
+              </Text>
+              {isCollected ? <Ionicons name="checkmark-circle" size={24} color={colors.brand[700]} /> : null}
             </View>
             <Text style={styles.cardBody}>{place.address}</Text>
           </View>

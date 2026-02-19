@@ -25,7 +25,7 @@ export function ExploreFloatingControls({
 
   return (
     <>
-      <View style={[styles.floatingBottomLeftControls, { bottom: bottomOffset }]}>
+      {/* <View style={[styles.floatingBottomLeftControls, { bottom: bottomOffset }]}>
         <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
           <Ionicons name="sparkles" size={20} color={colors.base.text} />
         </Pressable>
@@ -35,9 +35,12 @@ export function ExploreFloatingControls({
         <Pressable style={styles.floatingCircleButton} onPress={onZoomOut}>
           <Ionicons name="remove" size={20} color={colors.base.text} />
         </Pressable>
-      </View>
+      </View> */}
 
       <View style={[styles.floatingBottomRightControls, { bottom: bottomOffset }]}>
+        <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
+          <Ionicons name="sparkles" size={20} color={colors.base.text} />
+        </Pressable>
         <Pressable style={styles.floatingCircleButton} onPress={onRefreshLocation}>
           <Ionicons name="locate" size={20} color={colors.brand[700]} />
         </Pressable>

@@ -231,7 +231,7 @@ export const gameStyles = StyleSheet.create({
   floatingPlaceTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   floatingPlaceImage: {
     width: 68,
@@ -249,7 +249,7 @@ export const gameStyles = StyleSheet.create({
   },
   floatingPlaceTextWrap: {
     flex: 1,
-    gap: 2,
+    gap: spacing.sm,
   },
   collectedBadge: {
     flexDirection: "row",
@@ -267,18 +267,15 @@ export const gameStyles = StyleSheet.create({
     fontSize: typography.size.caption,
     fontWeight: typography.weight.semibold,
   },
-  floatingPlaceTitleLeft: {
+  floatingPlaceTitleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
     gap: spacing.xs,
-    flex: 1,
     minWidth: 0,
   },
   floatingPlaceTitleText: {
     flexShrink: 1,
-    lineHeight: typography.lineHeight.labelLg,
-    includeFontPadding: false,
-    textAlignVertical: "center",
   },
   placeDetailCloseButtonRaised: {
     marginTop: -6,
