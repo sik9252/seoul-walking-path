@@ -62,7 +62,7 @@ export const gameStyles = StyleSheet.create({
     zIndex: 11,
     elevation: 4,
   },
-  floatingBottomRightCluster: {
+  floatingBottomRightControls: {
     position: "absolute",
     right: spacing.xl,
     bottom: 65,

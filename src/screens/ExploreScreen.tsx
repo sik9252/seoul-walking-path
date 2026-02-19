@@ -251,6 +251,7 @@ export function ExploreScreen({
             setIsSheetOpen(true);
           }}
           onCheckVisit={onCheckVisit}
+          isPlaceDetailActive={Boolean(focusedPlace)}
         />
 
         {!apiBaseUrl ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}

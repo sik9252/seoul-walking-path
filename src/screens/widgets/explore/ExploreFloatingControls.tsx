@@ -10,6 +10,7 @@ type ExploreFloatingControlsProps = {
   onRefreshLocation: () => void;
   onOpenList: () => void;
   onCheckVisit: () => void;
+  isPlaceDetailActive: boolean;
 };
 
 export function ExploreFloatingControls({
@@ -18,10 +19,13 @@ export function ExploreFloatingControls({
   onRefreshLocation,
   onOpenList,
   onCheckVisit,
+  isPlaceDetailActive,
 }: ExploreFloatingControlsProps) {
+  const bottomOffset = isPlaceDetailActive ? 65 : 30;
+
   return (
     <>
-      <View style={styles.floatingBottomLeftControls}>
+      <View style={[styles.floatingBottomLeftControls, { bottom: bottomOffset }]}>
         <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
           <Ionicons name="sparkles" size={20} color={colors.base.text} />
         </Pressable>
@@ -33,7 +37,7 @@ export function ExploreFloatingControls({
         </Pressable>
       </View>
 
-      <View style={styles.floatingBottomRightCluster}>
+      <View style={[styles.floatingBottomRightControls, { bottom: bottomOffset }]}>
         <Pressable style={styles.floatingCircleButton} onPress={onRefreshLocation}>
           <Ionicons name="locate" size={20} color={colors.brand[700]} />
         </Pressable>
