@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 .expo/
+.expo-shared/
 .idea/
 .vscode/
 npm-debug.log*
@@ -12,6 +13,20 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+
+# Native build outputs (Expo prebuild / RN)
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+ios/build/
+ios/DerivedData/
+ios/Pods/
+ios/.symlinks/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+*.hprof
+
 backend/data/manual/checkpoint-overrides.json
 backend/data/raw/
 backend/data/generated/
