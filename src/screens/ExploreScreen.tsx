@@ -193,13 +193,21 @@ export function ExploreScreen({
   }, [locationError]);
 
   const handleRefreshLocation = React.useCallback(async () => {
+    const knownLocation = userLocationRef.current;
+    if (knownLocation) {
+      mapWebViewRef.current?.injectJavaScript(
+        `window.__moveTo && window.__moveTo(${knownLocation.latitude}, ${knownLocation.longitude}); true;`,
+      );
+    }
+
     const result = await onRefreshLocation();
     if (!result.ok) {
       setLocationErrorMessage(result.reason);
       setIsLocationErrorOpen(true);
       return;
     }
-    const latestLocation = userLocationRef.current;
+
+    const latestLocation = userLocationRef.current ?? knownLocation;
     if (latestLocation) {
       mapWebViewRef.current?.injectJavaScript(
         `window.__moveTo && window.__moveTo(${latestLocation.latitude}, ${latestLocation.longitude}); true;`,
