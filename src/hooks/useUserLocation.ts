@@ -50,10 +50,6 @@ export function useUserLocation() {
     return permission.status;
   }, []);
 
-  const refreshLocation = React.useCallback(async (): Promise<RefreshLocationResult> => {
-    return refreshLocationWithOptions({ requestIfNeeded: true });
-  }, []);
-
   const refreshLocationWithOptions = React.useCallback(async (options?: RefreshLocationOptions): Promise<RefreshLocationResult> => {
     const requestIfNeeded = options?.requestIfNeeded ?? true;
     setIsLoadingLocation(true);
@@ -113,6 +109,10 @@ export function useUserLocation() {
       setIsLoadingLocation(false);
     }
   }, [startWatching]);
+
+  const refreshLocation = React.useCallback(async (): Promise<RefreshLocationResult> => {
+    return refreshLocationWithOptions({ requestIfNeeded: true });
+  }, [refreshLocationWithOptions]);
 
   const clearLocationError = React.useCallback(() => {
     setLocationError(null);

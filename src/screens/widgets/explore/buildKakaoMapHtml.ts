@@ -6,10 +6,10 @@ type MapCenter = {
 export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialCenter: MapCenter }) {
   const { kakaoJavascriptKey, initialCenter } = params;
   const initialCenterJson = JSON.stringify(initialCenter);
-  const userMarkerSize = 14;
+  const userMarkerSize = 12;
   const userHeadingHalfWidth = 5;
-  const userHeadingHeight = 14;
-  const userHeadingOffset = 20;
+  const userHeadingHeight = 10;
+  const userHeadingOffset = 15;
 
   return `<!doctype html>
 <html>
