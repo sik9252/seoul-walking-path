@@ -99,7 +99,7 @@ function AppShell() {
           places={places}
           loading={placesQuery.isPending || placesQuery.isFetchingNextPage}
           hasNext={Boolean(placesQuery.hasNextPage)}
-          apiEnabled={Boolean(apiBaseUrl)}
+          apiBaseUrl={apiBaseUrl}
           isError={placesQuery.isError}
           userLocation={location}
           isLoadingLocation={isLoadingLocation}

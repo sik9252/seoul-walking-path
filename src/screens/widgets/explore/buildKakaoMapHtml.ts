@@ -79,6 +79,21 @@ export function buildKakaoMapHtml(params: {
       .user-heading.idle {
         opacity: 0.8;
       }
+      .cluster-marker {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 8px;
+        border-radius: 17px;
+        border: 2px solid #ffffff;
+        background: #2e561a;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJavascriptKey}&autoload=false"></script>
   </head>
@@ -96,12 +111,168 @@ export function buildKakaoMapHtml(params: {
           }
         }
 
+        function createDisplayItems(rawPlaces, level, centerLat, centerLng) {
+          if (!rawPlaces || rawPlaces.length === 0) return [];
+
+          const clusterCell =
+            level >= 11 ? 0.08 :
+            level >= 9 ? 0.04 :
+            level >= 7 ? 0.02 :
+            0;
+
+          if (!clusterCell) {
+            return rawPlaces.map((place) => ({ type: "single", place }));
+          }
+
+          const grouped = new Map();
+          rawPlaces.forEach((place) => {
+            const key = [
+              Math.floor(place.lat / clusterCell),
+              Math.floor(place.lng / clusterCell),
+            ].join("_");
+            const existing = grouped.get(key);
+            if (existing) {
+              existing.items.push(place);
+              return;
+            }
+            grouped.set(key, { items: [place] });
+          });
+
+          const display = [];
+          grouped.forEach((group) => {
+            if (group.items.length === 1) {
+              display.push({ type: "single", place: group.items[0] });
+              return;
+            }
+            const lat =
+              group.items.reduce((sum, item) => sum + item.lat, 0) / group.items.length;
+            const lng =
+              group.items.reduce((sum, item) => sum + item.lng, 0) / group.items.length;
+            display.push({
+              type: "cluster",
+              count: group.items.length,
+              lat,
+              lng,
+            });
+          });
+
+          display.sort((a, b) => {
+            const aLat = a.type === "single" ? a.place.lat : a.lat;
+            const aLng = a.type === "single" ? a.place.lng : a.lng;
+            const bLat = b.type === "single" ? b.place.lat : b.lat;
+            const bLng = b.type === "single" ? b.place.lng : b.lng;
+            const aScore = Math.abs(aLat - centerLat) + Math.abs(aLng - centerLng);
+            const bScore = Math.abs(bLat - centerLat) + Math.abs(bLng - centerLng);
+            return aScore - bScore;
+          });
+
+          return display.slice(0, 180);
+        }
+
         function init() {
           const mapContainer = document.getElementById("map");
           const map = new kakao.maps.Map(mapContainer, {
             center: new kakao.maps.LatLng(center.latitude, center.longitude),
             level: 7,
           });
+          const overlays = [];
+
+          function clearOverlays() {
+            overlays.forEach((overlay) => overlay.setMap(null));
+            overlays.length = 0;
+          }
+
+          function emitViewport() {
+            const bounds = map.getBounds();
+            const southWest = bounds.getSouthWest();
+            const northEast = bounds.getNorthEast();
+            const centerPoint = map.getCenter();
+            postMessage({
+              type: "viewportChanged",
+              viewport: {
+                minLat: southWest.getLat(),
+                minLng: southWest.getLng(),
+                maxLat: northEast.getLat(),
+                maxLng: northEast.getLng(),
+                level: map.getLevel(),
+                centerLat: centerPoint.getLat(),
+                centerLng: centerPoint.getLng(),
+              },
+            });
+          }
+
+          function renderPlaces() {
+            clearOverlays();
+            const centerPoint = map.getCenter();
+            const displayItems = createDisplayItems(
+              places,
+              map.getLevel(),
+              centerPoint.getLat(),
+              centerPoint.getLng(),
+            );
+
+            displayItems.forEach(function (item) {
+              if (item.type === "cluster") {
+                const cluster = document.createElement("button");
+                cluster.className = "cluster-marker";
+                cluster.type = "button";
+                cluster.textContent = String(item.count);
+                cluster.addEventListener("click", function () {
+                  map.setLevel(Math.max(1, map.getLevel() - 2), {
+                    anchor: new kakao.maps.LatLng(item.lat, item.lng),
+                  });
+                });
+                const clusterOverlay = new kakao.maps.CustomOverlay({
+                  position: new kakao.maps.LatLng(item.lat, item.lng),
+                  content: cluster,
+                  yAnchor: 0.5,
+                  zIndex: 4,
+                });
+                clusterOverlay.setMap(map);
+                overlays.push(clusterOverlay);
+                return;
+              }
+
+              const place = item.place;
+              const position = new kakao.maps.LatLng(place.lat, place.lng);
+              if (place.imageUrl) {
+                const button = document.createElement("button");
+                button.className = "spot-marker";
+                button.type = "button";
+                button.ariaLabel = place.name;
+
+                const image = document.createElement("img");
+                image.src = place.imageUrl;
+                image.alt = place.name;
+                image.onerror = function () {
+                  button.style.background = "#dce5d5";
+                  button.innerHTML = "";
+                };
+                button.appendChild(image);
+
+                button.addEventListener("click", function () {
+                  postMessage({ type: "markerPress", placeId: place.id });
+                });
+
+                const overlay = new kakao.maps.CustomOverlay({
+                  position,
+                  content: button,
+                  yAnchor: 1,
+                  zIndex: 3,
+                });
+                overlay.setMap(map);
+                overlays.push(overlay);
+                return;
+              }
+
+              const marker = new kakao.maps.Marker({ map, position });
+              kakao.maps.event.addListener(marker, "click", function () {
+                postMessage({ type: "markerPress", placeId: place.id });
+              });
+              overlays.push(marker);
+            });
+          }
+
           window.__zoomMap = function (delta) {
             const currentLevel = map.getLevel();
             const nextLevel = Math.min(14, Math.max(1, currentLevel + delta));
@@ -128,42 +299,11 @@ export function buildKakaoMapHtml(params: {
             userOverlay.setMap(map);
           }
 
-          places.forEach(function (place) {
-            const position = new kakao.maps.LatLng(place.lat, place.lng);
-
-            if (place.imageUrl) {
-              const button = document.createElement("button");
-              button.className = "spot-marker";
-              button.type = "button";
-              button.ariaLabel = place.name;
-
-              const image = document.createElement("img");
-              image.src = place.imageUrl;
-              image.alt = place.name;
-              image.onerror = function () {
-                button.style.background = "#dce5d5";
-                button.innerHTML = "";
-              };
-              button.appendChild(image);
-
-              button.addEventListener("click", function () {
-                postMessage({ type: "markerPress", placeId: place.id });
-              });
-
-              const overlay = new kakao.maps.CustomOverlay({
-                position,
-                content: button,
-                yAnchor: 1,
-                zIndex: 3,
-              });
-              overlay.setMap(map);
-              return;
-            }
-
-            const marker = new kakao.maps.Marker({ map, position });
-            kakao.maps.event.addListener(marker, "click", function () {
-              postMessage({ type: "markerPress", placeId: place.id });
-            });
+          renderPlaces();
+          emitViewport();
+          kakao.maps.event.addListener(map, "idle", function () {
+            renderPlaces();
+            emitViewport();
           });
         }
 

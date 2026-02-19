@@ -113,13 +113,51 @@ export class MockStoreService {
     }
   }
 
-  getPlaces(params: { lat?: number; lng?: number; radius?: number; page: number; pageSize: number }) {
-    const { lat, lng, radius, page, pageSize } = params;
+  getPlaces(params: {
+    lat?: number;
+    lng?: number;
+    radius?: number;
+    minLat?: number;
+    maxLat?: number;
+    minLng?: number;
+    maxLng?: number;
+    limit?: number;
+    page: number;
+    pageSize: number;
+  }) {
+    const { lat, lng, radius, minLat, maxLat, minLng, maxLng, limit, page, pageSize } = params;
     let rows = this.places;
+
+    if (
+      minLat !== undefined &&
+      maxLat !== undefined &&
+      minLng !== undefined &&
+      maxLng !== undefined
+    ) {
+      rows = rows.filter(
+        (place) =>
+          place.lat >= minLat &&
+          place.lat <= maxLat &&
+          place.lng >= minLng &&
+          place.lng <= maxLng,
+      );
+    }
 
     if (lat !== undefined && lng !== undefined) {
       const applyRadius = radius ?? 5000;
       rows = rows.filter((place) => distanceInMeters(lat, lng, place.lat, place.lng) <= applyRadius);
+    }
+
+    if (limit !== undefined) {
+      const safeLimit = Math.min(500, Math.max(1, Math.floor(limit)));
+      const items = rows.slice(0, safeLimit);
+      return {
+        items,
+        page: 1,
+        pageSize: safeLimit,
+        total: rows.length,
+        hasNext: rows.length > safeLimit,
+      };
     }
 
     const safePage = Math.max(1, Math.floor(page));

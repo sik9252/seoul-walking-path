@@ -5,6 +5,15 @@ export const DEMO_USER_ID = "demo-user";
 export const DEMO_LAT = 37.579617;
 export const DEMO_LNG = 126.977041;
 export const PAGE_SIZE = 20;
+export const MAP_PAGE_LIMIT = 300;
+
+export type MapViewportBounds = {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+  level: number;
+};
 
 export function getApiBaseUrl() {
   const platformBaseUrl =
@@ -25,6 +34,22 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 export async function fetchPlacesPage(apiBaseUrl: string, page: number) {
   return fetchJson<PlacePage>(`${apiBaseUrl}/places?page=${page}&pageSize=${PAGE_SIZE}`);
+}
+
+export async function fetchPlacesByViewport(
+  apiBaseUrl: string,
+  viewport: MapViewportBounds,
+  limit = MAP_PAGE_LIMIT,
+) {
+  const params = new URLSearchParams({
+    minLat: String(viewport.minLat),
+    maxLat: String(viewport.maxLat),
+    minLng: String(viewport.minLng),
+    maxLng: String(viewport.maxLng),
+    limit: String(limit),
+  });
+  const page = await fetchJson<PlacePage>(`${apiBaseUrl}/places?${params.toString()}`);
+  return page.items;
 }
 
 export async function fetchMyCards(apiBaseUrl: string) {

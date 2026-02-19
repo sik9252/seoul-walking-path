@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { WebView } from "react-native-webview";
 import type { WebViewMessageEvent } from "react-native-webview";
+import { fetchPlacesByViewport, MAP_PAGE_LIMIT, type MapViewportBounds } from "../apis/gameApi";
 import type { RefreshLocationResult } from "../hooks/useUserLocation";
 import { gameStyles as styles } from "../styles/gameStyles";
 import { PlaceItem } from "../types/gameTypes";
@@ -21,7 +22,7 @@ type Props = {
   places: PlaceItem[];
   loading: boolean;
   hasNext: boolean;
-  apiEnabled: boolean;
+  apiBaseUrl?: string;
   isError: boolean;
   userLocation: { latitude: number; longitude: number; heading?: number | null } | null;
   isLoadingLocation: boolean;
@@ -40,7 +41,7 @@ export function ExploreScreen({
   places,
   loading,
   hasNext,
-  apiEnabled,
+  apiBaseUrl,
   isError,
   userLocation,
   locationError,
@@ -54,17 +55,14 @@ export function ExploreScreen({
   onLoadMore,
 }: Props) {
   const mapWebViewRef = React.useRef<WebView>(null);
+  const viewportDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const viewportCacheRef = React.useRef<Map<string, PlaceItem[]>>(new Map());
+  const lastViewportKeyRef = React.useRef<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
   const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
   const [locationErrorMessage, setLocationErrorMessage] = React.useState("현재 위치를 가져오지 못했습니다.");
   const [mapPlaces, setMapPlaces] = React.useState<PlaceItem[]>([]);
-
-  React.useEffect(() => {
-    if (mapPlaces.length === 0 && places.length > 0) {
-      setMapPlaces(places.slice(0, 200));
-    }
-  }, [mapPlaces.length, places]);
 
   const markerPlaces = mapPlaces;
   const mapCenter = {
@@ -83,18 +81,82 @@ export function ExploreScreen({
     });
   }, [kakaoJavascriptKey, mapCenter, markerPlaces, userLocation]);
 
+  const fetchViewportPlaces = React.useCallback(
+    async (viewport: MapViewportBounds) => {
+      if (!apiBaseUrl) return;
+      const key = [
+        viewport.minLat.toFixed(4),
+        viewport.minLng.toFixed(4),
+        viewport.maxLat.toFixed(4),
+        viewport.maxLng.toFixed(4),
+        viewport.level,
+      ].join("|");
+
+      if (lastViewportKeyRef.current === key) return;
+      lastViewportKeyRef.current = key;
+
+      if (viewportCacheRef.current.has(key)) {
+        const cached = viewportCacheRef.current.get(key) ?? [];
+        setMapPlaces(cached);
+        return;
+      }
+
+      try {
+        const items = await fetchPlacesByViewport(apiBaseUrl, viewport, MAP_PAGE_LIMIT);
+        viewportCacheRef.current.set(key, items);
+        setMapPlaces(items);
+      } catch (error) {
+        console.warn("[explore] failed to fetch viewport places", error);
+      }
+    },
+    [apiBaseUrl],
+  );
+
   const handleMapMessage = React.useCallback(
     (event: WebViewMessageEvent) => {
       try {
-        const payload = JSON.parse(event.nativeEvent.data) as { type?: string; placeId?: string };
-        if (payload.type !== "markerPress" || !payload.placeId) return;
-        const selected = markerPlaces.find((place) => place.id === payload.placeId);
-        if (selected) setFocusedPlace(selected);
+        const payload = JSON.parse(event.nativeEvent.data) as {
+          type?: string;
+          placeId?: string;
+          viewport?: MapViewportBounds;
+        };
+
+        if (payload.type === "markerPress" && payload.placeId) {
+          const selected = markerPlaces.find((place) => place.id === payload.placeId);
+          if (selected) setFocusedPlace(selected);
+          return;
+        }
+
+        if (
+          payload.type === "viewportChanged" &&
+          payload.viewport &&
+          Number.isFinite(payload.viewport.minLat) &&
+          Number.isFinite(payload.viewport.maxLat) &&
+          Number.isFinite(payload.viewport.minLng) &&
+          Number.isFinite(payload.viewport.maxLng) &&
+          Number.isFinite(payload.viewport.level)
+        ) {
+          if (viewportDebounceRef.current) {
+            clearTimeout(viewportDebounceRef.current);
+          }
+          viewportDebounceRef.current = setTimeout(() => {
+            void fetchViewportPlaces(payload.viewport as MapViewportBounds);
+          }, 300);
+        }
       } catch (error) {
         console.warn("[kakao-map] invalid postMessage payload", error);
       }
     },
-    [markerPlaces],
+    [fetchViewportPlaces, markerPlaces],
+  );
+
+  React.useEffect(
+    () => () => {
+      if (viewportDebounceRef.current) {
+        clearTimeout(viewportDebounceRef.current);
+      }
+    },
+    [],
   );
 
   React.useEffect(() => {
@@ -145,7 +207,7 @@ export function ExploreScreen({
           onOpenDetail={onOpenDetail}
         />
 
-        {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
+        {!apiBaseUrl ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
         {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
       </View>
 
