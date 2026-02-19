@@ -64,6 +64,7 @@ export function ExploreScreen({
   const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
   const [locationErrorMessage, setLocationErrorMessage] = React.useState("현재 위치를 가져오지 못했습니다.");
   const [mapPlaces, setMapPlaces] = React.useState<PlaceItem[]>([]);
+  const [isViewportLoading, setIsViewportLoading] = React.useState(false);
   const userLocationRef = React.useRef(userLocation);
 
   React.useEffect(() => {
@@ -107,11 +108,14 @@ export function ExploreScreen({
       }
 
       try {
+        setIsViewportLoading(true);
         const items = await fetchPlacesByViewport(apiBaseUrl, viewport, MAP_PAGE_LIMIT);
         viewportCacheRef.current.set(key, items);
         setMapPlaces(items);
       } catch (error) {
         console.warn("[explore] failed to fetch viewport places", error);
+      } finally {
+        setIsViewportLoading(false);
       }
     },
     [apiBaseUrl],
@@ -255,10 +259,10 @@ export function ExploreScreen({
 
       <ExplorePlaceListSheet
         visible={isSheetOpen}
-        places={places}
-        loading={loading}
-        hasNext={hasNext}
-        onLoadMore={onLoadMore}
+        places={markerPlaces}
+        loading={isViewportLoading}
+        hasNext={false}
+        onLoadMore={() => {}}
         onClose={() => setIsSheetOpen(false)}
         onCheckVisit={onCheckVisit}
         onOpenDetail={onOpenDetail}
