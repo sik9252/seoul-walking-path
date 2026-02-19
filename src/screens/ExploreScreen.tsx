@@ -37,7 +37,7 @@ export function ExploreScreen({
   onOpenDetail,
   onLoadMore,
 }: Props) {
-  const [viewMode, setViewMode] = React.useState<"map" | "list">("map");
+  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const markerPlaces = places.slice(0, 200);
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
@@ -212,110 +212,103 @@ export function ExploreScreen({
     [markerPlaces, onOpenDetail],
   );
 
-  if (viewMode === "map") {
-    return (
-      <View style={styles.mapScreen}>
-        <Text style={styles.title}>탐험</Text>
-        <Text style={styles.description}>지도에서 관광지 마커와 내 위치를 확인하세요.</Text>
-        <View style={styles.segmentWrap}>
-          <Pressable style={[styles.segmentButton, styles.segmentButtonActive]} onPress={() => setViewMode("map")}>
-            <Text style={[styles.segmentLabel, styles.segmentLabelActive]}>지도</Text>
-          </Pressable>
-          <Pressable style={styles.segmentButton} onPress={() => setViewMode("list")}>
-            <Text style={styles.segmentLabel}>목록</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.mapCard}>
-          {kakaoJavascriptKey ? (
-            <WebView
-              style={styles.mapFull}
-              source={{ html: mapHtml }}
-              onMessage={handleMapMessage}
-              javaScriptEnabled
-              domStorageEnabled
-              originWhitelist={["*"]}
-            />
-          ) : (
-            <View style={styles.imageFallback}>
-              <Text style={styles.errorText}>EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY가 필요합니다.</Text>
-            </View>
-          )}
-          <View style={styles.mapPanel}>
-            <View style={styles.mapPanelRow}>
-              <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개</Text>
-              <Pressable onPress={onRefreshLocation}>
-                <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 새로고침"}</Text>
-              </Pressable>
-            </View>
-            <Button label="현재 위치 방문 판정 (데모)" onPress={onCheckVisit} />
-            {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
-            {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
-            {locationError ? <Text style={styles.errorText}>{locationError}</Text> : null}
-          </View>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <FlatList
-      data={places}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.screen}
-      onEndReachedThreshold={0.5}
-      onEndReached={() => {
-        if (!loading && hasNext) {
-          onLoadMore();
-        }
-      }}
-      ListHeaderComponent={
-        <View style={styles.listHeader}>
-          <Text style={styles.title}>탐험</Text>
-          <Text style={styles.description}>관광지 목록을 확인하고 상세 정보를 열어보세요.</Text>
-          <View style={styles.segmentWrap}>
-            <Pressable style={styles.segmentButton} onPress={() => setViewMode("map")}>
-              <Text style={styles.segmentLabel}>지도</Text>
-            </Pressable>
-            <Pressable style={[styles.segmentButton, styles.segmentButtonActive]} onPress={() => setViewMode("list")}>
-              <Text style={[styles.segmentLabel, styles.segmentLabelActive]}>목록</Text>
-            </Pressable>
-          </View>
-          {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
-          {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
-        </View>
-      }
-      renderItem={({ item }) => (
-        <Pressable onPress={() => onOpenDetail(item)}>
-          <Card>
-            <Text style={styles.cardTitle}>{item.name}</Text>
-            <Text style={styles.cardBody}>
-              {item.category} · {item.address}
-            </Text>
-          </Card>
-        </Pressable>
-      )}
-      ListFooterComponent={
-        <View style={styles.listFooter}>
-          {loading ? <ActivityIndicator color={colors.brand[600]} /> : null}
-          {!loading && hasNext ? (
-            <Pressable style={styles.moreBtn} onPress={onLoadMore}>
-              <Text style={styles.moreText}>더 보기</Text>
-            </Pressable>
-          ) : null}
-          {!loading && !hasNext && places.length > 0 ? (
-            <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text>
-          ) : null}
-        </View>
-      }
-      ListEmptyComponent={
-        !loading ? (
+    <View style={styles.mapScreen}>
+      <View style={styles.mapTopHeader}>
+        <Text style={styles.title}>탐험</Text>
+        <Text style={styles.description}>헤더 아래 전체 화면에서 지도와 마커를 확인하세요.</Text>
+      </View>
+
+      <View style={styles.mapBody}>
+        {kakaoJavascriptKey ? (
+          <WebView
+            style={styles.mapFull}
+            source={{ html: mapHtml }}
+            onMessage={handleMapMessage}
+            javaScriptEnabled
+            domStorageEnabled
+            originWhitelist={["*"]}
+          />
+        ) : (
           <View style={styles.imageFallback}>
-            <Ionicons name="search-outline" size={22} color={colors.base.textSubtle} />
-            <Text style={styles.cardBody}>관광지 데이터가 없습니다.</Text>
+            <Text style={styles.errorText}>EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY가 필요합니다.</Text>
           </View>
-        ) : null
-      }
-    />
+        )}
+
+        <Pressable style={styles.floatingListButton} onPress={() => setIsSheetOpen(true)}>
+          <Ionicons name="list" size={18} color={colors.base.text} />
+          <Text style={styles.floatingListLabel}>목록 보기</Text>
+        </Pressable>
+
+        <View style={styles.mapMetaRow}>
+          <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개</Text>
+          <Pressable onPress={onRefreshLocation}>
+            <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 새로고침"}</Text>
+          </Pressable>
+        </View>
+        {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
+        {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
+        {locationError ? <Text style={styles.errorText}>{locationError}</Text> : null}
+      </View>
+
+      {isSheetOpen ? (
+        <>
+          <Pressable style={styles.sheetBackdrop} onPress={() => setIsSheetOpen(false)} />
+          <View style={styles.sheetPanel}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <Text style={styles.cardTitle}>관광지 목록</Text>
+              <Text style={styles.cardBody}>지도 마커와 연동된 장소를 확인할 수 있어요.</Text>
+              <Button label="현재 위치 방문 판정 (데모)" onPress={onCheckVisit} />
+            </View>
+            <FlatList
+              data={places}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.sheetList}
+              onEndReachedThreshold={0.5}
+              onEndReached={() => {
+                if (!loading && hasNext) {
+                  onLoadMore();
+                }
+              }}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    setIsSheetOpen(false);
+                    onOpenDetail(item);
+                  }}
+                >
+                  <Card>
+                    <Text style={styles.cardTitle}>{item.name}</Text>
+                    <Text style={styles.cardBody}>
+                      {item.category} · {item.address}
+                    </Text>
+                  </Card>
+                </Pressable>
+              )}
+              ListFooterComponent={
+                <View style={styles.listFooter}>
+                  {loading ? <ActivityIndicator color={colors.brand[600]} /> : null}
+                  {!loading && hasNext ? (
+                    <Pressable style={styles.moreBtn} onPress={onLoadMore}>
+                      <Text style={styles.moreText}>더 보기</Text>
+                    </Pressable>
+                  ) : null}
+                  {!loading && !hasNext && places.length > 0 ? <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text> : null}
+                </View>
+              }
+              ListEmptyComponent={
+                !loading ? (
+                  <View style={styles.imageFallback}>
+                    <Ionicons name="search-outline" size={22} color={colors.base.textSubtle} />
+                    <Text style={styles.cardBody}>관광지 데이터가 없습니다.</Text>
+                  </View>
+                ) : null
+              }
+            />
+          </View>
+        </>
+      ) : null}
+    </View>
   );
 }

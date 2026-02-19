@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { colors, spacing, typography } from "../theme/tokens";
+import { colors, radius, spacing, typography } from "../theme/tokens";
 
 export const gameStyles = StyleSheet.create({
   safe: {
@@ -44,63 +44,85 @@ export const gameStyles = StyleSheet.create({
   listHeader: {
     gap: spacing.md,
   },
-  segmentWrap: {
-    flexDirection: "row",
-    borderWidth: 1,
-    borderColor: colors.base.border,
-    borderRadius: 999,
-    overflow: "hidden",
-    backgroundColor: colors.base.surface,
-  },
-  segmentButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: spacing.md,
-  },
-  segmentButtonActive: {
-    backgroundColor: colors.accent.lime100,
-  },
-  segmentLabel: {
-    fontSize: typography.size.labelMd,
-    fontWeight: typography.weight.semibold,
-    color: colors.base.textSubtle,
-  },
-  segmentLabelActive: {
-    color: colors.brand[700],
-    fontWeight: typography.weight.bold,
-  },
   mapScreen: {
     flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.x2,
     paddingBottom: 110,
-    gap: spacing.md,
   },
-  mapCard: {
+  mapBody: {
     flex: 1,
-    borderRadius: 14,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#E1E6DE",
-    backgroundColor: colors.base.surface,
   },
   mapFull: {
     flex: 1,
     width: "100%",
   },
-  mapPanel: {
-    padding: spacing.md,
-    gap: spacing.sm,
+  mapTopHeader: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.base.background,
+    gap: spacing.xs,
+  },
+  floatingListButton: {
+    position: "absolute",
+    right: spacing.xl,
+    bottom: spacing.x3,
+    minHeight: 46,
+    borderRadius: radius.pill,
+    backgroundColor: colors.base.surface,
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    paddingHorizontal: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    zIndex: 11,
+    elevation: 4,
+  },
+  floatingListLabel: {
+    color: colors.base.text,
+    fontSize: typography.size.labelMd,
+    fontWeight: typography.weight.bold,
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 12, 10, 0.35)",
+    zIndex: 12,
+  },
+  sheetPanel: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "62%",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    backgroundColor: colors.base.surface,
     borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: colors.base.border,
+    zIndex: 13,
+    overflow: "hidden",
+  },
+  sheetHandle: {
+    width: 48,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.base.subtle,
+    alignSelf: "center",
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  sheetHeader: {
+    padding: spacing.md,
+    gap: spacing.xs,
     borderTopColor: colors.base.border,
     backgroundColor: colors.base.surface,
   },
-  mapPanelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  sheetList: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
     gap: spacing.sm,
   },
   mapWrap: {
@@ -115,12 +137,19 @@ export const gameStyles = StyleSheet.create({
     height: 260,
   },
   mapMetaRow: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    position: "absolute",
+    left: spacing.xl,
+    right: spacing.xl,
+    top: spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     gap: spacing.sm,
+    zIndex: 10,
   },
   listFooter: {
     paddingVertical: spacing.md,
