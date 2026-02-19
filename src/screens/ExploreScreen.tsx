@@ -287,8 +287,9 @@ export function ExploreScreen({
             </Pressable>
           </View>
           <View style={styles.bottomRightRow}>
-            <Pressable style={styles.floatingCircleButton} onPress={() => setIsSheetOpen(true)}>
+            <Pressable style={styles.floatingListButtonWide} onPress={() => setIsSheetOpen(true)}>
               <Ionicons name="list" size={20} color={colors.base.text} />
+              <Text style={styles.floatingListButtonLabel}>목록 보기</Text>
             </Pressable>
             <Pressable style={styles.floatingCircleButton} onPress={() => void handleRefreshLocation()}>
               <Ionicons name="locate" size={20} color={colors.brand[700]} />
