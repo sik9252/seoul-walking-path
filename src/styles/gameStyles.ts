@@ -252,8 +252,6 @@ export const gameStyles = StyleSheet.create({
     gap: 2,
   },
   collectedBadge: {
-    marginTop: spacing.xs,
-    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -272,7 +270,12 @@ export const gameStyles = StyleSheet.create({
   floatingPlaceTitleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
     gap: spacing.xs,
+    minWidth: 0,
+  },
+  floatingPlaceTitleText: {
+    flexShrink: 1,
   },
   placeDetailCloseButtonRaised: {
     marginTop: -6,
