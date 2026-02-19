@@ -90,8 +90,8 @@ export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: Ex
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {place.name}
                 </Text>
-                <Text style={styles.cardBody} numberOfLines={1}>
-                  {place.category} · {place.address}
+                <Text style={styles.cardBody}>
+                  {place.address}
                 </Text>
               </View>
               <Pressable onPress={handleClose}>
