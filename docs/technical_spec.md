@@ -18,7 +18,7 @@
 - Framework: NestJS
 - Language: TypeScript
 - DB: PostgreSQL(도입 예정)
-- 배치: 관광지 원천 데이터 일 1회 동기화
+- 배치: 관광지 원천 데이터 주 1회 동기화
 
 ## 4) 도메인 모델(목표)
 - places
