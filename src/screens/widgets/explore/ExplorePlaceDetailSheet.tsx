@@ -16,7 +16,7 @@ type ExplorePlaceDetailSheetProps = {
 export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: ExplorePlaceDetailSheetProps) {
   const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible: Boolean(place),
-    collapsedOffset: 530,
+    collapsedOffset: 560,
   });
 
   const handleClose = React.useCallback(() => {
@@ -46,7 +46,6 @@ export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: Ex
                 <Ionicons name="close" size={24} color={colors.base.textSubtle} />
               </Pressable>
             </View>
-            <Text style={styles.description}>{place.category}</Text>
 
             {place.imageUrl ? (
               <Image source={{ uri: place.imageUrl }} style={styles.placeImage} resizeMode="cover" />
@@ -90,9 +89,7 @@ export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: Ex
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {place.name}
                 </Text>
-                <Text style={styles.cardBody}>
-                  {place.address}
-                </Text>
+                <Text style={styles.cardBody}>{place.address}</Text>
               </View>
               <Pressable onPress={handleClose}>
                 <Ionicons name="close" size={24} color={colors.base.textSubtle} />

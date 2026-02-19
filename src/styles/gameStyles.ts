@@ -29,7 +29,7 @@ export const gameStyles = StyleSheet.create({
     color: colors.base.text,
   },
   cardBody: {
-    fontSize: typography.size.bodySm,
+    fontSize: typography.size.caption,
     color: colors.base.textSubtle,
   },
   moreBtn: {
@@ -57,7 +57,7 @@ export const gameStyles = StyleSheet.create({
   floatingBottomLeftControls: {
     position: "absolute",
     left: spacing.xl,
-    bottom: spacing.x3,
+    bottom: 65,
     gap: spacing.sm,
     zIndex: 11,
     elevation: 4,
@@ -65,7 +65,7 @@ export const gameStyles = StyleSheet.create({
   floatingBottomRightCluster: {
     position: "absolute",
     right: spacing.xl,
-    bottom: spacing.x3,
+    bottom: 65,
     gap: spacing.sm,
     zIndex: 11,
     elevation: 4,
