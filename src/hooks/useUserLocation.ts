@@ -23,9 +23,7 @@ export function useUserLocation() {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== "granted") {
         setLocationError("위치 권한이 거부되었습니다.");
-        if (!location) {
-          setLocation(DEFAULT_SEOUL_LOCATION);
-        }
+        setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
         return;
       }
 
@@ -40,13 +38,11 @@ export function useUserLocation() {
     } catch (error) {
       console.warn("[location] failed to get location", error);
       setLocationError("현재 위치를 가져오지 못했습니다.");
-      if (!location) {
-        setLocation(DEFAULT_SEOUL_LOCATION);
-      }
+      setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
     } finally {
       setIsLoadingLocation(false);
     }
-  }, [location]);
+  }, []);
 
   React.useEffect(() => {
     void refreshLocation();
