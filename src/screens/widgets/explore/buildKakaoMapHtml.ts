@@ -6,6 +6,10 @@ type MapCenter = {
 export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialCenter: MapCenter }) {
   const { kakaoJavascriptKey, initialCenter } = params;
   const initialCenterJson = JSON.stringify(initialCenter);
+  const userMarkerSize = 14;
+  const userHeadingHalfWidth = 5;
+  const userHeadingHeight = 14;
+  const userHeadingOffset = 20;
 
   return `<!doctype html>
 <html>
@@ -13,6 +17,12 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <style>
+      :root {
+        --user-marker-size: ${userMarkerSize}px;
+        --user-heading-half-width: ${userHeadingHalfWidth}px;
+        --user-heading-height: ${userHeadingHeight}px;
+        --user-heading-offset: ${userHeadingOffset}px;
+      }
       html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; background: #f6f7f4; }
       .spot-marker {
         width: 34px;
@@ -48,8 +58,8 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         stroke-linejoin: round;
       }
       .user-marker {
-        width: 16px;
-        height: 16px;
+        width: var(--user-marker-size);
+        height: var(--user-marker-size);
         border-radius: 50%;
         border: 2px solid #ffffff;
         background: #2563eb;
@@ -58,15 +68,15 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
       }
       .user-heading {
         position: absolute;
-        top: -15px;
+        top: calc(var(--user-heading-offset) * -1);
         left: 50%;
         width: 0;
         height: 0;
-        margin-left: -6px;
-        border-left: 6px solid transparent;
-        border-right: 6px solid transparent;
-        border-bottom: 11px solid #1d4ed8;
-        transform-origin: 50% 21px;
+        margin-left: calc(var(--user-heading-half-width) * -1);
+        border-left: var(--user-heading-half-width) solid transparent;
+        border-right: var(--user-heading-half-width) solid transparent;
+        border-bottom: var(--user-heading-height) solid #1d4ed8;
+        transform-origin: 50% calc(var(--user-heading-offset) + 7px);
       }
       .user-heading.idle {
         opacity: 0.8;
