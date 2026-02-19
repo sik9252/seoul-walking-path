@@ -10,9 +10,9 @@ import {
   buildKakaoMapHtml,
   ExploreFloatingControls,
   ExploreLocationErrorModal,
+  ExplorePlaceDetailSheet,
   ExploreMapView,
   ExplorePlaceListSheet,
-  ExplorePlacePreviewCard,
   ExploreVisitResultModal,
 } from "./widgets/explore";
 
@@ -132,7 +132,10 @@ export function ExploreScreen({
 
         if (payload.type === "markerPress" && payload.placeId) {
           const selected = markerPlaces.find((place) => place.id === payload.placeId);
-          if (selected) setFocusedPlace(selected);
+          if (selected) {
+            setIsSheetOpen(false);
+            setFocusedPlace(selected);
+          }
           return;
         }
 
@@ -240,14 +243,11 @@ export function ExploreScreen({
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onRefreshLocation={() => void handleRefreshLocation()}
-          onOpenList={() => setIsSheetOpen(true)}
+          onOpenList={() => {
+            setFocusedPlace(null);
+            setIsSheetOpen(true);
+          }}
           onCheckVisit={onCheckVisit}
-        />
-
-        <ExplorePlacePreviewCard
-          place={focusedPlace}
-          onClose={() => setFocusedPlace(null)}
-          onOpenDetail={onOpenDetail}
         />
 
         {!apiBaseUrl ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
@@ -268,6 +268,12 @@ export function ExploreScreen({
         onLoadMore={() => {}}
         onClose={() => setIsSheetOpen(false)}
         onCheckVisit={onCheckVisit}
+        onOpenDetail={onOpenDetail}
+      />
+
+      <ExplorePlaceDetailSheet
+        place={focusedPlace}
+        onClose={() => setFocusedPlace(null)}
         onOpenDetail={onOpenDetail}
       />
 
