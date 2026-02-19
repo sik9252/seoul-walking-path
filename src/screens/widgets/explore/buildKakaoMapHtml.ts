@@ -30,6 +30,17 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         object-fit: cover;
         display: block;
       }
+      .spot-marker-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1f3f14;
+        background: linear-gradient(135deg, #dff1d2, #c9e5b7);
+      }
       .user-marker {
         width: 16px;
         height: 16px;
@@ -241,41 +252,40 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
 
               const place = item.place;
               const position = new kakao.maps.LatLng(place.lat, place.lng);
-              if (place.imageUrl) {
-                const button = document.createElement("button");
-                button.className = "spot-marker";
-                button.type = "button";
-                button.ariaLabel = place.name;
+              const button = document.createElement("button");
+              button.className = "spot-marker";
+              button.type = "button";
+              button.ariaLabel = place.name;
 
+              const fallback = document.createElement("div");
+              fallback.className = "spot-marker-fallback";
+              fallback.textContent = "◎";
+
+              if (place.imageUrl) {
                 const image = document.createElement("img");
                 image.src = place.imageUrl;
                 image.alt = place.name;
                 image.onerror = function () {
-                  button.style.background = "#dce5d5";
                   button.innerHTML = "";
+                  button.appendChild(fallback);
                 };
                 button.appendChild(image);
-
-                button.addEventListener("click", function () {
-                  postMessage({ type: "markerPress", placeId: place.id });
-                });
-
-                const overlay = new kakao.maps.CustomOverlay({
-                  position,
-                  content: button,
-                  yAnchor: 1,
-                  zIndex: 3,
-                });
-                overlay.setMap(map);
-                overlays.push(overlay);
-                return;
+              } else {
+                button.appendChild(fallback);
               }
 
-              const marker = new kakao.maps.Marker({ map, position });
-              kakao.maps.event.addListener(marker, "click", function () {
+              button.addEventListener("click", function () {
                 postMessage({ type: "markerPress", placeId: place.id });
               });
-              overlays.push(marker);
+
+              const overlay = new kakao.maps.CustomOverlay({
+                position,
+                content: button,
+                yAnchor: 1,
+                zIndex: 3,
+              });
+              overlay.setMap(map);
+              overlays.push(overlay);
             });
           }
 
