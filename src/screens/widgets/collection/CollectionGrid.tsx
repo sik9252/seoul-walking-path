@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
 import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
-import { CatalogCardItem } from "../../../types/gameTypes";
+import { CatalogCardItem, PlaceItem } from "../../../types/gameTypes";
 
 type CollectionGridItem =
   | {
@@ -22,9 +22,10 @@ type CollectionGridProps = {
   loading: boolean;
   hasNext: boolean;
   onLoadMore: () => void;
+  onLocatePlace: (place: PlaceItem) => void;
 };
 
-export function CollectionGrid({ items, loading, hasNext, onLoadMore }: CollectionGridProps) {
+export function CollectionGrid({ items, loading, hasNext, onLoadMore, onLocatePlace }: CollectionGridProps) {
   return (
     <FlatList
       data={items}
@@ -93,9 +94,11 @@ export function CollectionGrid({ items, loading, hasNext, onLoadMore }: Collecti
                   <Ionicons name="image-outline" size={26} color={colors.base.textSubtle} />
                 </View>
               )}
-              <View style={styles.collectionRareBadge}>
-                <Ionicons name="star" size={16} color={colors.accent.ratingStar} />
-              </View>
+              {card.place ? (
+                <Pressable style={styles.collectionRareBadge} onPress={() => onLocatePlace(card.place as PlaceItem)}>
+                  <Ionicons name="location" size={18} color={colors.brand[700]} />
+                </Pressable>
+              ) : null}
             </View>
             <Text numberOfLines={1} style={styles.collectionCardName}>
               {card.title}

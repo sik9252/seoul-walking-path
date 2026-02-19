@@ -64,6 +64,11 @@ function AppShell() {
   const [tabBarHeight, setTabBarHeight] = React.useState(0);
   const [isExploreDetailExpanded, setIsExploreDetailExpanded] = React.useState(false);
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
+  const [mapFocusRequest, setMapFocusRequest] = React.useState<{
+    id: number;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [visitDialog, setVisitDialog] = React.useState<{
     visible: boolean;
     title: string;
@@ -213,6 +218,15 @@ function AppShell() {
     setStartupStep("onboarding");
   }, [clearLocationError]);
 
+  const handleLocatePlaceFromCollection = React.useCallback((place: PlaceItem) => {
+    setTab("explore");
+    setMapFocusRequest({
+      id: Date.now(),
+      latitude: place.lat,
+      longitude: place.lng,
+    });
+  }, []);
+
   const tabs: TabItem[] = [
     {
       key: "explore",
@@ -348,6 +362,7 @@ function AppShell() {
           bottomOverlayOffset={tabBarHeight}
           onDetailExpandedChange={setIsExploreDetailExpanded}
           collectedPlaceIds={collectedPlaceIds}
+          mapFocusRequest={mapFocusRequest}
         />
       ) : null}
 
@@ -359,6 +374,7 @@ function AppShell() {
           myCardsError={cardsQuery.isError}
           selectedCategory={collectionCategory}
           onSelectCategory={setCollectionCategory}
+          onLocatePlace={handleLocatePlaceFromCollection}
         />
       ) : null}
 

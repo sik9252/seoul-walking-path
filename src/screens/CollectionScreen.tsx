@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { useCardCatalogQuery } from "../hooks/useGameData";
 import { gameStyles as styles } from "../styles/gameStyles";
-import { MyCard } from "../types/gameTypes";
+import { MyCard, PlaceItem } from "../types/gameTypes";
 import {
   CollectionCategory,
   CollectionCategoryItem,
@@ -20,6 +20,7 @@ type Props = {
   myCardsError: boolean;
   selectedCategory: CollectionCategory;
   onSelectCategory: (category: CollectionCategory) => void;
+  onLocatePlace: (place: PlaceItem) => void;
 };
 
 const DEFAULT_REGIONS = [
@@ -53,6 +54,7 @@ export function CollectionScreen({
   myCardsError,
   selectedCategory,
   onSelectCategory,
+  onLocatePlace,
 }: Props) {
   const selectedAreaCode = selectedCategory === "all" ? undefined : selectedCategory;
   const selectedRegion = selectedAreaCode ? REGION_LABELS_BY_CODE[selectedAreaCode] : undefined;
@@ -112,6 +114,7 @@ export function CollectionScreen({
           loading={catalogQuery.isFetchingNextPage}
           hasNext={Boolean(catalogQuery.hasNextPage)}
           onLoadMore={() => void catalogQuery.fetchNextPage()}
+          onLocatePlace={onLocatePlace}
         />
       ) : null}
     </View>

@@ -37,6 +37,11 @@ type Props = {
   bottomOverlayOffset?: number;
   onDetailExpandedChange?: (expanded: boolean) => void;
   collectedPlaceIds: string[];
+  mapFocusRequest?: {
+    id: number;
+    latitude: number;
+    longitude: number;
+  } | null;
 };
 
 export function ExploreScreen({
@@ -58,6 +63,7 @@ export function ExploreScreen({
   bottomOverlayOffset = 0,
   onDetailExpandedChange,
   collectedPlaceIds,
+  mapFocusRequest,
 }: Props) {
   const mapWebViewRef = React.useRef<WebView>(null);
   const viewportDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +240,13 @@ export function ExploreScreen({
       `window.__setUserLocation && window.__setUserLocation(${locationPayload}); true;`,
     );
   }, [isMapReady, userLocation]);
+
+  React.useEffect(() => {
+    if (!isMapReady || !mapWebViewRef.current || !mapFocusRequest) return;
+    mapWebViewRef.current.injectJavaScript(
+      `window.__moveTo && window.__moveTo(${mapFocusRequest.latitude}, ${mapFocusRequest.longitude}); true;`,
+    );
+  }, [isMapReady, mapFocusRequest]);
 
   return (
     <View style={styles.mapScreen}>
