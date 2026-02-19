@@ -5,13 +5,13 @@ import React from "react";
 import { Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { TabBar, TabItem } from "./src/components/ui";
-import { getApiBaseUrl } from "./src/screens/gameApi";
+import { getApiBaseUrl } from "./src/apis/gameApi";
 import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
 import { PlaceDetailScreen } from "./src/screens/PlaceDetailScreen";
-import { gameStyles as styles } from "./src/screens/gameStyles";
-import { GameTab, PlaceItem } from "./src/screens/gameTypes";
-import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/screens/useGameData";
+import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
+import { gameStyles as styles } from "./src/styles/gameStyles";
+import { GameTab, PlaceItem } from "./src/types/gameTypes";
 import { colors } from "./src/theme/tokens";
 
 const queryClient = new QueryClient();

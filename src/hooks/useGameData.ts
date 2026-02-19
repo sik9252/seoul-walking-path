@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
-import { checkVisit, DEMO_USER_ID, fetchMyCards, fetchPlacesPage, PAGE_SIZE } from "./gameApi";
+import { checkVisit, DEMO_USER_ID, fetchMyCards, fetchPlacesPage, PAGE_SIZE } from "../apis/gameApi";
 
 export function usePlacesQuery(apiBaseUrl?: string) {
   return useInfiniteQuery({

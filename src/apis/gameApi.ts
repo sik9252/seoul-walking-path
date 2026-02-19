@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { PlacePage, MyCard, VisitCheckResponse } from "./gameTypes";
+import { PlacePage, MyCard, VisitCheckResponse } from "../types/gameTypes";
 
 export const DEMO_USER_ID = "demo-user";
 export const DEMO_LAT = 37.579617;

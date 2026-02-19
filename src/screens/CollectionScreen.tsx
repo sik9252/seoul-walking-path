@@ -2,8 +2,8 @@ import React from "react";
 import { ActivityIndicator, ScrollView, Text } from "react-native";
 import { Card } from "../components/ui";
 import { colors } from "../theme/tokens";
-import { gameStyles as styles } from "./gameStyles";
-import { MyCard } from "./gameTypes";
+import { gameStyles as styles } from "../styles/gameStyles";
+import { MyCard } from "../types/gameTypes";
 
 type Props = {
   cards: MyCard[];

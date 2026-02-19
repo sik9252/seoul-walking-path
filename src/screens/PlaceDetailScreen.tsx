@@ -3,8 +3,8 @@ import React from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { Card } from "../components/ui";
 import { colors } from "../theme/tokens";
-import { gameStyles as styles } from "./gameStyles";
-import { PlaceItem } from "./gameTypes";
+import { gameStyles as styles } from "../styles/gameStyles";
+import { PlaceItem } from "../types/gameTypes";
 
 type Props = {
   place: PlaceItem;
