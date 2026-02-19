@@ -1,36 +1,14 @@
-import { PlaceItem } from "../../../types/gameTypes";
-
 type MapCenter = {
   latitude: number;
   longitude: number;
 };
 
-type UserLocation = {
-  latitude: number;
-  longitude: number;
-  heading?: number | null;
-} | null;
-
 export function buildKakaoMapHtml(params: {
   kakaoJavascriptKey: string;
-  markerPlaces: PlaceItem[];
-  userLocation: UserLocation;
-  mapCenter: MapCenter;
+  initialCenter: MapCenter;
 }) {
-  const { kakaoJavascriptKey, markerPlaces, userLocation, mapCenter } = params;
-
-  const placesJson = JSON.stringify(
-    markerPlaces.map((place) => ({
-      id: place.id,
-      name: place.name,
-      address: place.address,
-      lat: place.lat,
-      lng: place.lng,
-      imageUrl: place.imageUrl ?? null,
-    })),
-  );
-  const userLocationJson = JSON.stringify(userLocation);
-  const centerJson = JSON.stringify(mapCenter);
+  const { kakaoJavascriptKey, initialCenter } = params;
+  const initialCenterJson = JSON.stringify(initialCenter);
 
   return `<!doctype html>
 <html>
@@ -101,9 +79,9 @@ export function buildKakaoMapHtml(params: {
     <div id="map"></div>
     <script>
       (function () {
-        const places = ${placesJson};
-        const userLocation = ${userLocationJson};
-        const center = ${centerJson};
+        let places = [];
+        let userLocation = null;
+        let userOverlay = null;
 
         function postMessage(payload) {
           if (window.ReactNativeWebView) {
@@ -170,9 +148,10 @@ export function buildKakaoMapHtml(params: {
         }
 
         function init() {
+          const initialCenter = ${initialCenterJson};
           const mapContainer = document.getElementById("map");
           const map = new kakao.maps.Map(mapContainer, {
-            center: new kakao.maps.LatLng(center.latitude, center.longitude),
+            center: new kakao.maps.LatLng(initialCenter.latitude, initialCenter.longitude),
             level: 7,
           });
           const overlays = [];
@@ -273,13 +252,12 @@ export function buildKakaoMapHtml(params: {
             });
           }
 
-          window.__zoomMap = function (delta) {
-            const currentLevel = map.getLevel();
-            const nextLevel = Math.min(14, Math.max(1, currentLevel + delta));
-            map.setLevel(nextLevel);
-          };
-
-          if (userLocation && userLocation.latitude && userLocation.longitude) {
+          function renderUserLocation() {
+            if (userOverlay) {
+              userOverlay.setMap(null);
+              userOverlay = null;
+            }
+            if (!userLocation || !userLocation.latitude || !userLocation.longitude) return;
             const heading = typeof userLocation.heading === "number" ? userLocation.heading : null;
 
             const userMarker = document.createElement("div");
@@ -290,7 +268,7 @@ export function buildKakaoMapHtml(params: {
             headingArrow.style.transform = "rotate(" + (heading === null ? 0 : heading) + "deg)";
             userMarker.appendChild(headingArrow);
 
-            const userOverlay = new kakao.maps.CustomOverlay({
+            userOverlay = new kakao.maps.CustomOverlay({
               position: new kakao.maps.LatLng(userLocation.latitude, userLocation.longitude),
               content: userMarker,
               yAnchor: 0.5,
@@ -299,7 +277,27 @@ export function buildKakaoMapHtml(params: {
             userOverlay.setMap(map);
           }
 
+          window.__zoomMap = function (delta) {
+            const currentLevel = map.getLevel();
+            const nextLevel = Math.min(14, Math.max(1, currentLevel + delta));
+            map.setLevel(nextLevel);
+          };
+          window.__setPlaces = function (nextPlaces) {
+            if (!Array.isArray(nextPlaces)) return;
+            places = nextPlaces;
+            renderPlaces();
+          };
+          window.__setUserLocation = function (nextUserLocation) {
+            userLocation = nextUserLocation || null;
+            renderUserLocation();
+          };
+          window.__moveTo = function (lat, lng) {
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            map.setCenter(new kakao.maps.LatLng(lat, lng));
+          };
+
           renderPlaces();
+          renderUserLocation();
           emitViewport();
           kakao.maps.event.addListener(map, "idle", function () {
             renderPlaces();

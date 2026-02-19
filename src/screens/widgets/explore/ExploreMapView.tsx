@@ -9,6 +9,7 @@ type ExploreMapViewProps = {
   kakaoJavascriptKey?: string;
   mapHtml: string;
   onMessage: (event: WebViewMessageEvent) => void;
+  onLoadEnd?: () => void;
 };
 
 export function ExploreMapView({
@@ -16,6 +17,7 @@ export function ExploreMapView({
   kakaoJavascriptKey,
   mapHtml,
   onMessage,
+  onLoadEnd,
 }: ExploreMapViewProps) {
   if (!kakaoJavascriptKey) {
     return (
@@ -31,6 +33,7 @@ export function ExploreMapView({
       style={styles.mapFull}
       source={{ html: mapHtml }}
       onMessage={onMessage}
+      onLoadEnd={onLoadEnd}
       javaScriptEnabled
       domStorageEnabled
       originWhitelist={["*"]}

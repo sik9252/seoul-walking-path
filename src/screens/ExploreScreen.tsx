@@ -58,28 +58,33 @@ export function ExploreScreen({
   const viewportDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const viewportCacheRef = React.useRef<Map<string, PlaceItem[]>>(new Map());
   const lastViewportKeyRef = React.useRef<string | null>(null);
+  const [isMapReady, setIsMapReady] = React.useState(false);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
   const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
   const [locationErrorMessage, setLocationErrorMessage] = React.useState("현재 위치를 가져오지 못했습니다.");
   const [mapPlaces, setMapPlaces] = React.useState<PlaceItem[]>([]);
+  const userLocationRef = React.useRef(userLocation);
+
+  React.useEffect(() => {
+    userLocationRef.current = userLocation;
+  }, [userLocation]);
 
   const markerPlaces = mapPlaces;
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
     longitude: userLocation?.longitude ?? 126.978,
   };
+  const initialCenterRef = React.useRef(mapCenter);
   const kakaoJavascriptKey = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
 
   const mapHtml = React.useMemo(() => {
     if (!kakaoJavascriptKey) return "";
     return buildKakaoMapHtml({
       kakaoJavascriptKey,
-      markerPlaces,
-      userLocation,
-      mapCenter,
+      initialCenter: initialCenterRef.current,
     });
-  }, [kakaoJavascriptKey, mapCenter, markerPlaces, userLocation]);
+  }, [kakaoJavascriptKey]);
 
   const fetchViewportPlaces = React.useCallback(
     async (viewport: MapViewportBounds) => {
@@ -172,16 +177,46 @@ export function ExploreScreen({
     if (!result.ok) {
       setLocationErrorMessage(result.reason);
       setIsLocationErrorOpen(true);
+      return;
+    }
+    const latestLocation = userLocationRef.current;
+    if (latestLocation) {
+      mapWebViewRef.current?.injectJavaScript(
+        `window.__moveTo && window.__moveTo(${latestLocation.latitude}, ${latestLocation.longitude}); true;`,
+      );
     }
   }, [onRefreshLocation]);
 
   const handleZoomIn = React.useCallback(() => {
+    if (!isMapReady) return;
     mapWebViewRef.current?.injectJavaScript("window.__zoomMap && window.__zoomMap(-1); true;");
-  }, []);
+  }, [isMapReady]);
 
   const handleZoomOut = React.useCallback(() => {
+    if (!isMapReady) return;
     mapWebViewRef.current?.injectJavaScript("window.__zoomMap && window.__zoomMap(1); true;");
-  }, []);
+  }, [isMapReady]);
+
+  React.useEffect(() => {
+    if (!isMapReady || !mapWebViewRef.current) return;
+    const placesPayload = JSON.stringify(
+      markerPlaces.map((place) => ({
+        id: place.id,
+        name: place.name,
+        address: place.address,
+        lat: place.lat,
+        lng: place.lng,
+        imageUrl: place.imageUrl ?? null,
+      })),
+    );
+    mapWebViewRef.current.injectJavaScript(`window.__setPlaces && window.__setPlaces(${placesPayload}); true;`);
+  }, [isMapReady, markerPlaces]);
+
+  React.useEffect(() => {
+    if (!isMapReady || !mapWebViewRef.current) return;
+    const locationPayload = JSON.stringify(userLocation ?? null);
+    mapWebViewRef.current.injectJavaScript(`window.__setUserLocation && window.__setUserLocation(${locationPayload}); true;`);
+  }, [isMapReady, userLocation]);
 
   return (
     <View style={styles.mapScreen}>
@@ -191,6 +226,7 @@ export function ExploreScreen({
           kakaoJavascriptKey={kakaoJavascriptKey}
           mapHtml={mapHtml}
           onMessage={handleMapMessage}
+          onLoadEnd={() => setIsMapReady(true)}
         />
 
         <ExploreFloatingControls
