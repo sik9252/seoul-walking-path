@@ -1,7 +1,6 @@
 import React from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useCardCatalogQuery } from "../hooks/useGameData";
-import { colors } from "../theme/tokens";
 import { gameStyles as styles } from "../styles/gameStyles";
 import { MyCard } from "../types/gameTypes";
 import {
@@ -10,6 +9,7 @@ import {
   CollectionCategoryTabs,
   CollectionGrid,
   CollectionHeader,
+  CollectionLoadingSkeleton,
   CollectionProgressCard,
 } from "./widgets/collection";
 
@@ -93,11 +93,7 @@ export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsErr
         onSelectCategory={setSelectedCategory}
       />
 
-      {loading ? (
-        <View style={styles.collectionStateBox}>
-          <ActivityIndicator color={colors.brand[600]} />
-        </View>
-      ) : null}
+      {loading ? <CollectionLoadingSkeleton /> : null}
       {isError ? (
         <View style={styles.collectionStateBox}>
           <Text style={styles.errorText}>카드 목록을 불러오지 못했습니다.</Text>

@@ -521,4 +521,20 @@ export const gameStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  collectionSkeletonWrap: {
+    paddingTop: spacing.md,
+    gap: spacing.md,
+  },
+  collectionSkeletonGridRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  collectionSkeletonCard: {
+    flex: 1,
+    height: 320,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    backgroundColor: colors.base.subtle,
+  },
 });
