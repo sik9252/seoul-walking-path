@@ -24,7 +24,7 @@ export const gameStyles = StyleSheet.create({
     color: colors.base.textSubtle,
   },
   cardTitle: {
-    fontSize: typography.size.labelLg,
+    fontSize: typography.size.labelMd,
     fontWeight: typography.weight.bold,
     color: colors.base.text,
   },
