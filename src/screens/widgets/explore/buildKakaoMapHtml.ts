@@ -92,56 +92,57 @@ export function buildKakaoMapHtml(params: {
         function createDisplayItems(rawPlaces, level, centerLat, centerLng) {
           if (!rawPlaces || rawPlaces.length === 0) return [];
 
-          const clusterCell =
-            level >= 11 ? 0.08 :
-            level >= 9 ? 0.04 :
-            level >= 7 ? 0.02 :
-            0;
-
-          if (!clusterCell) {
-            const sorted = rawPlaces
-              .map((place) => ({
-                place,
-                score:
-                  Math.abs(place.lat - centerLat) +
-                  Math.abs(place.lng - centerLng),
-              }))
-              .sort((a, b) => a.score - b.score)
-              .slice(0, 180);
-            return sorted.map((item) => ({ type: "single", place: item.place }));
+          function clusterCellByLevel(targetLevel) {
+            if (targetLevel >= 11) return 0.08;
+            if (targetLevel >= 9) return 0.04;
+            if (targetLevel >= 7) return 0.02;
+            if (targetLevel >= 5) return 0.01;
+            return 0.005;
           }
 
-          const grouped = new Map();
-          rawPlaces.forEach((place) => {
-            const key = [
-              Math.floor(place.lat / clusterCell),
-              Math.floor(place.lng / clusterCell),
-            ].join("_");
-            const existing = grouped.get(key);
-            if (existing) {
-              existing.items.push(place);
-              return;
-            }
-            grouped.set(key, { items: [place] });
-          });
-
-          const display = [];
-          grouped.forEach((group) => {
-            if (group.items.length === 1) {
-              display.push({ type: "single", place: group.items[0] });
-              return;
-            }
-            const lat =
-              group.items.reduce((sum, item) => sum + item.lat, 0) / group.items.length;
-            const lng =
-              group.items.reduce((sum, item) => sum + item.lng, 0) / group.items.length;
-            display.push({
-              type: "cluster",
-              count: group.items.length,
-              lat,
-              lng,
+          function buildGroupedDisplay(cellSize) {
+            const grouped = new Map();
+            rawPlaces.forEach((place) => {
+              const key = [
+                Math.floor(place.lat / cellSize),
+                Math.floor(place.lng / cellSize),
+              ].join("_");
+              const existing = grouped.get(key);
+              if (existing) {
+                existing.items.push(place);
+                return;
+              }
+              grouped.set(key, { items: [place] });
             });
-          });
+
+            const items = [];
+            grouped.forEach((group) => {
+              if (group.items.length === 1) {
+                items.push({ type: "single", place: group.items[0] });
+                return;
+              }
+              const lat =
+                group.items.reduce((sum, item) => sum + item.lat, 0) / group.items.length;
+              const lng =
+                group.items.reduce((sum, item) => sum + item.lng, 0) / group.items.length;
+              items.push({
+                type: "cluster",
+                count: group.items.length,
+                lat,
+                lng,
+              });
+            });
+            return items;
+          }
+
+          let clusterCell = clusterCellByLevel(level);
+          let display = buildGroupedDisplay(clusterCell);
+
+          // If still too dense, increase cluster strength progressively.
+          while (display.length > 120 && clusterCell < 0.25) {
+            clusterCell = clusterCell * 1.6;
+            display = buildGroupedDisplay(clusterCell);
+          }
 
           display.sort((a, b) => {
             const aLat = a.type === "single" ? a.place.lat : a.lat;
@@ -153,7 +154,7 @@ export function buildKakaoMapHtml(params: {
             return aScore - bScore;
           });
 
-          return display.slice(0, 180);
+          return display.slice(0, 120);
         }
 
         function init() {
