@@ -234,14 +234,14 @@ export const gameStyles = StyleSheet.create({
     gap: spacing.sm,
   },
   floatingPlaceImage: {
-    width: 56,
-    height: 56,
+    width: 68,
+    height: 68,
     borderRadius: radius.md,
     backgroundColor: colors.base.subtle,
   },
   floatingPlaceImageFallback: {
-    width: 56,
-    height: 56,
+    width: 68,
+    height: 68,
     borderRadius: radius.md,
     backgroundColor: colors.base.subtle,
     alignItems: "center",
@@ -270,8 +270,15 @@ export const gameStyles = StyleSheet.create({
   floatingPlaceTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    minWidth: 0,
+  },
+  floatingPlaceTitleLeft: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
+    flex: 1,
     minWidth: 0,
   },
   floatingPlaceTitleText: {
