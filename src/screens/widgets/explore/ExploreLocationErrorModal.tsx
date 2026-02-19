@@ -17,10 +17,12 @@ export function ExploreLocationErrorModal({
   return (
     <Modal visible={visible} transparent animationType="fade">
       <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <View style={styles.locationErrorModal}>
-        <Text style={styles.cardTitle}>위치 확인 실패</Text>
-        <Text style={styles.cardBody}>{message}</Text>
-        <Button label="확인" onPress={onClose} />
+      <View style={styles.centerModalWrap} pointerEvents="box-none">
+        <View style={styles.locationErrorModal}>
+          <Text style={styles.cardTitle}>위치 확인 실패</Text>
+          <Text style={styles.cardBody}>{message}</Text>
+          <Button label="확인" onPress={onClose} />
+        </View>
       </View>
     </Modal>
   );
