@@ -6,10 +6,13 @@ import {
   AttemptItem,
   AttemptStatus,
   CourseCheckpoint,
+  PlaceCard,
+  PlaceItem,
   Poi,
   PoiCategory,
   RouteItem,
   SessionItem,
+  UserVisitItem,
 } from "./models";
 
 const CHECKPOINT_RADIUS_M = 40;
@@ -90,6 +93,18 @@ type GeocodedCheckpointSnapshot = {
   checkpoints: GeocodedCheckpoint[];
 };
 
+type TourPlaceSnapshot = {
+  places: Array<{
+    sourceId: string;
+    title: string;
+    category: string;
+    address: string;
+    lat: number;
+    lng: number;
+    imageUrl?: string | null;
+  }>;
+};
+
 function toRadians(value: number) {
   return (value * Math.PI) / 180;
 }
@@ -153,6 +168,19 @@ function buildPois(routeId: string, course: SeoulCourse): Poi[] {
   }));
 }
 
+function normalizePlaceCategory(raw: string): string {
+  if (raw.startsWith("A01")) return "자연";
+  if (raw.startsWith("A02")) return "문화";
+  if (raw.startsWith("A03")) return "레저";
+  return "일반";
+}
+
+function rarityByIndex(index: number): "common" | "rare" | "epic" {
+  if (index % 17 === 0) return "epic";
+  if (index % 5 === 0) return "rare";
+  return "common";
+}
+
 @Injectable()
 export class MockStoreService {
   private routes: RouteItem[] = DEFAULT_ROUTES;
@@ -161,9 +189,13 @@ export class MockStoreService {
   private attempts: AttemptItem[] = [];
   private visits: AttemptCheckpointVisit[] = [];
   private favoriteRouteIds = new Set<string>();
+  private places: PlaceItem[] = [];
+  private cards: PlaceCard[] = [];
+  private userPlaceVisits: UserVisitItem[] = [];
 
   constructor() {
     this.bootstrapRouteData();
+    this.bootstrapPlaceData();
   }
 
   private bootstrapRouteData() {
@@ -215,6 +247,64 @@ export class MockStoreService {
       }
     } catch (error) {
       console.error("[mock-store] failed to load generated course files, fallback to default mock", error);
+    }
+  }
+
+  private bootstrapPlaceData() {
+    const backendRoot = process.cwd();
+    const placesPath = path.join(backendRoot, "data/generated/tour-places.normalized.json");
+    if (!fs.existsSync(placesPath)) {
+      this.places = [
+        {
+          id: "place-sample-1",
+          sourceId: "sample-1",
+          name: "경복궁",
+          category: "문화",
+          address: "서울 종로구 사직로 161",
+          lat: 37.579617,
+          lng: 126.977041,
+        },
+        {
+          id: "place-sample-2",
+          sourceId: "sample-2",
+          name: "남산서울타워",
+          category: "랜드마크",
+          address: "서울 용산구 남산공원길 105",
+          lat: 37.55117,
+          lng: 126.988227,
+        },
+      ];
+      this.cards = this.places.map((place, index) => ({
+        cardId: `card-${place.id}`,
+        placeId: place.id,
+        title: `${place.name} 카드`,
+        rarity: rarityByIndex(index + 1),
+      }));
+      return;
+    }
+
+    try {
+      const snapshot = JSON.parse(fs.readFileSync(placesPath, "utf8")) as TourPlaceSnapshot;
+      const rows = Array.isArray(snapshot.places) ? snapshot.places : [];
+      this.places = rows.map((row, index) => ({
+        id: `place-${row.sourceId}`,
+        sourceId: row.sourceId,
+        name: row.title,
+        category: normalizePlaceCategory(row.category),
+        address: row.address,
+        lat: row.lat,
+        lng: row.lng,
+        imageUrl: row.imageUrl ?? null,
+      }));
+      this.cards = this.places.map((place, index) => ({
+        cardId: `card-${place.id}`,
+        placeId: place.id,
+        title: `${place.name} 카드`,
+        rarity: rarityByIndex(index + 1),
+        imageUrl: place.imageUrl ?? null,
+      }));
+    } catch (error) {
+      console.error("[mock-store] failed to load tour places, fallback sample", error);
     }
   }
 
@@ -380,5 +470,100 @@ export class MockStoreService {
 
   getFavorites() {
     return this.getRoutes().filter((route) => this.favoriteRouteIds.has(route.id));
+  }
+
+  getPlaces(params: { lat?: number; lng?: number; radius?: number; page: number; pageSize: number }) {
+    const { lat, lng, radius, page, pageSize } = params;
+    let rows = this.places;
+
+    if (lat !== undefined && lng !== undefined) {
+      const applyRadius = radius ?? 5000;
+      rows = rows.filter((place) => distanceInMeters(lat, lng, place.lat, place.lng) <= applyRadius);
+    }
+
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.min(100, Math.max(1, Math.floor(pageSize)));
+    const startIndex = (safePage - 1) * safePageSize;
+    const items = rows.slice(startIndex, startIndex + safePageSize);
+    const total = rows.length;
+
+    return {
+      items,
+      page: safePage,
+      pageSize: safePageSize,
+      total,
+      hasNext: startIndex + items.length < total,
+    };
+  }
+
+  checkPlaceVisit(payload: { userId: string; lat: number; lng: number; radiusM: number }) {
+    const { userId, lat, lng, radiusM } = payload;
+    const candidate = this.places
+      .map((place) => ({ place, distanceM: distanceInMeters(lat, lng, place.lat, place.lng) }))
+      .filter((row) => row.distanceM <= radiusM)
+      .sort((a, b) => a.distanceM - b.distanceM)[0];
+
+    if (!candidate) {
+      return {
+        matched: false,
+        collected: false,
+      };
+    }
+
+    const existing = this.userPlaceVisits.find((visit) => visit.userId === userId && visit.placeId === candidate.place.id);
+    if (existing) {
+      return {
+        matched: true,
+        collected: false,
+        reason: "already_collected",
+        place: candidate.place,
+        distanceM: Math.round(candidate.distanceM),
+      };
+    }
+
+    const now = new Date().toISOString();
+    this.userPlaceVisits.push({
+      userId,
+      placeId: candidate.place.id,
+      firstVisitedAt: now,
+      lat,
+      lng,
+    });
+    const card = this.cards.find((item) => item.placeId === candidate.place.id) ?? null;
+
+    return {
+      matched: true,
+      collected: true,
+      place: candidate.place,
+      card,
+      distanceM: Math.round(candidate.distanceM),
+      collectedAt: now,
+    };
+  }
+
+  getCardCatalog(page = 1, pageSize = 20) {
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.min(100, Math.max(1, Math.floor(pageSize)));
+    const startIndex = (safePage - 1) * safePageSize;
+    const items = this.cards.slice(startIndex, startIndex + safePageSize);
+    return {
+      items,
+      page: safePage,
+      pageSize: safePageSize,
+      total: this.cards.length,
+      hasNext: startIndex + items.length < this.cards.length,
+    };
+  }
+
+  getMyCards(userId: string) {
+    const acquiredPlaceIds = new Set(
+      this.userPlaceVisits.filter((visit) => visit.userId === userId).map((visit) => visit.placeId),
+    );
+    return this.cards
+      .filter((card) => acquiredPlaceIds.has(card.placeId))
+      .map((card) => ({
+        ...card,
+        place: this.places.find((place) => place.id === card.placeId) ?? null,
+      }));
   }
 }

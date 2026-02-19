@@ -11,6 +11,7 @@
     "build:checkpoint-upsert-sql": "ts-node scripts/build-checkpoint-upsert-sql.ts",
     "export:unresolved-checkpoints": "ts-node scripts/export-unresolved-checkpoints.ts",
     "suggest:checkpoint-overrides": "ts-node scripts/suggest-checkpoint-overrides.ts",
+    "sync:tour-places": "ts-node scripts/sync-tour-places.ts",
     "sync:seoul-courses": "ts-node scripts/sync-seoul-courses.ts",
     "geocode:checkpoints:kakao": "ts-node scripts/geocode-checkpoints-kakao.ts",
     "sync:daily": "ts-node scripts/run-daily-sync.ts"
