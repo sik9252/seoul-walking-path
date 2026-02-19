@@ -84,18 +84,13 @@ function normalizeItems(items: TourApiItem[]): PlaceRow[] {
     .filter((item): item is PlaceRow => !!item);
 }
 
-function normalizeServiceKey(raw: string): string {
-  const trimmed = raw.trim();
-  try {
-    return decodeURIComponent(trimmed);
-  } catch {
-    return trimmed;
-  }
+function encodeServiceKey(raw: string): string {
+  return encodeURIComponent(raw.trim());
 }
 
-async function fetchPage(baseUrl: string, params: URLSearchParams, pageNo: number): Promise<TourApiResponse> {
+async function fetchPage(baseUrl: string, params: URLSearchParams, serviceKeyEncoded: string, pageNo: number): Promise<TourApiResponse> {
   params.set("pageNo", String(pageNo));
-  const response = await fetch(`${baseUrl}?${params.toString()}`);
+  const response = await fetch(`${baseUrl}?serviceKey=${serviceKeyEncoded}&${params.toString()}`);
   if (!response.ok) {
     throw new Error(`Tour API request failed (${response.status})`);
   }
@@ -105,8 +100,8 @@ async function fetchPage(baseUrl: string, params: URLSearchParams, pageNo: numbe
 async function main() {
   loadEnvFile();
   const rawServiceKey = process.env.TOUR_API_SERVICE_KEY;
-  const serviceKey = rawServiceKey ? normalizeServiceKey(rawServiceKey) : "";
-  if (!serviceKey) {
+  const serviceKeyEncoded = rawServiceKey ? encodeServiceKey(rawServiceKey) : "";
+  if (!serviceKeyEncoded) {
     throw new Error("Missing TOUR_API_SERVICE_KEY in env");
   }
 
@@ -117,7 +112,6 @@ async function main() {
   const timeoutMs = Math.max(5000, Number(process.env.TOUR_API_TIMEOUT_MS ?? "15000"));
 
   const params = new URLSearchParams({
-    serviceKey,
     MobileOS: "ETC",
     MobileApp: "SeoulWalkgil",
     _type: "json",
@@ -134,7 +128,7 @@ async function main() {
     let totalCount = 0;
 
     while (true) {
-      const pageResponse = await fetchPage(baseUrl, params, page);
+      const pageResponse = await fetchPage(baseUrl, params, serviceKeyEncoded, page);
       const resultCode = pageResponse.response?.header?.resultCode;
       if (resultCode && resultCode !== "0000") {
         const message = pageResponse.response?.header?.resultMsg ?? "unknown";

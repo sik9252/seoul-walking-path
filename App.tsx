@@ -1,5 +1,6 @@
-import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { QueryClient, QueryClientProvider, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
   ActivityIndicator,
@@ -44,9 +45,20 @@ type MyCard = {
   place: PlaceItem | null;
 };
 
+type VisitCheckResponse = {
+  matched?: boolean;
+  collected?: boolean;
+  place?: PlaceItem;
+  card?: { title?: string };
+  reason?: string;
+};
+
 const DEMO_USER_ID = "demo-user";
 const DEMO_LAT = 37.579617;
 const DEMO_LNG = 126.977041;
+const PAGE_SIZE = 20;
+
+const queryClient = new QueryClient();
 
 function getApiBaseUrl() {
   const platformBaseUrl =
@@ -57,10 +69,20 @@ function getApiBaseUrl() {
   return base?.endsWith("/") ? base.slice(0, -1) : base;
 }
 
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(`request_failed_${response.status}`);
+  }
+  return (await response.json()) as T;
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AppShell />
+      <QueryClientProvider client={queryClient}>
+        <AppShell />
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }
@@ -68,64 +90,30 @@ export default function App() {
 function AppShell() {
   const [tab, setTab] = React.useState<GameTab>("explore");
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
-  const [places, setPlaces] = React.useState<PlaceItem[]>([]);
-  const [placePage, setPlacePage] = React.useState(1);
-  const [hasNextPlaces, setHasNextPlaces] = React.useState(false);
-  const [loadingPlaces, setLoadingPlaces] = React.useState(false);
-  const [cards, setCards] = React.useState<MyCard[]>([]);
-  const [loadingCards, setLoadingCards] = React.useState(false);
-
   const apiBaseUrl = getApiBaseUrl();
+  const query = useQueryClient();
+  const apiEnabled = Boolean(apiBaseUrl);
 
-  const loadPlaces = React.useCallback(
-    async (page: number, append: boolean) => {
-      if (!apiBaseUrl) return;
-      setLoadingPlaces(true);
-      try {
-        const response = await fetch(
-          `${apiBaseUrl}/places?lat=${DEMO_LAT}&lng=${DEMO_LNG}&radius=3000&page=${page}&pageSize=20`,
-        );
-        if (!response.ok) {
-          throw new Error(`places_failed_${response.status}`);
-        }
-        const payload = (await response.json()) as PlacePage;
-        setPlaces((prev) => (append ? [...prev, ...payload.items] : payload.items));
-        setPlacePage(payload.page);
-        setHasNextPlaces(payload.hasNext);
-      } catch (error) {
-        console.warn("[app] loadPlaces failed", error);
-      } finally {
-        setLoadingPlaces(false);
-      }
-    },
-    [apiBaseUrl],
-  );
+  const placesQuery = useInfiniteQuery({
+    queryKey: ["places", apiBaseUrl, DEMO_LAT, DEMO_LNG, PAGE_SIZE],
+    enabled: apiEnabled,
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      fetchJson<PlacePage>(
+        `${apiBaseUrl}/places?lat=${DEMO_LAT}&lng=${DEMO_LNG}&radius=3000&page=${pageParam}&pageSize=${PAGE_SIZE}`,
+      ),
+    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
+  });
 
-  const loadMyCards = React.useCallback(async () => {
-    if (!apiBaseUrl) return;
-    setLoadingCards(true);
-    try {
-      const response = await fetch(`${apiBaseUrl}/cards/my?userId=${DEMO_USER_ID}`);
-      if (!response.ok) throw new Error(`cards_failed_${response.status}`);
-      const payload = (await response.json()) as MyCard[];
-      setCards(payload);
-    } catch (error) {
-      console.warn("[app] loadMyCards failed", error);
-    } finally {
-      setLoadingCards(false);
-    }
-  }, [apiBaseUrl]);
+  const cardsQuery = useQuery({
+    queryKey: ["cards", "my", apiBaseUrl, DEMO_USER_ID],
+    enabled: apiEnabled,
+    queryFn: () => fetchJson<MyCard[]>(`${apiBaseUrl}/cards/my?userId=${DEMO_USER_ID}`),
+  });
 
-  React.useEffect(() => {
-    if (!apiBaseUrl) return;
-    void loadPlaces(1, false);
-    void loadMyCards();
-  }, [apiBaseUrl, loadMyCards, loadPlaces]);
-
-  const checkVisit = React.useCallback(async () => {
-    if (!apiBaseUrl) return;
-    try {
-      const response = await fetch(`${apiBaseUrl}/visits/check`, {
+  const visitMutation = useMutation({
+    mutationFn: () =>
+      fetchJson<VisitCheckResponse>(`${apiBaseUrl}/visits/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,16 +122,8 @@ function AppShell() {
           lng: DEMO_LNG,
           radiusM: 50,
         }),
-      });
-      if (!response.ok) throw new Error(`visit_failed_${response.status}`);
-      const payload = (await response.json()) as {
-        matched?: boolean;
-        collected?: boolean;
-        place?: PlaceItem;
-        card?: { title?: string };
-        reason?: string;
-      };
-
+      }),
+    onSuccess: (payload) => {
       if (!payload.matched) {
         Alert.alert("방문 실패", "반경 내 관광지가 없어요.");
         return;
@@ -153,12 +133,22 @@ function AppShell() {
       } else {
         Alert.alert("이미 수집됨", `${payload.place?.name ?? "관광지"}는 이미 수집한 장소예요.`);
       }
-      void loadMyCards();
-    } catch (error) {
+      void query.invalidateQueries({ queryKey: ["cards", "my", apiBaseUrl, DEMO_USER_ID] });
+    },
+    onError: (error) => {
       console.warn("[app] checkVisit failed", error);
       Alert.alert("오류", "방문 판정 중 문제가 발생했어요.");
-    }
-  }, [apiBaseUrl, loadMyCards]);
+    },
+  });
+
+  const places = React.useMemo(
+    () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
+    [placesQuery.data?.pages],
+  );
+  const hasNextPlaces = Boolean(placesQuery.hasNextPage);
+  const loadingPlaces = placesQuery.isPending || placesQuery.isFetchingNextPage;
+  const loadingCards = cardsQuery.isPending || cardsQuery.isFetching;
+  const cards = cardsQuery.data ?? [];
 
   const tabs: TabItem[] = [
     {
@@ -196,14 +186,15 @@ function AppShell() {
           onEndReachedThreshold={0.5}
           onEndReached={() => {
             if (!loadingPlaces && hasNextPlaces) {
-              void loadPlaces(placePage + 1, true);
+              void placesQuery.fetchNextPage();
             }
           }}
           ListHeaderComponent={
             <View style={styles.listHeader}>
               <Text style={styles.title}>탐험</Text>
               <Text style={styles.description}>근처 관광지에 도달해 카드를 수집하세요.</Text>
-              <Button label="현재 위치 방문 판정 (데모)" onPress={checkVisit} />
+              <Button label="현재 위치 방문 판정 (데모)" onPress={() => visitMutation.mutate()} />
+              {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
             </View>
           }
           renderItem={({ item }) => (
@@ -220,7 +211,7 @@ function AppShell() {
             <View style={styles.listFooter}>
               {loadingPlaces ? <ActivityIndicator color={colors.brand[600]} /> : null}
               {!loadingPlaces && hasNextPlaces ? (
-                <Pressable style={styles.moreBtn} onPress={() => void loadPlaces(placePage + 1, true)}>
+                <Pressable style={styles.moreBtn} onPress={() => void placesQuery.fetchNextPage()}>
                   <Text style={styles.moreText}>더 보기</Text>
                 </Pressable>
               ) : null}
@@ -229,9 +220,7 @@ function AppShell() {
               ) : null}
             </View>
           }
-          ListEmptyComponent={
-            !loadingPlaces ? <Text style={styles.cardBody}>관광지 데이터가 없습니다.</Text> : null
-          }
+          ListEmptyComponent={!loadingPlaces ? <Text style={styles.cardBody}>관광지 데이터가 없습니다.</Text> : null}
         />
       ) : null}
 
@@ -269,8 +258,7 @@ function AppShell() {
           <Card>
             <Text style={styles.detailLabel}>설명</Text>
             <Text style={styles.cardBody}>
-              {selectedPlace.name}는 {selectedPlace.category} 카테고리 관광지입니다. 방문 반경 안에 들어오면 카드 수집이
-              가능합니다.
+              {selectedPlace.name}는 {selectedPlace.category} 카테고리 관광지입니다. 방문 반경 안에 들어오면 카드 수집이 가능합니다.
             </Text>
           </Card>
         </ScrollView>
@@ -280,10 +268,8 @@ function AppShell() {
         <ScrollView contentContainerStyle={styles.screen}>
           <Text style={styles.title}>컬렉션</Text>
           <Text style={styles.description}>획득한 관광지 카드를 모아보세요.</Text>
-
           {loadingCards ? <ActivityIndicator color={colors.brand[600]} /> : null}
           {!loadingCards && cards.length === 0 ? <Text style={styles.cardBody}>아직 획득한 카드가 없어요.</Text> : null}
-
           {cards.map((card) => (
             <Card key={card.cardId}>
               <Text style={styles.cardTitle}>{card.title}</Text>
@@ -387,6 +373,10 @@ const styles = StyleSheet.create({
     color: colors.base.text,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing.xs,
+    fontSize: typography.size.bodySm,
+  },
+  errorText: {
+    color: "#B42318",
     fontSize: typography.size.bodySm,
   },
 });
