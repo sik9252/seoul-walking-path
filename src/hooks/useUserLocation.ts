@@ -11,6 +11,10 @@ export type RefreshLocationResult =
   | { ok: true }
   | { ok: false; reason: string };
 
+type RefreshLocationOptions = {
+  requestIfNeeded?: boolean;
+};
+
 const DEFAULT_SEOUL_LOCATION: UserLocationState = {
   latitude: 37.5665,
   longitude: 126.978,
@@ -41,11 +45,26 @@ export function useUserLocation() {
     );
   }, []);
 
+  const getPermissionStatus = React.useCallback(async () => {
+    const permission = await Location.getForegroundPermissionsAsync();
+    return permission.status;
+  }, []);
+
   const refreshLocation = React.useCallback(async (): Promise<RefreshLocationResult> => {
+    return refreshLocationWithOptions({ requestIfNeeded: true });
+  }, []);
+
+  const refreshLocationWithOptions = React.useCallback(async (options?: RefreshLocationOptions): Promise<RefreshLocationResult> => {
+    const requestIfNeeded = options?.requestIfNeeded ?? true;
     setIsLoadingLocation(true);
     setLocationError(null);
     try {
-      const permission = await Location.requestForegroundPermissionsAsync();
+      const currentPermission = await Location.getForegroundPermissionsAsync();
+      let permission = currentPermission;
+      if (permission.status !== "granted" && requestIfNeeded) {
+        permission = await Location.requestForegroundPermissionsAsync();
+      }
+
       if (permission.status !== "granted") {
         const reason = "위치 권한이 거부되었습니다.";
         setLocationError(reason);
@@ -53,15 +72,35 @@ export function useUserLocation() {
         return { ok: false, reason };
       }
 
-      const current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+      const lastKnown = await Location.getLastKnownPositionAsync({
+        requiredAccuracy: 150,
       });
+      if (lastKnown?.coords) {
+        setLocation({
+          latitude: lastKnown.coords.latitude,
+          longitude: lastKnown.coords.longitude,
+          heading:
+            typeof lastKnown.coords.heading === "number" && lastKnown.coords.heading >= 0
+              ? lastKnown.coords.heading
+              : null,
+        });
+      }
 
-      setLocation({
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        heading: typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
-      });
+      const current = await Promise.race([
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
+
+      if (current?.coords) {
+        setLocation({
+          latitude: current.coords.latitude,
+          longitude: current.coords.longitude,
+          heading: typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
+        });
+      }
+
       await startWatching();
       return { ok: true };
     } catch (error) {
@@ -73,7 +112,7 @@ export function useUserLocation() {
     } finally {
       setIsLoadingLocation(false);
     }
-  }, []);
+  }, [startWatching]);
 
   const clearLocationError = React.useCallback(() => {
     setLocationError(null);
@@ -92,6 +131,8 @@ export function useUserLocation() {
     isLoadingLocation,
     locationError,
     refreshLocation,
+    refreshLocationWithOptions,
+    getPermissionStatus,
     clearLocationError,
   };
 }

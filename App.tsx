@@ -54,7 +54,8 @@ function AppShell() {
         message,
       }),
   });
-  const { location, isLoadingLocation, locationError, refreshLocation, clearLocationError } = useUserLocation();
+  const { location, isLoadingLocation, locationError, refreshLocation, refreshLocationWithOptions, getPermissionStatus, clearLocationError } =
+    useUserLocation();
 
   const places = React.useMemo(
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
@@ -86,6 +87,22 @@ function AppShell() {
     }
     setIsRequestingPermission(false);
   }, [clearLocationError, refreshLocation]);
+
+  const handleOnboardingNext = React.useCallback(async () => {
+    setIsRequestingPermission(true);
+    try {
+      const permissionStatus = await getPermissionStatus();
+      if (permissionStatus === "granted") {
+        await refreshLocationWithOptions({ requestIfNeeded: false });
+        clearLocationError();
+        setStartupStep("home");
+        return;
+      }
+      setStartupStep("permission");
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  }, [clearLocationError, getPermissionStatus, refreshLocationWithOptions]);
 
   const handleContinueWithoutPermission = React.useCallback(() => {
     clearLocationError();
@@ -130,7 +147,7 @@ function AppShell() {
 
   if (startupStep === "splash") {
     return (
-      <SafeAreaView edges={["top"]} style={startupStyles.safe}>
+      <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
         <StatusBar style="dark" />
         <View style={startupStyles.center}>
           <Image source={require("./assets/seoul_walking_path_logo.png")} style={startupStyles.splashLogo} />
@@ -143,7 +160,7 @@ function AppShell() {
 
   if (startupStep === "onboarding") {
     return (
-      <SafeAreaView edges={["top"]} style={startupStyles.safe}>
+      <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
         <StatusBar style="dark" />
         <View style={startupStyles.center}>
           <Image source={require("./assets/seoul_walking_path_logo.png")} style={startupStyles.onboardingLogo} />
@@ -153,7 +170,11 @@ function AppShell() {
           </Text>
         </View>
         <View style={startupStyles.footer}>
-          <Button label="다음" onPress={() => setStartupStep("permission")} />
+          <Button
+            label={isRequestingPermission ? "확인 중..." : "다음"}
+            onPress={() => void handleOnboardingNext()}
+            disabled={isRequestingPermission}
+          />
         </View>
       </SafeAreaView>
     );
@@ -161,7 +182,7 @@ function AppShell() {
 
   if (startupStep === "permission") {
     return (
-      <SafeAreaView edges={["top"]} style={startupStyles.safe}>
+      <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
         <StatusBar style="dark" />
         <View style={startupStyles.center}>
           <Ionicons name="location-outline" size={48} color={colors.brand[700]} />
@@ -240,8 +261,7 @@ const startupStyles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.base.background,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
   },
   center: {
     flex: 1,
