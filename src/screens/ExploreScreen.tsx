@@ -305,6 +305,7 @@ export function ExploreScreen({
       <ExplorePlaceListSheet
         visible={isSheetOpen}
         places={sheetPlaces}
+        collectedPlaceIds={collectedPlaceIds}
         loading={isViewportLoading}
         hasNext={false}
         onLoadMore={() => {}}
