@@ -35,6 +35,7 @@ type Props = {
   onCloseVisitDialog: () => void;
   onOpenDetail: (place: PlaceItem) => void;
   onLoadMore: () => void;
+  bottomOverlayOffset?: number;
 };
 
 export function ExploreScreen({
@@ -53,6 +54,7 @@ export function ExploreScreen({
   onCloseVisitDialog,
   onOpenDetail,
   onLoadMore,
+  bottomOverlayOffset = 0,
 }: Props) {
   const mapWebViewRef = React.useRef<WebView>(null);
   const viewportDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -268,11 +270,13 @@ export function ExploreScreen({
         onLoadMore={() => {}}
         onClose={() => setIsSheetOpen(false)}
         onOpenDetail={onOpenDetail}
+        bottomOffset={bottomOverlayOffset}
       />
 
       <ExplorePlaceDetailSheet
         place={focusedPlace}
         onClose={() => setFocusedPlace(null)}
+        bottomOffset={bottomOverlayOffset}
       />
 
       <ExploreVisitResultModal

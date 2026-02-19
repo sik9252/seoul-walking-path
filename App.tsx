@@ -59,6 +59,7 @@ function AppShell() {
   const [splashProgress, setSplashProgress] = React.useState(0.1);
   const [splashStatus, setSplashStatus] = React.useState("권한 상태를 확인하는 중...");
   const [tab, setTab] = React.useState<GameTab>("explore");
+  const [tabBarHeight, setTabBarHeight] = React.useState(0);
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
   const [visitDialog, setVisitDialog] = React.useState<{
     visible: boolean;
@@ -334,6 +335,7 @@ function AppShell() {
           onCloseVisitDialog={() => setVisitDialog((prev) => ({ ...prev, visible: false }))}
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}
+          bottomOverlayOffset={tabBarHeight}
         />
       ) : null}
 
@@ -355,7 +357,12 @@ function AppShell() {
         </View>
       ) : null}
 
-      <TabBar tabs={tabs} activeKey={tab} onPressTab={(key) => setTab(key as GameTab)} />
+      <TabBar
+        tabs={tabs}
+        activeKey={tab}
+        onPressTab={(key) => setTab(key as GameTab)}
+        onHeightChange={setTabBarHeight}
+      />
     </SafeAreaView>
   );
 }

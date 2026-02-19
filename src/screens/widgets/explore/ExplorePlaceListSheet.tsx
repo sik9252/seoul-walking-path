@@ -15,6 +15,7 @@ type ExplorePlaceListSheetProps = {
   onLoadMore: () => void;
   onClose: () => void;
   onOpenDetail: (place: PlaceItem) => void;
+  bottomOffset?: number;
 };
 
 export function ExplorePlaceListSheet({
@@ -25,6 +26,7 @@ export function ExplorePlaceListSheet({
   onLoadMore,
   onClose,
   onOpenDetail,
+  bottomOffset = 0,
 }: ExplorePlaceListSheetProps) {
   const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible,
@@ -41,7 +43,7 @@ export function ExplorePlaceListSheet({
   return (
     <>
       {expanded ? <Pressable style={styles.sheetBackdrop} onPress={handleClose} /> : null}
-      <Animated.View style={[styles.sheetPanel, { transform: [{ translateY }] }]}>
+      <Animated.View style={[styles.sheetPanel, { bottom: bottomOffset, transform: [{ translateY }] }]}>
         <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
           <View style={styles.sheetHandle} />
         </Pressable>

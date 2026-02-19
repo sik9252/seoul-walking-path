@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from "react-native";
+import { LayoutChangeEvent, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 
@@ -22,13 +15,23 @@ type TabBarProps = {
   activeKey: string;
   onPressTab: (key: string) => void;
   style?: StyleProp<ViewStyle>;
+  onHeightChange?: (height: number) => void;
 };
 
-export function TabBar({ tabs, activeKey, onPressTab, style }: TabBarProps) {
+export function TabBar({ tabs, activeKey, onPressTab, style, onHeightChange }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const handleLayout = React.useCallback(
+    (event: LayoutChangeEvent) => {
+      onHeightChange?.(event.nativeEvent.layout.height);
+    },
+    [onHeightChange],
+  );
 
   return (
-    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, spacing.sm) }, style]}>
+    <View
+      onLayout={handleLayout}
+      style={[styles.root, { paddingBottom: Math.max(insets.bottom, spacing.sm) }, style]}
+    >
       {tabs.map((tab) => {
         const active = tab.key === activeKey;
         return (

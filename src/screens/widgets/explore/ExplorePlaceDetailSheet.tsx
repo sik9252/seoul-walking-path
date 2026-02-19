@@ -10,9 +10,10 @@ import { useBottomSheetSnap } from "./useBottomSheetSnap";
 type ExplorePlaceDetailSheetProps = {
   place: PlaceItem | null;
   onClose: () => void;
+  bottomOffset?: number;
 };
 
-export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSheetProps) {
+export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: ExplorePlaceDetailSheetProps) {
   const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible: Boolean(place),
     collapsedOffset: 530,
@@ -28,7 +29,7 @@ export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSh
   return (
     <>
       {expanded ? <Pressable style={styles.sheetBackdrop} onPress={handleClose} /> : null}
-      <Animated.View style={[styles.placeDetailSheetPanel, { transform: [{ translateY }] }]}>
+      <Animated.View style={[styles.placeDetailSheetPanel, { bottom: bottomOffset, transform: [{ translateY }] }]}>
         <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
           <View style={styles.sheetHandle} />
         </Pressable>
