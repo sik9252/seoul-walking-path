@@ -390,6 +390,13 @@ export const gameStyles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     gap: spacing.sm,
+    alignItems: "center",
+  },
+  collectionTabsWrap: {
+    height: 82,
+  },
+  collectionTabsScroll: {
+    flexGrow: 0,
   },
   collectionTabChip: {
     minWidth: 136,
@@ -399,6 +406,7 @@ export const gameStyles = StyleSheet.create({
     backgroundColor: colors.base.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
+    alignSelf: "center",
   },
   collectionTabChipActive: {
     borderColor: "#9BE8B9",

@@ -19,45 +19,52 @@ type CollectionCategoryTabsProps = {
 
 export function CollectionCategoryTabs({ categories, selectedCategory, onSelectCategory }: CollectionCategoryTabsProps) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionTabsRow}>
-      <Pressable
-        key="all"
-        onPress={() => onSelectCategory("all")}
-        style={[styles.collectionTabChip, selectedCategory === "all" && styles.collectionTabChipActive]}
+    <View style={styles.collectionTabsWrap}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.collectionTabsScroll}
+        contentContainerStyle={styles.collectionTabsRow}
       >
-        <View style={styles.collectionTabChipInner}>
-          <Ionicons
-            name="grid"
-            size={18}
-            color={selectedCategory === "all" ? colors.brand[700] : colors.base.textSubtle}
-          />
-          <Text style={[styles.collectionTabChipLabel, selectedCategory === "all" && styles.collectionTabChipLabelActive]}>
-            전체
-          </Text>
-        </View>
-      </Pressable>
+        <Pressable
+          key="all"
+          onPress={() => onSelectCategory("all")}
+          style={[styles.collectionTabChip, selectedCategory === "all" && styles.collectionTabChipActive]}
+        >
+          <View style={styles.collectionTabChipInner}>
+            <Ionicons
+              name="grid"
+              size={18}
+              color={selectedCategory === "all" ? colors.brand[700] : colors.base.textSubtle}
+            />
+            <Text style={[styles.collectionTabChipLabel, selectedCategory === "all" && styles.collectionTabChipLabelActive]}>
+              전체
+            </Text>
+          </View>
+        </Pressable>
 
-      {categories.map((item) => {
-        const active = selectedCategory === item.value;
-        return (
-          <Pressable
-            key={item.areaCode}
-            onPress={() => onSelectCategory(item.value)}
-            style={[styles.collectionTabChip, active && styles.collectionTabChipActive]}
-          >
-            <View style={styles.collectionTabChipInner}>
-              <Ionicons
-                name="location"
-                size={18}
-                color={active ? colors.brand[700] : colors.base.textSubtle}
-              />
-              <Text style={[styles.collectionTabChipLabel, active && styles.collectionTabChipLabelActive]}>
-                {item.label || "지역"}
-              </Text>
-            </View>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+        {categories.map((item) => {
+          const active = selectedCategory === item.value;
+          return (
+            <Pressable
+              key={item.areaCode}
+              onPress={() => onSelectCategory(item.value)}
+              style={[styles.collectionTabChip, active && styles.collectionTabChipActive]}
+            >
+              <View style={styles.collectionTabChipInner}>
+                <Ionicons
+                  name="location"
+                  size={18}
+                  color={active ? colors.brand[700] : colors.base.textSubtle}
+                />
+                <Text style={[styles.collectionTabChipLabel, active && styles.collectionTabChipLabelActive]}>
+                  {item.label || "지역"}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
