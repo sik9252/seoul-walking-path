@@ -54,6 +54,7 @@ export function ExploreScreen({
         address: place.address,
         lat: place.lat,
         lng: place.lng,
+        imageUrl: place.imageUrl ?? null,
       })),
     );
     const userLocationJson = JSON.stringify(userLocation);
@@ -66,6 +67,22 @@ export function ExploreScreen({
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <style>
       html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; background: #f6f7f4; }
+      .spot-marker {
+        width: 34px;
+        height: 34px;
+        border-radius: 17px;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        background: #e8efe3;
+        padding: 0;
+      }
+      .spot-marker img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJavascriptKey}&autoload=false"></script>
   </head>
@@ -99,10 +116,38 @@ export function ExploreScreen({
           }
 
           places.forEach(function (place) {
-            const marker = new kakao.maps.Marker({
-              map,
-              position: new kakao.maps.LatLng(place.lat, place.lng),
-            });
+            const position = new kakao.maps.LatLng(place.lat, place.lng);
+
+            if (place.imageUrl) {
+              const button = document.createElement("button");
+              button.className = "spot-marker";
+              button.type = "button";
+              button.ariaLabel = place.name;
+
+              const image = document.createElement("img");
+              image.src = place.imageUrl;
+              image.alt = place.name;
+              image.onerror = function () {
+                button.style.background = "#dce5d5";
+                button.innerHTML = "";
+              };
+              button.appendChild(image);
+
+              button.addEventListener("click", function () {
+                postMessage({ type: "markerPress", placeId: place.id });
+              });
+
+              const overlay = new kakao.maps.CustomOverlay({
+                position,
+                content: button,
+                yAnchor: 1,
+                zIndex: 3,
+              });
+              overlay.setMap(map);
+              return;
+            }
+
+            const marker = new kakao.maps.Marker({ map, position });
             kakao.maps.event.addListener(marker, "click", function () {
               postMessage({ type: "markerPress", placeId: place.id });
             });
