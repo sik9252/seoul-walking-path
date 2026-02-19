@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { colors, radius, spacing, typography } from "../theme/tokens";
+import { colors, radius, shadow, spacing, typography } from "../theme/tokens";
 
 export const gameStyles = StyleSheet.create({
   safe: {
@@ -55,34 +55,24 @@ export const gameStyles = StyleSheet.create({
     flex: 1,
     width: "100%",
   },
-  mapTopHeader: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.base.background,
-    gap: spacing.xs,
-  },
-  floatingListButton: {
+  floatingRightControls: {
     position: "absolute",
     right: spacing.xl,
-    bottom: spacing.x3,
-    minHeight: 46,
-    borderRadius: radius.pill,
-    backgroundColor: colors.base.surface,
-    borderWidth: 1,
-    borderColor: colors.base.border,
-    paddingHorizontal: spacing.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
+    top: spacing.lg,
+    gap: spacing.sm,
     zIndex: 11,
     elevation: 4,
   },
-  floatingListLabel: {
-    color: colors.base.text,
-    fontSize: typography.size.labelMd,
-    fontWeight: typography.weight.bold,
+  floatingCircleButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.base.surface,
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.level2,
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -140,7 +130,7 @@ export const gameStyles = StyleSheet.create({
     position: "absolute",
     left: spacing.xl,
     right: spacing.xl,
-    top: spacing.md,
+    top: spacing.lg,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radius.md,
@@ -149,7 +139,44 @@ export const gameStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     gap: spacing.sm,
-    zIndex: 10,
+    zIndex: 9,
+  },
+  floatingPlaceCard: {
+    position: "absolute",
+    left: spacing.xl,
+    right: spacing.xl,
+    bottom: spacing.x4,
+    borderRadius: radius.lg,
+    backgroundColor: "rgba(255, 255, 255, 0.96)",
+    borderWidth: 1,
+    borderColor: colors.base.border,
+    padding: spacing.md,
+    gap: spacing.sm,
+    zIndex: 12,
+    ...shadow.level2,
+  },
+  floatingPlaceTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  floatingPlaceImage: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    backgroundColor: colors.base.subtle,
+  },
+  floatingPlaceImageFallback: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    backgroundColor: colors.base.subtle,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  floatingPlaceTextWrap: {
+    flex: 1,
+    gap: 2,
   },
   listFooter: {
     paddingVertical: spacing.md,

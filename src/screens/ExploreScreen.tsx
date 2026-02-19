@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from "react-native";
 import { WebView } from "react-native-webview";
 import type { WebViewMessageEvent } from "react-native-webview";
 import { Button, Card } from "../components/ui";
@@ -38,6 +38,7 @@ export function ExploreScreen({
   onLoadMore,
 }: Props) {
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+  const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
   const markerPlaces = places.slice(0, 200);
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
@@ -204,21 +205,20 @@ export function ExploreScreen({
         const payload = JSON.parse(event.nativeEvent.data) as { type?: string; placeId?: string };
         if (payload.type !== "markerPress" || !payload.placeId) return;
         const selected = markerPlaces.find((place) => place.id === payload.placeId);
-        if (selected) onOpenDetail(selected);
+        if (selected) {
+          setFocusedPlace(selected);
+        }
       } catch (error) {
         console.warn("[kakao-map] invalid postMessage payload", error);
       }
     },
-    [markerPlaces, onOpenDetail],
+    [markerPlaces],
   );
+
+  const previewPlace = focusedPlace ?? markerPlaces[0] ?? null;
 
   return (
     <View style={styles.mapScreen}>
-      <View style={styles.mapTopHeader}>
-        <Text style={styles.title}>탐험</Text>
-        <Text style={styles.description}>헤더 아래 전체 화면에서 지도와 마커를 확인하세요.</Text>
-      </View>
-
       <View style={styles.mapBody}>
         {kakaoJavascriptKey ? (
           <WebView
@@ -235,17 +235,49 @@ export function ExploreScreen({
           </View>
         )}
 
-        <Pressable style={styles.floatingListButton} onPress={() => setIsSheetOpen(true)}>
-          <Ionicons name="list" size={18} color={colors.base.text} />
-          <Text style={styles.floatingListLabel}>목록 보기</Text>
-        </Pressable>
+        <View style={styles.floatingRightControls}>
+          <Pressable style={styles.floatingCircleButton} onPress={onRefreshLocation}>
+            <Ionicons name="locate" size={20} color={colors.brand[700]} />
+          </Pressable>
+          <Pressable style={styles.floatingCircleButton} onPress={() => setIsSheetOpen(true)}>
+            <Ionicons name="list" size={20} color={colors.base.text} />
+          </Pressable>
+          <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
+            <Ionicons name="sparkles" size={20} color={colors.base.text} />
+          </Pressable>
+        </View>
 
         <View style={styles.mapMetaRow}>
           <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개</Text>
-          <Pressable onPress={onRefreshLocation}>
-            <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 새로고침"}</Text>
-          </Pressable>
+          <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 준비됨"}</Text>
         </View>
+
+        {previewPlace ? (
+          <View style={styles.floatingPlaceCard}>
+            <View style={styles.floatingPlaceTop}>
+              {previewPlace.imageUrl ? (
+                <Image source={{ uri: previewPlace.imageUrl }} style={styles.floatingPlaceImage} />
+              ) : (
+                <View style={styles.floatingPlaceImageFallback}>
+                  <Ionicons name="image-outline" size={20} color={colors.base.textSubtle} />
+                </View>
+              )}
+              <View style={styles.floatingPlaceTextWrap}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {previewPlace.name}
+                </Text>
+                <Text style={styles.cardBody} numberOfLines={1}>
+                  {previewPlace.category} · {previewPlace.address}
+                </Text>
+              </View>
+              <Pressable onPress={() => setFocusedPlace(null)}>
+                <Ionicons name="close" size={18} color={colors.base.textSubtle} />
+              </Pressable>
+            </View>
+            <Button label="상세 정보 보기" onPress={() => onOpenDetail(previewPlace)} />
+          </View>
+        ) : null}
+
         {!apiEnabled ? <Text style={styles.errorText}>API URL이 설정되지 않았습니다.</Text> : null}
         {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
         {locationError ? <Text style={styles.errorText}>{locationError}</Text> : null}
