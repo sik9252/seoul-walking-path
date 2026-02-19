@@ -1,9 +1,15 @@
 import React from "react";
-import { ActivityIndicator, ScrollView, Text } from "react-native";
-import { Card } from "../components/ui";
+import { ActivityIndicator, Text, View } from "react-native";
 import { colors } from "../theme/tokens";
 import { gameStyles as styles } from "../styles/gameStyles";
 import { MyCard } from "../types/gameTypes";
+import {
+  CollectionCategory,
+  CollectionCategoryTabs,
+  CollectionGrid,
+  CollectionHeader,
+  CollectionProgressCard,
+} from "./widgets/collection";
 
 type Props = {
   cards: MyCard[];
@@ -12,21 +18,56 @@ type Props = {
 };
 
 export function CollectionScreen({ cards, loading, isError }: Props) {
+  const [selectedCategory, setSelectedCategory] = React.useState<CollectionCategory>("all");
+
+  const filteredCards = React.useMemo(() => {
+    if (selectedCategory === "all") return cards;
+    return cards.filter((card) => {
+      const category = card.place?.category.toLowerCase() ?? "";
+      if (selectedCategory === "food") {
+        return category.includes("food") || category.includes("음식");
+      }
+      if (selectedCategory === "nature") {
+        return category.includes("nature") || category.includes("공원") || category.includes("산");
+      }
+      return true;
+    });
+  }, [cards, selectedCategory]);
+
+  const gridItems = React.useMemo(() => {
+    const collectedItems = filteredCards.map((card) => ({
+      id: card.cardId,
+      locked: false as const,
+      card,
+    }));
+
+    const lockedCount = Math.max(0, 8 - collectedItems.length);
+    const lockedItems = Array.from({ length: lockedCount }, (_, index) => ({
+      id: `locked-${selectedCategory}-${index + 1}`,
+      locked: true as const,
+      title: `Unknown Spot ${index + 1}`,
+    }));
+
+    return [...collectedItems, ...lockedItems];
+  }, [filteredCards, selectedCategory]);
+
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Text style={styles.title}>컬렉션</Text>
-      <Text style={styles.description}>획득한 관광지 카드를 모아보세요.</Text>
+    <View style={styles.collectionScreen}>
+      <CollectionHeader />
+      <CollectionProgressCard collectedCount={cards.length} totalCount={50} />
+      <CollectionCategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
 
-      {loading ? <ActivityIndicator color={colors.brand[600]} /> : null}
-      {isError ? <Text style={styles.errorText}>카드 목록을 불러오지 못했습니다.</Text> : null}
-      {!loading && cards.length === 0 ? <Text style={styles.cardBody}>아직 획득한 카드가 없어요.</Text> : null}
-
-      {cards.map((card) => (
-        <Card key={card.cardId}>
-          <Text style={styles.cardTitle}>{card.title}</Text>
-          <Text style={styles.cardBody}>{card.rarity.toUpperCase()} · {card.place?.name ?? "알 수 없는 장소"}</Text>
-        </Card>
-      ))}
-    </ScrollView>
+      {loading ? (
+        <View style={styles.collectionStateBox}>
+          <ActivityIndicator color={colors.brand[600]} />
+        </View>
+      ) : null}
+      {isError ? (
+        <View style={styles.collectionStateBox}>
+          <Text style={styles.errorText}>카드 목록을 불러오지 못했습니다.</Text>
+        </View>
+      ) : null}
+      {!loading && !isError ? <CollectionGrid items={gridItems} /> : null}
+    </View>
   );
 }

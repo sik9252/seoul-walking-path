@@ -1,0 +1,75 @@
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { FlatList, Image, Text, View } from "react-native";
+import { gameStyles as styles } from "../../../styles/gameStyles";
+import { colors } from "../../../theme/tokens";
+import { MyCard } from "../../../types/gameTypes";
+
+type CollectionGridItem =
+  | {
+      id: string;
+      locked: false;
+      card: MyCard;
+    }
+  | {
+      id: string;
+      locked: true;
+      title: string;
+    };
+
+type CollectionGridProps = {
+  items: CollectionGridItem[];
+};
+
+export function CollectionGrid({ items }: CollectionGridProps) {
+  return (
+    <FlatList
+      data={items}
+      numColumns={2}
+      keyExtractor={(item) => item.id}
+      columnWrapperStyle={styles.collectionGridRow}
+      contentContainerStyle={styles.collectionGridContent}
+      showsVerticalScrollIndicator={false}
+      renderItem={({ item }) => {
+        if (item.locked) {
+          return (
+            <View style={styles.collectionCardWrap}>
+              <View style={[styles.collectionCardImageWrap, styles.collectionCardImageLocked]}>
+                <View style={styles.collectionCardLockCircle}>
+                  <Ionicons name="lock-closed" size={24} color={colors.base.surface} />
+                </View>
+              </View>
+              <Text numberOfLines={1} style={[styles.collectionCardName, styles.collectionCardNameLocked]}>
+                {item.title}
+              </Text>
+              <Text style={styles.collectionCardStatusLocked}>Locked</Text>
+            </View>
+          );
+        }
+
+        const { card } = item;
+        const imageUrl = card.place?.imageUrl;
+        return (
+          <View style={styles.collectionCardWrap}>
+            <View style={styles.collectionCardImageWrap}>
+              {imageUrl ? (
+                <Image source={{ uri: imageUrl }} style={styles.collectionCardImage} />
+              ) : (
+                <View style={styles.collectionCardImageFallback}>
+                  <Ionicons name="image-outline" size={26} color={colors.base.textSubtle} />
+                </View>
+              )}
+              <View style={styles.collectionRareBadge}>
+                <Ionicons name="star" size={16} color={colors.accent.ratingStar} />
+              </View>
+            </View>
+            <Text numberOfLines={1} style={styles.collectionCardName}>
+              {card.title}
+            </Text>
+            <Text style={styles.collectionCardStatus}>Collected</Text>
+          </View>
+        );
+      }}
+    />
+  );
+}
