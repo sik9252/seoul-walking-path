@@ -10,6 +10,7 @@ import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
 import { PlaceDetailScreen } from "./src/screens/PlaceDetailScreen";
 import { useUserLocation } from "./src/hooks/useUserLocation";
+import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
 import { gameStyles as styles } from "./src/styles/gameStyles";
 import { GameTab, PlaceItem } from "./src/types/gameTypes";
@@ -41,6 +42,13 @@ function AppShell() {
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
     [placesQuery.data?.pages],
   );
+
+  useNearbyCollectionAlert({
+    places,
+    location,
+    radiusM: 120,
+    enabled: tab === "explore",
+  });
 
   const tabs: TabItem[] = [
     {

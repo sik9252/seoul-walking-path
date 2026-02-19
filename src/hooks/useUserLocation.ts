@@ -21,6 +21,25 @@ export function useUserLocation() {
   const [location, setLocation] = React.useState<UserLocationState | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = React.useState(false);
   const [locationError, setLocationError] = React.useState<string | null>(null);
+  const watcherRef = React.useRef<Location.LocationSubscription | null>(null);
+
+  const startWatching = React.useCallback(async () => {
+    if (watcherRef.current) return;
+    watcherRef.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: 15,
+        timeInterval: 5000,
+      },
+      (next) => {
+        setLocation({
+          latitude: next.coords.latitude,
+          longitude: next.coords.longitude,
+          heading: typeof next.coords.heading === "number" && next.coords.heading >= 0 ? next.coords.heading : null,
+        });
+      },
+    );
+  }, []);
 
   const refreshLocation = React.useCallback(async (): Promise<RefreshLocationResult> => {
     setIsLoadingLocation(true);
@@ -43,6 +62,7 @@ export function useUserLocation() {
         longitude: current.coords.longitude,
         heading: typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
       });
+      await startWatching();
       return { ok: true };
     } catch (error) {
       console.warn("[location] failed to get location", error);
@@ -58,6 +78,14 @@ export function useUserLocation() {
   React.useEffect(() => {
     void refreshLocation();
   }, [refreshLocation]);
+
+  React.useEffect(
+    () => () => {
+      watcherRef.current?.remove();
+      watcherRef.current = null;
+    },
+    [],
+  );
 
   return {
     location,
