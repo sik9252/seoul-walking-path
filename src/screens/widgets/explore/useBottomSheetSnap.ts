@@ -11,6 +11,7 @@ export function useBottomSheetSnap({ visible, collapsedOffset }: Params) {
   const [expanded, setExpanded] = React.useState(false);
   const expandedRef = React.useRef(false);
   const collapsedOffsetRef = React.useRef(collapsedOffset);
+  const dragStartYRef = React.useRef(collapsedOffset);
 
   React.useEffect(() => {
     collapsedOffsetRef.current = collapsedOffset;
@@ -58,23 +59,31 @@ export function useBottomSheetSnap({ visible, collapsedOffset }: Params) {
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) =>
           Math.abs(gesture.dy) > 4 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderGrant: () => {
+          translateY.stopAnimation((value: number) => {
+            dragStartYRef.current = value;
+          });
+        },
         onPanResponderMove: (_, gesture) => {
-          const base = expandedRef.current ? 0 : collapsedOffset;
-          const next = Math.max(0, Math.min(collapsedOffset, base + gesture.dy));
+          const next = Math.max(0, Math.min(collapsedOffset, dragStartYRef.current + gesture.dy));
           translateY.setValue(next);
         },
         onPanResponderRelease: (_, gesture) => {
-          const shouldExpand = gesture.dy < -24;
-          const shouldCollapse = gesture.dy > 24;
-          if (shouldExpand) {
+          const currentY = Math.max(0, Math.min(collapsedOffset, dragStartYRef.current + gesture.dy));
+          const fastSwipeUp = gesture.vy < -0.35;
+          const fastSwipeDown = gesture.vy > 0.35;
+          const halfPoint = collapsedOffset * 0.5;
+
+          if (fastSwipeUp) {
             setExpandedState(true);
             return;
           }
-          if (shouldCollapse) {
+          if (fastSwipeDown) {
             setExpandedState(false);
             return;
           }
-          setExpandedState(expandedRef.current);
+
+          setExpandedState(currentY <= halfPoint);
         },
       }),
     [collapsedOffset, setExpandedState, translateY],
