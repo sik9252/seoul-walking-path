@@ -54,7 +54,7 @@ export class MockStoreService {
   }
 
   private bootstrapPlaceData() {
-    const backendRoot = process.cwd();
+    const backendRoot = path.resolve(__dirname, "../..");
     const placesPath = path.join(backendRoot, "data/generated/tour-places.normalized.json");
     if (!fs.existsSync(placesPath)) {
       this.places = [
@@ -83,6 +83,7 @@ export class MockStoreService {
         title: `${place.name} 카드`,
         rarity: rarityByIndex(index + 1),
       }));
+      console.warn(`[mock-store] places file not found: ${placesPath}. fallback sample loaded.`);
       return;
     }
 
@@ -106,6 +107,7 @@ export class MockStoreService {
         rarity: rarityByIndex(index + 1),
         imageUrl: place.imageUrl ?? null,
       }));
+      console.log(`[mock-store] loaded ${this.places.length} places from ${placesPath}`);
     } catch (error) {
       console.error("[mock-store] failed to load tour places, fallback sample", error);
     }
