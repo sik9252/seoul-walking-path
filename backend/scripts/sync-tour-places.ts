@@ -5,6 +5,7 @@ import { loadEnvFile } from "../src/common/load-env";
 type TourApiItem = {
   contentid?: string | number;
   contenttypeid?: string | number;
+  areacode?: string | number;
   title?: string;
   addr1?: string;
   addr2?: string;
@@ -36,6 +37,8 @@ type TourApiResponse = {
 
 type PlaceRow = {
   sourceId: string;
+  areaCode: string;
+  region: string;
   title: string;
   category: string;
   address: string;
@@ -46,6 +49,28 @@ type PlaceRow = {
 
 const rootDir = path.resolve(__dirname, "..");
 const outputPath = path.join(rootDir, "data/generated/tour-places.normalized.json");
+
+const REGION_BY_AREA_CODE: Record<string, string> = {
+  "1": "서울",
+  "2": "인천",
+  "3": "대전",
+  "4": "대구",
+  "5": "광주",
+  "6": "부산",
+  "7": "울산",
+  "8": "세종",
+  "31": "경기",
+  "32": "강원",
+  "33": "충북",
+  "34": "충남",
+  "35": "경북",
+  "36": "경남",
+  "37": "전북",
+  "38": "전남",
+  "39": "제주",
+};
+
+const DEFAULT_AREA_CODES = Object.keys(REGION_BY_AREA_CODE);
 
 function toNumber(input: string | number | undefined): number | null {
   if (typeof input === "number" && Number.isFinite(input)) return input;
@@ -62,17 +87,21 @@ function extractItems(payload: TourApiResponse): TourApiItem[] {
   return Array.isArray(raw) ? raw : [raw];
 }
 
-function normalizeItems(items: TourApiItem[]): PlaceRow[] {
+function normalizeItems(items: TourApiItem[], fallbackAreaCode: string): PlaceRow[] {
   return items
     .map((item) => {
       const lat = toNumber(item.mapy);
       const lng = toNumber(item.mapx);
       if (lat === null || lng === null) return null;
+      const areaCode = item.areacode ? String(item.areacode) : fallbackAreaCode;
+      const region = REGION_BY_AREA_CODE[areaCode] ?? "기타";
       const sourceId = item.contentid ? String(item.contentid) : "";
       const title = (item.title ?? "").trim();
       if (!sourceId || !title) return null;
       return {
         sourceId,
+        areaCode,
+        region,
         title,
         category: item.cat3 ?? item.cat2 ?? item.cat1 ?? "ETC",
         address: [item.addr1, item.addr2].filter(Boolean).join(" ").trim(),
@@ -107,49 +136,68 @@ async function main() {
 
   const baseUrl =
     process.env.TOUR_API_BASE_URL ?? "https://apis.data.go.kr/B551011/KorService2/areaBasedList2";
-  const areaCode = process.env.TOUR_API_AREA_CODE ?? "1";
+  const rawAreaCodes = process.env.TOUR_API_AREA_CODES ?? process.env.TOUR_API_AREA_CODE ?? "ALL";
+  const areaCodes =
+    rawAreaCodes.trim().toUpperCase() === "ALL"
+      ? DEFAULT_AREA_CODES
+      : rawAreaCodes
+          .split(",")
+          .map((code) => code.trim())
+          .filter(Boolean);
+  if (areaCodes.length === 0) {
+    throw new Error("No area codes configured. Set TOUR_API_AREA_CODES or TOUR_API_AREA_CODE.");
+  }
   const numOfRows = Math.max(1, Number(process.env.TOUR_API_PAGE_SIZE ?? "100"));
   const timeoutMs = Math.max(5000, Number(process.env.TOUR_API_TIMEOUT_MS ?? "15000"));
-
-  const params = new URLSearchParams({
-    MobileOS: "ETC",
-    MobileApp: "SeoulWalkgil",
-    _type: "json",
-    areaCode,
-    numOfRows: String(numOfRows),
-  });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const allItems: TourApiItem[] = [];
+  const totalByAreaCode: Record<string, number> = {};
 
   try {
-    let page = 1;
-    let totalCount = 0;
+    for (const areaCode of areaCodes) {
+      const params = new URLSearchParams({
+        MobileOS: "ETC",
+        MobileApp: "SeoulWalkgil",
+        _type: "json",
+        areaCode,
+        numOfRows: String(numOfRows),
+      });
 
-    while (true) {
-      const pageResponse = await fetchPage(baseUrl, params, serviceKeyEncoded, page);
-      const resultCode = pageResponse.response?.header?.resultCode;
-      if (resultCode && resultCode !== "0000") {
-        const message = pageResponse.response?.header?.resultMsg ?? "unknown";
-        throw new Error(`Tour API error ${resultCode}: ${message}`);
+      let page = 1;
+      let areaTotalCount = 0;
+
+      while (true) {
+        const pageResponse = await fetchPage(baseUrl, params, serviceKeyEncoded, page);
+        const resultCode = pageResponse.response?.header?.resultCode;
+        if (resultCode && resultCode !== "0000") {
+          const message = pageResponse.response?.header?.resultMsg ?? "unknown";
+          throw new Error(`Tour API error ${resultCode}: ${message}`);
+        }
+
+        const pageItems = extractItems(pageResponse).map((item) => ({
+          ...item,
+          areacode: item.areacode ?? areaCode,
+        }));
+        allItems.push(...pageItems);
+        areaTotalCount = pageResponse.response?.body?.totalCount ?? areaTotalCount;
+
+        if (pageItems.length === 0) break;
+        if (areaTotalCount > 0 && page * numOfRows >= areaTotalCount) break;
+        if (pageItems.length < numOfRows) break;
+
+        page += 1;
       }
-
-      const pageItems = extractItems(pageResponse);
-      allItems.push(...pageItems);
-      totalCount = pageResponse.response?.body?.totalCount ?? totalCount;
-
-      if (pageItems.length === 0) break;
-      if (totalCount > 0 && allItems.length >= totalCount) break;
-      if (pageItems.length < numOfRows) break;
-
-      page += 1;
+      totalByAreaCode[areaCode] = areaTotalCount;
+      console.log(`Fetched areaCode=${areaCode} (${REGION_BY_AREA_CODE[areaCode] ?? "기타"}) total=${areaTotalCount}`);
     }
 
-    const normalized = normalizeItems(allItems);
+    const normalized = allItems.flatMap((item) => normalizeItems([item], item.areacode ? String(item.areacode) : "0"));
     const dedup = new Map<string, PlaceRow>();
     normalized.forEach((row) => dedup.set(row.sourceId, row));
     const places = [...dedup.values()];
+    const totalCount = Object.values(totalByAreaCode).reduce((acc, value) => acc + value, 0);
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(
@@ -159,7 +207,8 @@ async function main() {
           fetchedAt: new Date().toISOString(),
           totalCount,
           count: places.length,
-          areaCode,
+          areaCodes,
+          totalByAreaCode,
           places,
         },
         null,
@@ -168,7 +217,7 @@ async function main() {
       "utf8",
     );
 
-    console.log(`Synced tour places: total=${totalCount}, normalized=${places.length}`);
+    console.log(`Synced tour places: total=${totalCount}, normalized=${places.length}, areaCodes=${areaCodes.join(",")}`);
     console.log(`Output: ${outputPath}`);
   } finally {
     clearTimeout(timer);

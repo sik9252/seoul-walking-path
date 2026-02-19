@@ -2,6 +2,8 @@ export type GameTab = "explore" | "collection" | "my";
 
 export type PlaceItem = {
   id: string;
+  areaCode: string;
+  region: string;
   name: string;
   category: string;
   address: string;

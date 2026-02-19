@@ -6,6 +6,8 @@ import { PlaceCard, PlaceItem, UserVisitItem } from "./models";
 type TourPlaceSnapshot = {
   places: Array<{
     sourceId: string;
+    areaCode?: string;
+    region?: string;
     title: string;
     category: string;
     address: string;
@@ -37,6 +39,29 @@ function normalizePlaceCategory(raw: string): string {
   return "일반";
 }
 
+function inferRegionFromAddress(address: string): string {
+  const value = address.trim();
+  if (!value) return "기타";
+  if (value.startsWith("서울")) return "서울";
+  if (value.startsWith("부산")) return "부산";
+  if (value.startsWith("대구")) return "대구";
+  if (value.startsWith("인천")) return "인천";
+  if (value.startsWith("광주")) return "광주";
+  if (value.startsWith("대전")) return "대전";
+  if (value.startsWith("울산")) return "울산";
+  if (value.startsWith("세종")) return "세종";
+  if (value.startsWith("경기")) return "경기";
+  if (value.startsWith("강원")) return "강원";
+  if (value.startsWith("충북")) return "충북";
+  if (value.startsWith("충남")) return "충남";
+  if (value.startsWith("경북")) return "경북";
+  if (value.startsWith("경남")) return "경남";
+  if (value.startsWith("전북")) return "전북";
+  if (value.startsWith("전남")) return "전남";
+  if (value.startsWith("제주")) return "제주";
+  return "기타";
+}
+
 function rarityByIndex(index: number): "common" | "rare" | "epic" {
   if (index % 17 === 0) return "epic";
   if (index % 5 === 0) return "rare";
@@ -61,6 +86,8 @@ export class MockStoreService {
         {
           id: "place-sample-1",
           sourceId: "sample-1",
+          areaCode: "1",
+          region: "서울",
           name: "경복궁",
           category: "문화",
           address: "서울 종로구 사직로 161",
@@ -70,6 +97,8 @@ export class MockStoreService {
         {
           id: "place-sample-2",
           sourceId: "sample-2",
+          areaCode: "1",
+          region: "서울",
           name: "남산서울타워",
           category: "랜드마크",
           address: "서울 용산구 남산공원길 105",
@@ -93,6 +122,8 @@ export class MockStoreService {
       this.places = rows.map((row, index) => ({
         id: `place-${row.sourceId}`,
         sourceId: row.sourceId,
+        areaCode: row.areaCode ?? "0",
+        region: row.region ?? inferRegionFromAddress(row.address),
         name: row.title,
         category: normalizePlaceCategory(row.category),
         address: row.address,

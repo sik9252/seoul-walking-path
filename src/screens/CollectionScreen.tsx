@@ -20,18 +20,20 @@ type Props = {
 export function CollectionScreen({ cards, loading, isError }: Props) {
   const [selectedCategory, setSelectedCategory] = React.useState<CollectionCategory>("all");
 
+  const availableRegions = React.useMemo(() => {
+    const regionSet = new Set<string>();
+    cards.forEach((card) => {
+      const region = card.place?.region?.trim();
+      if (region) {
+        regionSet.add(region);
+      }
+    });
+    return [...regionSet].sort((a, b) => a.localeCompare(b, "ko"));
+  }, [cards]);
+
   const filteredCards = React.useMemo(() => {
     if (selectedCategory === "all") return cards;
-    return cards.filter((card) => {
-      const category = card.place?.category.toLowerCase() ?? "";
-      if (selectedCategory === "food") {
-        return category.includes("food") || category.includes("음식");
-      }
-      if (selectedCategory === "nature") {
-        return category.includes("nature") || category.includes("공원") || category.includes("산");
-      }
-      return true;
-    });
+    return cards.filter((card) => (card.place?.region ?? "").trim() === selectedCategory);
   }, [cards, selectedCategory]);
 
   const gridItems = React.useMemo(() => {
@@ -55,7 +57,11 @@ export function CollectionScreen({ cards, loading, isError }: Props) {
     <View style={styles.collectionScreen}>
       <CollectionHeader />
       <CollectionProgressCard collectedCount={cards.length} totalCount={50} />
-      <CollectionCategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+      <CollectionCategoryTabs
+        categories={availableRegions}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {loading ? (
         <View style={styles.collectionStateBox}>

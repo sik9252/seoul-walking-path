@@ -1,6 +1,8 @@
 export type PlaceItem = {
   id: string;
   sourceId: string;
+  areaCode: string;
+  region: string;
   name: string;
   category: string;
   address: string;
