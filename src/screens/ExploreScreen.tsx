@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
-import { Button, Card } from "../../../components/ui";
-import { colors } from "../../../theme/tokens";
-import { gameStyles as styles } from "../styles";
-import { PlaceItem } from "../types";
+import { Button, Card } from "../components/ui";
+import { colors } from "../theme/tokens";
+import { gameStyles as styles } from "./gameStyles";
+import { PlaceItem } from "./gameTypes";
 
 type Props = {
   places: PlaceItem[];

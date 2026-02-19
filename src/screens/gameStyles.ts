@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { colors, spacing, typography } from "../../theme/tokens";
+import { colors, spacing, typography } from "../theme/tokens";
 
 export const gameStyles = StyleSheet.create({
   safe: {
