@@ -543,6 +543,6 @@ export const gameStyles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 120,
-    backgroundColor: "rgba(255,255,255,0.55)",
+    backgroundColor: "rgba(255,255,255,0.1)",
   },
 });
