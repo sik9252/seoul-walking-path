@@ -35,9 +35,11 @@ export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: Ex
           { bottom: expanded ? -bottomOffset : bottomOffset, transform: [{ translateY }] },
         ]}
       >
-        <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
-          <View style={styles.sheetHandle} />
-        </Pressable>
+        <View style={styles.sheetHandleTouch} {...panHandlers}>
+          <Pressable onPress={() => setExpandedState(!expanded)} hitSlop={8}>
+            <View style={styles.sheetHandle} />
+          </Pressable>
+        </View>
         {expanded ? (
           <ScrollView contentContainerStyle={styles.placeDetailSheetContent}>
             <View style={styles.placeDetailSheetHeader}>
