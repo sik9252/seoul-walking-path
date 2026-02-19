@@ -148,6 +148,10 @@ export const gameStyles = StyleSheet.create({
     paddingBottom: spacing.x3,
     gap: spacing.md,
   },
+  placeDetailCollapsedContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
+  },
   placeDetailSheetHeader: {
     flexDirection: "row",
     alignItems: "center",

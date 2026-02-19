@@ -10,10 +10,9 @@ import { useBottomSheetSnap } from "./useBottomSheetSnap";
 type ExplorePlaceDetailSheetProps = {
   place: PlaceItem | null;
   onClose: () => void;
-  onOpenDetail: (place: PlaceItem) => void;
 };
 
-export function ExplorePlaceDetailSheet({ place, onClose, onOpenDetail }: ExplorePlaceDetailSheetProps) {
+export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSheetProps) {
   const { expanded, translateY, setExpandedState, panHandlers } = useBottomSheetSnap({
     visible: Boolean(place),
     collapsedOffset: 360,
@@ -32,43 +31,68 @@ export function ExplorePlaceDetailSheet({ place, onClose, onOpenDetail }: Explor
         >
           <View style={styles.sheetHandle} />
         </Pressable>
-        <ScrollView contentContainerStyle={styles.placeDetailSheetContent}>
-          <View style={styles.placeDetailSheetHeader}>
-            <Text style={styles.title}>{place.name}</Text>
-            <Pressable onPress={onClose}>
-              <Ionicons name="close" size={20} color={colors.base.textSubtle} />
-            </Pressable>
-          </View>
-          <Text style={styles.description}>{place.category}</Text>
-
-          {place.imageUrl ? (
-            <Image source={{ uri: place.imageUrl }} style={styles.placeImage} resizeMode="cover" />
-          ) : (
-            <View style={styles.imageFallback}>
-              <Ionicons name="image-outline" size={22} color={colors.base.textSubtle} />
-              <Text style={styles.cardBody}>이미지가 없습니다.</Text>
+        {expanded ? (
+          <ScrollView contentContainerStyle={styles.placeDetailSheetContent}>
+            <View style={styles.placeDetailSheetHeader}>
+              <Text style={styles.title}>{place.name}</Text>
+              <Pressable onPress={onClose}>
+                <Ionicons name="close" size={20} color={colors.base.textSubtle} />
+              </Pressable>
             </View>
-          )}
+            <Text style={styles.description}>{place.category}</Text>
 
-          <Card>
-            <Text style={styles.detailLabel}>주소</Text>
-            <Text style={styles.cardBody}>{place.address || "주소 정보 없음"}</Text>
-          </Card>
+            {place.imageUrl ? (
+              <Image source={{ uri: place.imageUrl }} style={styles.placeImage} resizeMode="cover" />
+            ) : (
+              <View style={styles.imageFallback}>
+                <Ionicons name="image-outline" size={22} color={colors.base.textSubtle} />
+                <Text style={styles.cardBody}>이미지가 없습니다.</Text>
+              </View>
+            )}
 
-          <Card>
-            <Text style={styles.detailLabel}>위치 좌표</Text>
-            <Text style={styles.cardBody}>
-              위도 {place.lat.toFixed(6)} / 경도 {place.lng.toFixed(6)}
-            </Text>
-          </Card>
+            <Card>
+              <Text style={styles.detailLabel}>주소</Text>
+              <Text style={styles.cardBody}>{place.address || "주소 정보 없음"}</Text>
+            </Card>
 
-          <Card>
-            <Text style={styles.detailLabel}>설명</Text>
-            <Text style={styles.cardBody}>
-              {place.name}는 {place.category} 카테고리 관광지입니다. 방문 반경 안에 들어오면 카드 수집이 가능합니다.
-            </Text>
-          </Card>
-        </ScrollView>
+            <Card>
+              <Text style={styles.detailLabel}>위치 좌표</Text>
+              <Text style={styles.cardBody}>
+                위도 {place.lat.toFixed(6)} / 경도 {place.lng.toFixed(6)}
+              </Text>
+            </Card>
+
+            <Card>
+              <Text style={styles.detailLabel}>설명</Text>
+              <Text style={styles.cardBody}>
+                {place.name}는 {place.category} 카테고리 관광지입니다. 방문 반경 안에 들어오면 카드 수집이 가능합니다.
+              </Text>
+            </Card>
+          </ScrollView>
+        ) : (
+          <View style={styles.placeDetailCollapsedContent}>
+            <View style={styles.floatingPlaceTop}>
+              {place.imageUrl ? (
+                <Image source={{ uri: place.imageUrl }} style={styles.floatingPlaceImage} />
+              ) : (
+                <View style={styles.floatingPlaceImageFallback}>
+                  <Ionicons name="image-outline" size={20} color={colors.base.textSubtle} />
+                </View>
+              )}
+              <View style={styles.floatingPlaceTextWrap}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                  {place.name}
+                </Text>
+                <Text style={styles.cardBody} numberOfLines={1}>
+                  {place.category} · {place.address}
+                </Text>
+              </View>
+              <Pressable onPress={onClose}>
+                <Ionicons name="close" size={18} color={colors.base.textSubtle} />
+              </Pressable>
+            </View>
+          </View>
+        )}
       </Animated.View>
     </>
   );

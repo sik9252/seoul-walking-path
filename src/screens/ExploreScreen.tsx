@@ -274,7 +274,6 @@ export function ExploreScreen({
       <ExplorePlaceDetailSheet
         place={focusedPlace}
         onClose={() => setFocusedPlace(null)}
-        onOpenDetail={onOpenDetail}
       />
 
       <ExploreVisitResultModal
