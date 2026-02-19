@@ -14,11 +14,18 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.beank.seoulwalkingpath"
+      "bundleIdentifier": "com.beank.seoulwalkingpath",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "주변 관광지 탐험과 방문 체크를 위해 위치 권한이 필요합니다."
+      }
     },
     "android": {
       "package": "com.beank.seoulwalkingpath",
       "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

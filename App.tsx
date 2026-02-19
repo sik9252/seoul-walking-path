@@ -9,6 +9,7 @@ import { getApiBaseUrl } from "./src/apis/gameApi";
 import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
 import { PlaceDetailScreen } from "./src/screens/PlaceDetailScreen";
+import { useUserLocation } from "./src/hooks/useUserLocation";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
 import { gameStyles as styles } from "./src/styles/gameStyles";
 import { GameTab, PlaceItem } from "./src/types/gameTypes";
@@ -34,6 +35,7 @@ function AppShell() {
   const placesQuery = usePlacesQuery(apiBaseUrl);
   const cardsQuery = useMyCardsQuery(apiBaseUrl);
   const visitMutation = useVisitMutation(apiBaseUrl);
+  const { location, isLoadingLocation, locationError, refreshLocation } = useUserLocation();
 
   const places = React.useMemo(
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
@@ -75,6 +77,10 @@ function AppShell() {
           hasNext={Boolean(placesQuery.hasNextPage)}
           apiEnabled={Boolean(apiBaseUrl)}
           isError={placesQuery.isError}
+          userLocation={location}
+          isLoadingLocation={isLoadingLocation}
+          locationError={locationError}
+          onRefreshLocation={() => void refreshLocation()}
           onCheckVisit={() => visitMutation.mutate()}
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}

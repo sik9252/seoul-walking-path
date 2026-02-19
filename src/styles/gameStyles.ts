@@ -44,6 +44,25 @@ export const gameStyles = StyleSheet.create({
   listHeader: {
     gap: spacing.md,
   },
+  mapWrap: {
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E1E6DE",
+    backgroundColor: colors.base.surface,
+  },
+  map: {
+    width: "100%",
+    height: 260,
+  },
+  mapMetaRow: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   listFooter: {
     paddingVertical: spacing.md,
     gap: spacing.xs,
