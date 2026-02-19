@@ -497,14 +497,14 @@ export const gameStyles = StyleSheet.create({
   },
   collectionCardLockOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(21, 28, 39, 0.42)",
+    backgroundColor: "rgba(21, 28, 39, 0.7)",
   },
   collectionCardLockCircle: {
     position: "absolute",
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: "rgba(71, 80, 98, 0.72)",
+    backgroundColor: "rgba(83, 92, 115, 0.52)",
     alignItems: "center",
     justifyContent: "center",
   },
