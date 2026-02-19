@@ -12,7 +12,6 @@ import {
   ExploreLocationErrorModal,
   ExplorePlaceDetailSheet,
   ExploreMapView,
-  ExplorePlaceListSheet,
   ExploreVisitResultModal,
 } from "./widgets/explore";
 
@@ -260,17 +259,6 @@ export function ExploreScreen({
         visible={isLocationErrorOpen}
         message={locationErrorMessage}
         onClose={() => setIsLocationErrorOpen(false)}
-      />
-
-      <ExplorePlaceListSheet
-        visible={isSheetOpen}
-        places={markerPlaces}
-        loading={isViewportLoading}
-        hasNext={false}
-        onLoadMore={() => {}}
-        onClose={() => setIsSheetOpen(false)}
-        onOpenDetail={onOpenDetail}
-        bottomOffset={bottomOverlayOffset}
       />
 
       <ExplorePlaceDetailSheet
