@@ -60,6 +60,7 @@ function AppShell() {
   const [splashStatus, setSplashStatus] = React.useState("권한 상태를 확인하는 중...");
   const [tab, setTab] = React.useState<GameTab>("explore");
   const [tabBarHeight, setTabBarHeight] = React.useState(0);
+  const [isExploreDetailExpanded, setIsExploreDetailExpanded] = React.useState(false);
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
   const [visitDialog, setVisitDialog] = React.useState<{
     visible: boolean;
@@ -336,6 +337,7 @@ function AppShell() {
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}
           bottomOverlayOffset={tabBarHeight}
+          onDetailExpandedChange={setIsExploreDetailExpanded}
         />
       ) : null}
 
@@ -357,12 +359,14 @@ function AppShell() {
         </View>
       ) : null}
 
-      <TabBar
-        tabs={tabs}
-        activeKey={tab}
-        onPressTab={(key) => setTab(key as GameTab)}
-        onHeightChange={setTabBarHeight}
-      />
+      {!isExploreDetailExpanded ? (
+        <TabBar
+          tabs={tabs}
+          activeKey={tab}
+          onPressTab={(key) => setTab(key as GameTab)}
+          onHeightChange={setTabBarHeight}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

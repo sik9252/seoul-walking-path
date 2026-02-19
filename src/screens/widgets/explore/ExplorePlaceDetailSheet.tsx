@@ -11,9 +11,15 @@ type ExplorePlaceDetailSheetProps = {
   place: PlaceItem | null;
   onClose: () => void;
   bottomOffset?: number;
+  onExpandedChange?: (expanded: boolean) => void;
 };
 
-export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: ExplorePlaceDetailSheetProps) {
+export function ExplorePlaceDetailSheet({
+  place,
+  onClose,
+  bottomOffset = 0,
+  onExpandedChange,
+}: ExplorePlaceDetailSheetProps) {
   const collapsedOffset = 560;
   const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible: Boolean(place),
@@ -24,6 +30,10 @@ export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: Ex
     reset();
     onClose();
   }, [onClose, reset]);
+
+  React.useEffect(() => {
+    onExpandedChange?.(Boolean(place) && expanded);
+  }, [expanded, onExpandedChange, place]);
 
   if (!place) return null;
 

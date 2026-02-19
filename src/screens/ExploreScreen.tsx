@@ -35,6 +35,7 @@ type Props = {
   onOpenDetail: (place: PlaceItem) => void;
   onLoadMore: () => void;
   bottomOverlayOffset?: number;
+  onDetailExpandedChange?: (expanded: boolean) => void;
 };
 
 export function ExploreScreen({
@@ -54,6 +55,7 @@ export function ExploreScreen({
   onOpenDetail,
   onLoadMore,
   bottomOverlayOffset = 0,
+  onDetailExpandedChange,
 }: Props) {
   const mapWebViewRef = React.useRef<WebView>(null);
   const viewportDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -265,6 +267,7 @@ export function ExploreScreen({
         place={focusedPlace}
         onClose={() => setFocusedPlace(null)}
         bottomOffset={bottomOverlayOffset}
+        onExpandedChange={onDetailExpandedChange}
       />
 
       <ExploreVisitResultModal
