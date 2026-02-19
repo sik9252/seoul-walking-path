@@ -14,7 +14,6 @@ type ExplorePlaceListSheetProps = {
   hasNext: boolean;
   onLoadMore: () => void;
   onClose: () => void;
-  onCheckVisit: () => void;
   onOpenDetail: (place: PlaceItem) => void;
 };
 
@@ -25,12 +24,11 @@ export function ExplorePlaceListSheet({
   hasNext,
   onLoadMore,
   onClose,
-  onCheckVisit,
   onOpenDetail,
 }: ExplorePlaceListSheetProps) {
   const { expanded, translateY, setExpandedState, panHandlers } = useBottomSheetSnap({
     visible,
-    collapsedOffset: 300,
+    collapsedOffset: 200,
   });
 
   if (!visible) return null;
@@ -39,15 +37,16 @@ export function ExplorePlaceListSheet({
     <>
       {expanded ? <Pressable style={styles.sheetBackdrop} onPress={onClose} /> : null}
       <Animated.View style={[styles.sheetPanel, { transform: [{ translateY }] }]}>
-        <Pressable
-          style={styles.sheetHandleTouch}
-          onPress={() => setExpandedState(!expanded)}
-          {...panHandlers}
-        >
+        <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
           <View style={styles.sheetHandle} />
         </Pressable>
         <View style={styles.sheetHeader}>
-          <Text style={styles.cardTitle}>관광지 목록</Text>
+          <View style={styles.sheetHeaderRow}>
+            <Text style={styles.cardTitle}>관광지 목록</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={18} color={colors.base.textSubtle} />
+            </Pressable>
+          </View>
           <Text style={styles.cardBody}>지도 마커와 연동된 장소를 확인할 수 있어요.</Text>
         </View>
         <FlatList

@@ -177,6 +177,12 @@ export const gameStyles = StyleSheet.create({
     borderTopColor: colors.base.border,
     backgroundColor: colors.base.surface,
   },
+  sheetHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
   sheetList: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,

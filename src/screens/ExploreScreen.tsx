@@ -267,7 +267,6 @@ export function ExploreScreen({
         hasNext={false}
         onLoadMore={() => {}}
         onClose={() => setIsSheetOpen(false)}
-        onCheckVisit={onCheckVisit}
         onOpenDetail={onOpenDetail}
       />
 
