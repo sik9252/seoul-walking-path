@@ -4,6 +4,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Image,
   Platform,
   Pressable,
@@ -188,28 +189,50 @@ function AppShell() {
       <StatusBar style="dark" />
 
       {tab === "explore" && selectedPlace === null ? (
-        <ScrollView contentContainerStyle={styles.screen}>
-          <Text style={styles.title}>탐험</Text>
-          <Text style={styles.description}>근처 관광지에 도달해 카드를 수집하세요.</Text>
-
-          <Button label="현재 위치 방문 판정 (데모)" onPress={checkVisit} />
-
-          {places.map((place) => (
-            <Pressable key={place.id} onPress={() => setSelectedPlace(place)}>
+        <FlatList
+          data={places}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.screen}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => {
+            if (!loadingPlaces && hasNextPlaces) {
+              void loadPlaces(placePage + 1, true);
+            }
+          }}
+          ListHeaderComponent={
+            <View style={styles.listHeader}>
+              <Text style={styles.title}>탐험</Text>
+              <Text style={styles.description}>근처 관광지에 도달해 카드를 수집하세요.</Text>
+              <Button label="현재 위치 방문 판정 (데모)" onPress={checkVisit} />
+            </View>
+          }
+          renderItem={({ item }) => (
+            <Pressable onPress={() => setSelectedPlace(item)}>
               <Card>
-                <Text style={styles.cardTitle}>{place.name}</Text>
-                <Text style={styles.cardBody}>{place.category} · {place.address}</Text>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={styles.cardBody}>
+                  {item.category} · {item.address}
+                </Text>
               </Card>
             </Pressable>
-          ))}
-
-          {loadingPlaces ? <ActivityIndicator color={colors.brand[600]} /> : null}
-          {hasNextPlaces ? (
-            <Pressable style={styles.moreBtn} onPress={() => void loadPlaces(placePage + 1, true)}>
-              <Text style={styles.moreText}>더 보기</Text>
-            </Pressable>
-          ) : null}
-        </ScrollView>
+          )}
+          ListFooterComponent={
+            <View style={styles.listFooter}>
+              {loadingPlaces ? <ActivityIndicator color={colors.brand[600]} /> : null}
+              {!loadingPlaces && hasNextPlaces ? (
+                <Pressable style={styles.moreBtn} onPress={() => void loadPlaces(placePage + 1, true)}>
+                  <Text style={styles.moreText}>더 보기</Text>
+                </Pressable>
+              ) : null}
+              {!loadingPlaces && !hasNextPlaces && places.length > 0 ? (
+                <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text>
+              ) : null}
+            </View>
+          }
+          ListEmptyComponent={
+            !loadingPlaces ? <Text style={styles.cardBody}>관광지 데이터가 없습니다.</Text> : null
+          }
+        />
       ) : null}
 
       {tab === "explore" && selectedPlace !== null ? (
@@ -322,6 +345,18 @@ const styles = StyleSheet.create({
   moreText: {
     color: colors.brand[700],
     fontWeight: typography.weight.semibold,
+  },
+  listHeader: {
+    gap: spacing.md,
+  },
+  listFooter: {
+    paddingVertical: spacing.md,
+    gap: spacing.xs,
+  },
+  endText: {
+    textAlign: "center",
+    color: colors.base.textSubtle,
+    fontSize: typography.size.bodySm,
   },
   backBtn: {
     flexDirection: "row",
