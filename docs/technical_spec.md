@@ -10,7 +10,7 @@
 ## 2) 프론트엔드
 - Framework: React Native (Expo)
 - Language: TypeScript
-- 지도: react-native-maps
+- 지도: MVP 1차는 리스트 중심(지도 뷰는 차기 단계에서 추가)
 - 상태관리: React Hook 기반
 - 저장소: AsyncStorage(로컬 UI 상태 캐시), 핵심 수집 데이터는 서버 기준
 

@@ -1,10 +1,17 @@
 openapi: 3.0.3
 info:
   title: 서울걷길 관광지 수집형 MVP API
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: http://localhost:4000/api
 paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+
   /places:
     get:
       summary: 관광지 목록(반경/페이징)
@@ -32,7 +39,7 @@ paths:
             type: integer
             default: 20
       responses:
-        '200':
+        "200":
           description: 관광지 목록 반환
 
   /visits/check:
@@ -55,7 +62,7 @@ paths:
                 radiusM:
                   type: number
       responses:
-        '200':
+        "200":
           description: 방문 판정 결과
 
   /cards/catalog:
@@ -73,7 +80,7 @@ paths:
             type: integer
             default: 20
       responses:
-        '200':
+        "200":
           description: 카드 도감 반환
 
   /cards/my:
@@ -85,309 +92,5 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: 수집 카드 목록 반환
-
-  /health:
-    get:
-      summary: Health check
-      responses:
-        '200':
-          description: OK
-
-  /routes:
-    get:
-      summary: 코스 목록
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: pageSize
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: 코스 목록 반환(페이징)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RouteListResponse'
-
-  /routes/{routeId}:
-    get:
-      summary: 코스 상세
-      parameters:
-        - in: path
-          name: routeId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 코스 상세 반환
-        '404':
-          description: 코스 없음
-
-  /routes/{routeId}/checkpoints:
-    get:
-      summary: 코스 체크포인트 목록
-      parameters:
-        - in: path
-          name: routeId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 체크포인트 목록
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CourseCheckpoint'
-        '404':
-          description: 코스 없음
-
-  /pois:
-    get:
-      summary: POI 목록
-      parameters:
-        - in: query
-          name: routeId
-          schema:
-            type: string
-        - in: query
-          name: category
-          schema:
-            type: string
-            enum: [landmark, photo, rest]
-      responses:
-        '200':
-          description: 필터링된 POI 목록
-
-  /sessions:
-    get:
-      summary: 산책 세션 목록(레거시)
-      responses:
-        '200':
-          description: 세션 목록
-    post:
-      summary: 산책 세션 저장(레거시)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [routeId, title, startedAt, durationSec, distanceMeters, kcal]
-              properties:
-                routeId:
-                  type: string
-                title:
-                  type: string
-                startedAt:
-                  type: string
-                durationSec:
-                  type: integer
-                distanceMeters:
-                  type: number
-                kcal:
-                  type: integer
-      responses:
-        '201':
-          description: 저장 완료
-
-  /attempts:
-    post:
-      summary: 체크포인트 도전(Attempt) 시작
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateAttemptRequest'
-      responses:
-        '201':
-          description: 도전 생성
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AttemptProgress'
-
-  /attempts/{attemptId}:
-    get:
-      summary: 도전 진행도 조회
-      parameters:
-        - in: path
-          name: attemptId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 진행도 조회 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AttemptProgress'
-        '404':
-          description: 도전 없음
-
-  /attempts/{attemptId}/location:
-    post:
-      summary: 위치 샘플 업로드 후 체크포인트 판정
-      parameters:
-        - in: path
-          name: attemptId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LocationSampleRequest'
-      responses:
-        '200':
-          description: 판정 결과
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LocationSampleResponse'
-        '404':
-          description: 도전 없음
-
-  /attempts/{attemptId}/complete:
-    post:
-      summary: 도전 종료/완주 처리
-      parameters:
-        - in: path
-          name: attemptId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 종료 성공
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AttemptProgress'
-
-  /favorites:
-    get:
-      summary: 즐겨찾기 코스 목록
-      responses:
-        '200':
-          description: 즐겨찾기 목록
-
-  /favorites/{routeId}/toggle:
-    post:
-      summary: 즐겨찾기 토글
-      parameters:
-        - in: path
-          name: routeId
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          description: 토글 완료
-
-components:
-  schemas:
-    RouteListResponse:
-      type: object
-      required: [items, page, pageSize, total, hasNext]
-      properties:
-        items:
-          type: array
-          items:
-            type: object
-        page:
-          type: integer
-        pageSize:
-          type: integer
-        total:
-          type: integer
-        hasNext:
-          type: boolean
-
-    CourseCheckpoint:
-      type: object
-      required: [id, routeId, order, name, lat, lng]
-      properties:
-        id:
-          type: string
-        routeId:
-          type: string
-        order:
-          type: integer
-        name:
-          type: string
-        lat:
-          type: number
-        lng:
-          type: number
-
-    CreateAttemptRequest:
-      type: object
-      required: [userId, routeId]
-      properties:
-        userId:
-          type: string
-        routeId:
-          type: string
-
-    AttemptProgress:
-      type: object
-      required: [attemptId, userId, routeId, status, visitedCount, totalCount, completionRate, visitedCheckpointIds]
-      properties:
-        attemptId:
-          type: string
-        userId:
-          type: string
-        routeId:
-          type: string
-        status:
-          type: string
-          enum: [in_progress, completed, abandoned]
-        visitedCount:
-          type: integer
-        totalCount:
-          type: integer
-        completionRate:
-          type: number
-        visitedCheckpointIds:
-          type: array
-          items:
-            type: string
-
-    LocationSampleRequest:
-      type: object
-      required: [lat, lng, recordedAt]
-      properties:
-        lat:
-          type: number
-        lng:
-          type: number
-        recordedAt:
-          type: string
-          format: date-time
-
-    LocationSampleResponse:
-      type: object
-      required: [newlyVisitedCheckpointIds, progress]
-      properties:
-        newlyVisitedCheckpointIds:
-          type: array
-          items:
-            type: string
-        progress:
-          $ref: '#/components/schemas/AttemptProgress'

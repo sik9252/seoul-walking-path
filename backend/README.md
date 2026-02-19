@@ -11,10 +11,8 @@ npm run start:dev
 - Swagger UI: `http://localhost:4000/docs`
 
 ## 현재 범위 (MVP 초안)
-- `GET /api/routes`
-- `GET /api/routes/:routeId`
-- `GET /api/pois`
-- `GET /api/sessions`
-- `POST /api/sessions`
-- `GET /api/favorites`
-- `POST /api/favorites/:routeId/toggle`
+- `GET /api/health`
+- `GET /api/places`
+- `POST /api/visits/check`
+- `GET /api/cards/catalog`
+- `GET /api/cards/my`
