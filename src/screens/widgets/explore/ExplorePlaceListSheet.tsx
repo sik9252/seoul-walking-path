@@ -74,13 +74,18 @@ export function ExplorePlaceListSheet({
             }}
           >
             <Card>
-              <View style={styles.sheetHeaderRow}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
+              <View style={styles.sheetCardContent}>
+                <View style={styles.sheetHeaderRow}>
+                  <Text style={styles.cardTitle}>{item.name}</Text>
+                </View>
+                <Text style={styles.cardBody}>{item.address}</Text>
                 {collectedPlaceIdSet.has(item.id) ? (
-                  <Ionicons name="checkmark-circle" size={20} color={colors.brand[700]} />
+                  <View style={styles.collectedBadge}>
+                    <Ionicons name="checkmark-circle" size={14} color={colors.brand[700]} />
+                    <Text style={styles.collectedBadgeText}>수집 완료</Text>
+                  </View>
                 ) : null}
               </View>
-              <Text style={styles.cardBody}>{item.address}</Text>
             </Card>
           </Pressable>
         )}

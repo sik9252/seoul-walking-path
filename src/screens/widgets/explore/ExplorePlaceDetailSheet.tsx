@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Animated, Image, Pressable, ScrollView, Text, View } from "react-native";
-import { Card, RegionTag } from "../../../components/ui";
+import { Animated, Image, Pressable, Text, View } from "react-native";
+import { RegionTag } from "../../../components/ui";
 import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
 import { PlaceItem } from "../../../types/gameTypes";
@@ -66,13 +66,18 @@ export function ExplorePlaceDetailSheet({
           )}
           <View style={styles.floatingPlaceTextWrap}>
             <View style={styles.floatingPlaceTitleRow}>
-              <RegionTag region={place.region} />
-              <Text style={styles.cardTitle} numberOfLines={1}>
+              {/* <RegionTag region={place.region} /> */}
+              <Text style={[styles.cardTitle, styles.floatingPlaceTitleText]} numberOfLines={1}>
                 {place.name}
               </Text>
-              {isCollected ? <Ionicons name="checkmark-circle" size={24} color={colors.brand[700]} /> : null}
             </View>
             <Text style={styles.cardBody}>{place.address}</Text>
+            {isCollected ? (
+              <View style={styles.collectedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color={colors.brand[700]} />
+                <Text style={styles.collectedBadgeText}>수집 완료</Text>
+              </View>
+            ) : null}
           </View>
           <Pressable style={styles.placeDetailCloseButtonRaised} onPress={handleClose}>
             <Ionicons name="close" size={24} color={colors.base.textSubtle} />

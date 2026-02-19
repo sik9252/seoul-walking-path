@@ -172,7 +172,7 @@ export const gameStyles = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   sheetHeader: {
-    padding: spacing.md,
+    padding: spacing.lg,
     gap: spacing.xs,
     borderTopColor: colors.base.border,
     backgroundColor: colors.base.surface,
@@ -183,9 +183,12 @@ export const gameStyles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.sm,
   },
+  sheetCardContent: {
+    gap: spacing.xs,
+  },
   sheetList: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
     gap: spacing.sm,
   },
   mapWrap: {
@@ -234,14 +237,14 @@ export const gameStyles = StyleSheet.create({
     gap: spacing.md,
   },
   floatingPlaceImage: {
-    width: 68,
-    height: 68,
+    width: 72,
+    height: 72,
     borderRadius: radius.md,
     backgroundColor: colors.base.subtle,
   },
   floatingPlaceImageFallback: {
-    width: 68,
-    height: 68,
+    width: 72,
+    height: 72,
     borderRadius: radius.md,
     backgroundColor: colors.base.subtle,
     alignItems: "center",
@@ -249,9 +252,10 @@ export const gameStyles = StyleSheet.create({
   },
   floatingPlaceTextWrap: {
     flex: 1,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   collectedBadge: {
+    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -259,12 +263,13 @@ export const gameStyles = StyleSheet.create({
     borderColor: colors.brand[100],
     borderWidth: 1,
     borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingLeft: spacing.xs,
+    paddingRight: 6,
+    paddingVertical: 2,
   },
   collectedBadgeText: {
     color: colors.brand[700],
-    fontSize: typography.size.caption,
+    fontSize: 10,
     fontWeight: typography.weight.semibold,
   },
   floatingPlaceTitleRow: {
@@ -304,7 +309,7 @@ export const gameStyles = StyleSheet.create({
   endText: {
     textAlign: "center",
     color: colors.base.textSubtle,
-    fontSize: typography.size.bodySm,
+    fontSize: typography.size.caption,
   },
   backBtn: {
     flexDirection: "row",
