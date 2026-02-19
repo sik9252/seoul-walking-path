@@ -36,10 +36,16 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
-        font-weight: 700;
-        color: #1f3f14;
-        background: linear-gradient(135deg, #dff1d2, #c9e5b7);
+        background: #dce5d5;
+      }
+      .spot-marker-fallback svg {
+        width: 18px;
+        height: 18px;
+        stroke: #43473e;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .user-marker {
         width: 16px;
@@ -259,7 +265,13 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
 
               const fallback = document.createElement("div");
               fallback.className = "spot-marker-fallback";
-              fallback.textContent = "◎";
+              fallback.innerHTML =
+                '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+                '<rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect>' +
+                '<circle cx="9" cy="10" r="1.5"></circle>' +
+                '<path d="M6.5 16.5l4.3-4.3a1.1 1.1 0 0 1 1.6 0l2.1 2.1"></path>' +
+                '<path d="M13.8 14.4l1.8-1.8a1.1 1.1 0 0 1 1.6 0l1.3 1.3"></path>' +
+                "</svg>";
 
               if (place.imageUrl) {
                 const image = document.createElement("img");
