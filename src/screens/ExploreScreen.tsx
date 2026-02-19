@@ -271,16 +271,22 @@ export function ExploreScreen({
           </View>
         )}
 
-        <View style={styles.floatingRightControls}>
+        <View style={styles.floatingTopRightControls}>
           <Pressable style={styles.floatingCircleButton} onPress={handleZoomIn}>
             <Ionicons name="add" size={20} color={colors.base.text} />
           </Pressable>
           <Pressable style={styles.floatingCircleButton} onPress={handleZoomOut}>
             <Ionicons name="remove" size={20} color={colors.base.text} />
           </Pressable>
+        </View>
+
+        <View style={styles.floatingMidRightControls}>
           <Pressable style={styles.floatingCircleButton} onPress={() => void handleRefreshLocation()}>
             <Ionicons name="locate" size={20} color={colors.brand[700]} />
           </Pressable>
+        </View>
+
+        <View style={styles.floatingBottomRightControls}>
           <Pressable style={styles.floatingCircleButton} onPress={() => setIsSheetOpen(true)}>
             <Ionicons name="list" size={20} color={colors.base.text} />
           </Pressable>

@@ -54,10 +54,25 @@ export const gameStyles = StyleSheet.create({
     flex: 1,
     width: "100%",
   },
-  floatingRightControls: {
+  floatingTopRightControls: {
     position: "absolute",
     right: spacing.xl,
-    top: spacing.lg,
+    top: spacing.xl,
+    gap: spacing.sm,
+    zIndex: 11,
+    elevation: 4,
+  },
+  floatingMidRightControls: {
+    position: "absolute",
+    right: spacing.xl,
+    top: "38%",
+    zIndex: 11,
+    elevation: 4,
+  },
+  floatingBottomRightControls: {
+    position: "absolute",
+    right: spacing.xl,
+    bottom: spacing.x3,
     gap: spacing.sm,
     zIndex: 11,
     elevation: 4,
