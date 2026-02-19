@@ -92,6 +92,22 @@ export function buildKakaoMapHtml(params: {
         function createDisplayItems(rawPlaces, level, centerLat, centerLng) {
           if (!rawPlaces || rawPlaces.length === 0) return [];
 
+          // Uncluster when user is zoomed in enough or viewport item count is small.
+          // Kakao map: lower level means closer zoom.
+          if (level <= 4 || rawPlaces.length <= 10) {
+            return rawPlaces
+              .map((place) => ({
+                type: "single",
+                place,
+                score:
+                  Math.abs(place.lat - centerLat) +
+                  Math.abs(place.lng - centerLng),
+              }))
+              .sort((a, b) => a.score - b.score)
+              .slice(0, 120)
+              .map((item) => ({ type: item.type, place: item.place }));
+          }
+
           function clusterCellByLevel(targetLevel) {
             if (targetLevel >= 11) return 0.08;
             if (targetLevel >= 9) return 0.04;
