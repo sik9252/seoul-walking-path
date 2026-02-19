@@ -43,7 +43,9 @@ export function ExplorePlaceListSheet({
   return (
     <>
       {expanded ? <Pressable style={styles.sheetBackdrop} onPress={handleClose} /> : null}
-      <Animated.View style={[styles.sheetPanel, { bottom: expanded ? 0 : bottomOffset, transform: [{ translateY }] }]}>
+      <Animated.View
+        style={[styles.sheetPanel, { bottom: expanded ? -bottomOffset : bottomOffset, transform: [{ translateY }] }]}
+      >
         <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
           <View style={styles.sheetHandle} />
         </Pressable>
