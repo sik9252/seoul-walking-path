@@ -495,7 +495,12 @@ export const gameStyles = StyleSheet.create({
   collectionCardImageLocked: {
     backgroundColor: "#AEB4BD",
   },
+  collectionCardLockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(21, 28, 39, 0.42)",
+  },
   collectionCardLockCircle: {
+    position: "absolute",
     width: 84,
     height: 84,
     borderRadius: 42,

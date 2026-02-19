@@ -51,15 +51,24 @@ export function CollectionGrid({ items, loading, hasNext, onLoadMore }: Collecti
               <Text numberOfLines={1} style={[styles.collectionCardName, styles.collectionCardNameLocked]}>
                 {item.title}
               </Text>
-              <Text style={styles.collectionCardStatusLocked}>Locked</Text>
+              <Text style={styles.collectionCardStatusLocked}>미수집</Text>
             </View>
           );
         }
 
         if (!item.card.collected) {
+          const lockedImageUrl = item.card.place?.imageUrl ?? item.card.imageUrl ?? null;
           return (
             <View style={styles.collectionCardWrap}>
-              <View style={[styles.collectionCardImageWrap, styles.collectionCardImageLocked]}>
+              <View style={styles.collectionCardImageWrap}>
+                {lockedImageUrl ? (
+                  <Image source={{ uri: lockedImageUrl }} style={styles.collectionCardImage} />
+                ) : (
+                  <View style={[styles.collectionCardImageFallback, styles.collectionCardImageLocked]}>
+                    <Ionicons name="image-outline" size={26} color={colors.base.surface} />
+                  </View>
+                )}
+                <View style={styles.collectionCardLockOverlay} />
                 <View style={styles.collectionCardLockCircle}>
                   <Ionicons name="lock-closed" size={24} color={colors.base.surface} />
                 </View>
