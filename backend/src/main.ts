@@ -30,8 +30,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("docs", app, document);
 
-  await app.listen(4000);
-  console.log("[backend] listening on http://localhost:4000");
+  const port = Number(process.env.PORT ?? "4000");
+  const host = process.env.HOST ?? "0.0.0.0";
+  await app.listen(port, host);
+  console.log(`[backend] listening on http://localhost:${port}`);
+  if (host === "0.0.0.0") {
+    console.log("[backend] bound to 0.0.0.0 (LAN devices can connect via your Mac IP)");
+  }
 }
 
 void bootstrap();

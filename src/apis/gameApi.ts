@@ -17,11 +17,12 @@ export type MapViewportBounds = {
 };
 
 export function getApiBaseUrl() {
+  const sharedBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
   const platformBaseUrl =
     Platform.OS === "android"
       ? process.env.EXPO_PUBLIC_API_BASE_URL_ANDROID
       : process.env.EXPO_PUBLIC_API_BASE_URL_IOS;
-  const base = platformBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL;
+  const base = sharedBaseUrl || platformBaseUrl;
   return base?.endsWith("/") ? base.slice(0, -1) : base;
 }
 
