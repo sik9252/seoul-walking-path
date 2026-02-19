@@ -4,11 +4,13 @@ import React from "react";
 export type UserLocationState = {
   latitude: number;
   longitude: number;
+  heading?: number | null;
 };
 
 const DEFAULT_SEOUL_LOCATION: UserLocationState = {
   latitude: 37.5665,
   longitude: 126.978,
+  heading: null,
 };
 
 export function useUserLocation() {
@@ -34,6 +36,7 @@ export function useUserLocation() {
       setLocation({
         latitude: current.coords.latitude,
         longitude: current.coords.longitude,
+        heading: typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
       });
     } catch (error) {
       console.warn("[location] failed to get location", error);

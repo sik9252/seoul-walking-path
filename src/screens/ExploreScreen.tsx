@@ -14,7 +14,7 @@ type Props = {
   hasNext: boolean;
   apiEnabled: boolean;
   isError: boolean;
-  userLocation: { latitude: number; longitude: number } | null;
+  userLocation: { latitude: number; longitude: number; heading?: number | null } | null;
   isLoadingLocation: boolean;
   locationError: string | null;
   onRefreshLocation: () => void;
@@ -83,6 +83,30 @@ export function ExploreScreen({
         object-fit: cover;
         display: block;
       }
+      .user-marker {
+        width: 22px;
+        height: 22px;
+        border-radius: 11px;
+        border: 2px solid #ffffff;
+        background: #2563eb;
+        box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.25), 0 2px 8px rgba(0, 0, 0, 0.22);
+        position: relative;
+      }
+      .user-heading {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        width: 0;
+        height: 0;
+        margin-left: -6px;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 11px solid #1d4ed8;
+        transform-origin: 50% 21px;
+      }
+      .user-heading.idle {
+        opacity: 0.5;
+      }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJavascriptKey}&autoload=false"></script>
   </head>
@@ -108,11 +132,23 @@ export function ExploreScreen({
           });
 
           if (userLocation && userLocation.latitude && userLocation.longitude) {
-            const userMarker = new kakao.maps.Marker({
-              map,
+            const heading = typeof userLocation.heading === "number" ? userLocation.heading : null;
+
+            const userMarker = document.createElement("div");
+            userMarker.className = "user-marker";
+
+            const headingArrow = document.createElement("div");
+            headingArrow.className = heading === null ? "user-heading idle" : "user-heading";
+            headingArrow.style.transform = "rotate(" + (heading === null ? 0 : heading) + "deg)";
+            userMarker.appendChild(headingArrow);
+
+            const userOverlay = new kakao.maps.CustomOverlay({
               position: new kakao.maps.LatLng(userLocation.latitude, userLocation.longitude),
+              content: userMarker,
+              yAnchor: 0.5,
+              zIndex: 6,
             });
-            userMarker.setMap(map);
+            userOverlay.setMap(map);
           }
 
           places.forEach(function (place) {
