@@ -341,7 +341,7 @@ function AppShell() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <StatusBar style="dark" />
 
-      {tab === "explore" && selectedPlace === null ? (
+      <View style={{ flex: 1, display: tab === "explore" ? "flex" : "none" }}>
         <ExploreScreen
           places={places}
           loading={placesQuery.isPending || placesQuery.isFetchingNextPage}
@@ -364,7 +364,7 @@ function AppShell() {
           collectedPlaceIds={collectedPlaceIds}
           mapFocusRequest={mapFocusRequest}
         />
-      ) : null}
+      </View>
 
       {tab === "collection" ? (
         <CollectionScreen
