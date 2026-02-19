@@ -145,6 +145,9 @@ export function ExploreScreen({
           Number.isFinite(payload.viewport.maxLng) &&
           Number.isFinite(payload.viewport.level)
         ) {
+          console.log(
+            `[explore-map] targetLevel=${payload.viewport.level} bbox=(${payload.viewport.minLat.toFixed(5)},${payload.viewport.minLng.toFixed(5)})~(${payload.viewport.maxLat.toFixed(5)},${payload.viewport.maxLng.toFixed(5)})`,
+          );
           if (viewportDebounceRef.current) {
             clearTimeout(viewportDebounceRef.current);
           }
