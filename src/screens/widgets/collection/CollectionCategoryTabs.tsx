@@ -5,9 +5,13 @@ import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
 
 export type CollectionCategory = "all" | string;
+export type CollectionCategoryItem = {
+  value: string;
+  label: string;
+};
 
 type CollectionCategoryTabsProps = {
-  categories: string[];
+  categories: CollectionCategoryItem[];
   selectedCategory: CollectionCategory;
   onSelectCategory: (category: CollectionCategory) => void;
 };
@@ -31,12 +35,12 @@ export function CollectionCategoryTabs({ categories, selectedCategory, onSelectC
         </View>
       </Pressable>
 
-      {categories.map((region) => {
-        const active = selectedCategory === region;
+      {categories.map((item) => {
+        const active = selectedCategory === item.value;
         return (
           <Pressable
-            key={region}
-            onPress={() => onSelectCategory(region)}
+            key={item.value}
+            onPress={() => onSelectCategory(item.value)}
             style={[styles.collectionTabChip, active && styles.collectionTabChipActive]}
           >
             <View style={styles.collectionTabChipInner}>
@@ -46,7 +50,7 @@ export function CollectionCategoryTabs({ categories, selectedCategory, onSelectC
                 color={active ? colors.brand[700] : colors.base.textSubtle}
               />
               <Text style={[styles.collectionTabChipLabel, active && styles.collectionTabChipLabelActive]}>
-                {region}
+                {item.label || "지역"}
               </Text>
             </View>
           </Pressable>

@@ -6,6 +6,7 @@ import { gameStyles as styles } from "../styles/gameStyles";
 import { MyCard } from "../types/gameTypes";
 import {
   CollectionCategory,
+  CollectionCategoryItem,
   CollectionCategoryTabs,
   CollectionGrid,
   CollectionHeader,
@@ -39,6 +40,10 @@ const DEFAULT_REGIONS = [
   "제주",
 ];
 
+const REGION_LABELS: Record<string, string> = Object.fromEntries(
+  DEFAULT_REGIONS.map((name) => [name, name]),
+);
+
 export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsError }: Props) {
   const [selectedCategory, setSelectedCategory] = React.useState<CollectionCategory>("all");
 
@@ -49,16 +54,20 @@ export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsErr
     [catalogQuery.data?.pages],
   );
 
-  const availableRegions = React.useMemo(() => {
-    const regionSet = new Set<string>();
+  const availableRegions = React.useMemo<CollectionCategoryItem[]>(() => {
+    const regionSet = new Set<string>(DEFAULT_REGIONS);
     catalogItems.forEach((card) => {
       const region = card.place?.region?.trim();
       if (region) {
         regionSet.add(region);
       }
     });
-    DEFAULT_REGIONS.forEach((region) => regionSet.add(region));
-    return [...regionSet].sort((a, b) => a.localeCompare(b, "ko"));
+    return [...regionSet]
+      .sort((a, b) => a.localeCompare(b, "ko"))
+      .map((region) => ({
+        value: region,
+        label: REGION_LABELS[region] ?? region,
+      }));
   }, [catalogItems]);
 
   const gridItems = React.useMemo(() => {
