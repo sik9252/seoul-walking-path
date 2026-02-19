@@ -49,7 +49,7 @@ export function ExplorePlaceListSheet({
           <View style={styles.sheetHeaderRow}>
             <Text style={styles.cardTitle}>관광지 목록</Text>
             <Pressable onPress={handleClose}>
-              <Ionicons name="close" size={18} color={colors.base.textSubtle} />
+              <Ionicons name="close" size={24} color={colors.base.textSubtle} />
             </Pressable>
           </View>
           <Text style={styles.cardBody}>지도 마커와 연동된 장소를 확인할 수 있어요.</Text>

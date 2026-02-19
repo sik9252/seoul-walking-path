@@ -14,7 +14,7 @@ export const gameStyles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    fontSize: typography.size.titleLg,
+    fontSize: typography.size.titleMd,
     fontWeight: typography.weight.bold,
     color: colors.base.text,
   },

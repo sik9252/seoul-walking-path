@@ -37,7 +37,7 @@ export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSh
             <View style={styles.placeDetailSheetHeader}>
               <Text style={styles.title}>{place.name}</Text>
               <Pressable onPress={handleClose}>
-                <Ionicons name="close" size={20} color={colors.base.textSubtle} />
+                <Ionicons name="close" size={24} color={colors.base.textSubtle} />
               </Pressable>
             </View>
             <Text style={styles.description}>{place.category}</Text>
@@ -89,7 +89,7 @@ export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSh
                 </Text>
               </View>
               <Pressable onPress={handleClose}>
-                <Ionicons name="close" size={18} color={colors.base.textSubtle} />
+                <Ionicons name="close" size={24} color={colors.base.textSubtle} />
               </Pressable>
             </View>
           </View>
