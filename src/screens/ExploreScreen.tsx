@@ -40,6 +40,7 @@ export function ExploreScreen({
   onOpenDetail,
   onLoadMore,
 }: Props) {
+  const mapWebViewRef = React.useRef<WebView>(null);
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
   const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
@@ -137,6 +138,11 @@ export function ExploreScreen({
             center: new kakao.maps.LatLng(center.latitude, center.longitude),
             level: 7,
           });
+          window.__zoomMap = function (delta) {
+            const currentLevel = map.getLevel();
+            const nextLevel = Math.min(14, Math.max(1, currentLevel + delta));
+            map.setLevel(nextLevel);
+          };
 
           if (userLocation && userLocation.latitude && userLocation.longitude) {
             const heading = typeof userLocation.heading === "number" ? userLocation.heading : null;
@@ -220,7 +226,7 @@ export function ExploreScreen({
     [markerPlaces],
   );
 
-  const previewPlace = focusedPlace ?? markerPlaces[0] ?? null;
+  const previewPlace = focusedPlace ?? null;
 
   React.useEffect(() => {
     if (locationError && !hasShownInitialLocationError) {
@@ -238,11 +244,20 @@ export function ExploreScreen({
     }
   }, [onRefreshLocation]);
 
+  const handleZoomIn = React.useCallback(() => {
+    mapWebViewRef.current?.injectJavaScript("window.__zoomMap && window.__zoomMap(-1); true;");
+  }, []);
+
+  const handleZoomOut = React.useCallback(() => {
+    mapWebViewRef.current?.injectJavaScript("window.__zoomMap && window.__zoomMap(1); true;");
+  }, []);
+
   return (
     <View style={styles.mapScreen}>
       <View style={styles.mapBody}>
         {kakaoJavascriptKey ? (
           <WebView
+            ref={mapWebViewRef}
             style={styles.mapFull}
             source={{ html: mapHtml }}
             onMessage={handleMapMessage}
@@ -257,6 +272,12 @@ export function ExploreScreen({
         )}
 
         <View style={styles.floatingRightControls}>
+          <Pressable style={styles.floatingCircleButton} onPress={handleZoomIn}>
+            <Ionicons name="add" size={20} color={colors.base.text} />
+          </Pressable>
+          <Pressable style={styles.floatingCircleButton} onPress={handleZoomOut}>
+            <Ionicons name="remove" size={20} color={colors.base.text} />
+          </Pressable>
           <Pressable style={styles.floatingCircleButton} onPress={() => void handleRefreshLocation()}>
             <Ionicons name="locate" size={20} color={colors.brand[700]} />
           </Pressable>
