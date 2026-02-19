@@ -37,13 +37,13 @@ export function RegionTag({ region }: RegionTagProps) {
 
 const styles = StyleSheet.create({
   tag: {
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
+    borderRadius: radius.md,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     alignSelf: "flex-start",
   },
   label: {
     fontSize: typography.size.labelSm,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
   },
 });
