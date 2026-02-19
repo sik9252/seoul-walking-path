@@ -6,6 +6,7 @@ import { colors } from "../../../theme/tokens";
 
 export type CollectionCategory = "all" | string;
 export type CollectionCategoryItem = {
+  areaCode: string;
   value: string;
   label: string;
 };
@@ -20,6 +21,7 @@ export function CollectionCategoryTabs({ categories, selectedCategory, onSelectC
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionTabsRow}>
       <Pressable
+        key="all"
         onPress={() => onSelectCategory("all")}
         style={[styles.collectionTabChip, selectedCategory === "all" && styles.collectionTabChipActive]}
       >
@@ -39,7 +41,7 @@ export function CollectionCategoryTabs({ categories, selectedCategory, onSelectC
         const active = selectedCategory === item.value;
         return (
           <Pressable
-            key={item.value}
+            key={item.areaCode}
             onPress={() => onSelectCategory(item.value)}
             style={[styles.collectionTabChip, active && styles.collectionTabChipActive]}
           >

@@ -21,33 +21,34 @@ type Props = {
 };
 
 const DEFAULT_REGIONS = [
-  "서울",
-  "인천",
-  "대전",
-  "대구",
-  "광주",
-  "부산",
-  "울산",
-  "세종",
-  "경기",
-  "강원",
-  "충북",
-  "충남",
-  "경북",
-  "경남",
-  "전북",
-  "전남",
-  "제주",
+  { areaCode: "1", label: "서울" },
+  { areaCode: "2", label: "인천" },
+  { areaCode: "3", label: "대전" },
+  { areaCode: "4", label: "대구" },
+  { areaCode: "5", label: "광주" },
+  { areaCode: "6", label: "부산" },
+  { areaCode: "7", label: "울산" },
+  { areaCode: "8", label: "세종" },
+  { areaCode: "31", label: "경기" },
+  { areaCode: "32", label: "강원" },
+  { areaCode: "33", label: "충북" },
+  { areaCode: "34", label: "충남" },
+  { areaCode: "35", label: "경북" },
+  { areaCode: "36", label: "경남" },
+  { areaCode: "37", label: "전북" },
+  { areaCode: "38", label: "전남" },
+  { areaCode: "39", label: "제주" },
 ];
 
-const REGION_LABELS: Record<string, string> = Object.fromEntries(
-  DEFAULT_REGIONS.map((name) => [name, name]),
+const REGION_LABELS_BY_CODE: Record<string, string> = Object.fromEntries(
+  DEFAULT_REGIONS.map((item) => [item.areaCode, item.label]),
 );
 
 export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsError }: Props) {
   const [selectedCategory, setSelectedCategory] = React.useState<CollectionCategory>("all");
 
-  const selectedRegion = selectedCategory === "all" ? undefined : selectedCategory;
+  const selectedAreaCode = selectedCategory === "all" ? undefined : selectedCategory;
+  const selectedRegion = selectedAreaCode ? REGION_LABELS_BY_CODE[selectedAreaCode] : undefined;
   const catalogQuery = useCardCatalogQuery(apiBaseUrl, selectedRegion);
   const catalogItems = React.useMemo(
     () => (catalogQuery.data?.pages ?? []).flatMap((page) => page.items),
@@ -56,9 +57,10 @@ export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsErr
 
   const availableRegions = React.useMemo<CollectionCategoryItem[]>(
     () =>
-      DEFAULT_REGIONS.map((region) => ({
-        value: region,
-        label: REGION_LABELS[region] ?? region,
+      DEFAULT_REGIONS.map((item) => ({
+        areaCode: item.areaCode,
+        value: item.areaCode,
+        label: item.label,
       })),
     [],
   );
