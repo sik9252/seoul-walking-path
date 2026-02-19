@@ -100,6 +100,21 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         justify-content: center;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       }
+      .spider-hub {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 8px;
+        border-radius: 17px;
+        border: 2px solid #ffffff;
+        background: #111827;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+      }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoJavascriptKey}&autoload=false"></script>
   </head>
@@ -110,6 +125,7 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         let places = [];
         let userLocation = null;
         let userOverlay = null;
+        let spiderState = null;
 
         function postMessage(payload) {
           if (window.ReactNativeWebView) {
@@ -204,6 +220,18 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           return display.slice(0, 120);
         }
 
+        function getCoordKey(lat, lng) {
+          return lat.toFixed(6) + "|" + lng.toFixed(6);
+        }
+
+        function getPlacesAtSameCoord(targetPlace) {
+          const key = getCoordKey(targetPlace.lat, targetPlace.lng);
+          const grouped = places.filter(function (place) {
+            return getCoordKey(place.lat, place.lng) === key;
+          });
+          return { key: key, items: grouped };
+        }
+
         function init() {
           const initialCenter = ${initialCenterJson};
           const mapContainer = document.getElementById("map");
@@ -238,6 +266,93 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
             });
           }
 
+          function createSpotButton(place) {
+            const button = document.createElement("button");
+            button.className = "spot-marker";
+            button.type = "button";
+            button.ariaLabel = place.name;
+            if (place.collected) {
+              button.classList.add("collected");
+            }
+
+            const fallback = document.createElement("div");
+            fallback.className = "spot-marker-fallback";
+            fallback.innerHTML =
+              '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+              '<rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect>' +
+              '<circle cx="9" cy="10" r="1.5"></circle>' +
+              '<path d="M6.5 16.5l4.3-4.3a1.1 1.1 0 0 1 1.6 0l2.1 2.1"></path>' +
+              '<path d="M13.8 14.4l1.8-1.8a1.1 1.1 0 0 1 1.6 0l1.3 1.3"></path>' +
+              "</svg>";
+
+            if (place.imageUrl) {
+              const image = document.createElement("img");
+              image.src = place.imageUrl;
+              image.alt = place.name;
+              image.onerror = function () {
+                button.innerHTML = "";
+                button.appendChild(fallback);
+              };
+              button.appendChild(image);
+            } else {
+              button.appendChild(fallback);
+            }
+
+            return button;
+          }
+
+          function renderSpiderfy() {
+            if (!spiderState || !spiderState.items || spiderState.items.length < 2) return;
+            const projection = map.getProjection();
+            if (!projection || !projection.pointFromCoords || !projection.coordsFromPoint) return;
+
+            const center = new kakao.maps.LatLng(spiderState.lat, spiderState.lng);
+            const centerPoint = projection.pointFromCoords(center);
+            const count = spiderState.items.length;
+            const radiusPx = Math.max(36, Math.min(82, 24 + count * 3));
+
+            spiderState.items.forEach(function (place, index) {
+              const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
+              const point = new kakao.maps.Point(
+                centerPoint.x + Math.cos(angle) * radiusPx,
+                centerPoint.y + Math.sin(angle) * radiusPx,
+              );
+              const coords = projection.coordsFromPoint(point);
+
+              const leg = new kakao.maps.Polyline({
+                path: [center, coords],
+                strokeWeight: 2,
+                strokeColor: "#94A3B8",
+                strokeOpacity: 0.95,
+                strokeStyle: "solid",
+              });
+              leg.setMap(map);
+              overlays.push(leg);
+
+              const button = createSpotButton(place);
+              button.addEventListener("click", function () {
+                postMessage({ type: "markerPress", placeId: place.id });
+              });
+
+              const overlay = new kakao.maps.CustomOverlay({
+                position: coords,
+                content: button,
+                yAnchor: 1,
+                zIndex: 7,
+              });
+              overlay.setMap(map);
+              overlays.push(overlay);
+            });
+          }
+
+          function closeSpiderfy(shouldRender) {
+            if (!spiderState) return;
+            spiderState = null;
+            if (shouldRender) {
+              renderPlaces();
+            }
+          }
+
           function renderPlaces() {
             clearOverlays();
             const centerPoint = map.getCenter();
@@ -247,6 +362,8 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               centerPoint.getLat(),
               centerPoint.getLng(),
             );
+            const expandedCoordKey = spiderState ? spiderState.key : null;
+            const seenExpandedCoord = new Set();
 
             displayItems.forEach(function (item) {
               if (item.type === "cluster") {
@@ -255,6 +372,7 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
                 cluster.type = "button";
                 cluster.textContent = String(item.count);
                 cluster.addEventListener("click", function () {
+                  closeSpiderfy(false);
                   map.setLevel(Math.max(1, map.getLevel() - 2), {
                     anchor: new kakao.maps.LatLng(item.lat, item.lng),
                   });
@@ -271,39 +389,50 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               }
 
               const place = item.place;
+              const coordKey = getCoordKey(place.lat, place.lng);
+              if (expandedCoordKey && coordKey === expandedCoordKey) {
+                if (seenExpandedCoord.has(coordKey)) {
+                  return;
+                }
+                seenExpandedCoord.add(coordKey);
+                const hub = document.createElement("button");
+                hub.className = "spider-hub";
+                hub.type = "button";
+                hub.textContent = String(spiderState.items.length);
+                hub.addEventListener("click", function () {
+                  closeSpiderfy(true);
+                });
+                const hubOverlay = new kakao.maps.CustomOverlay({
+                  position: new kakao.maps.LatLng(place.lat, place.lng),
+                  content: hub,
+                  yAnchor: 0.5,
+                  zIndex: 5,
+                });
+                hubOverlay.setMap(map);
+                overlays.push(hubOverlay);
+                return;
+              }
+
               const position = new kakao.maps.LatLng(place.lat, place.lng);
-              const button = document.createElement("button");
-              button.className = "spot-marker";
-              button.type = "button";
-              button.ariaLabel = place.name;
-              if (place.collected) {
-                button.classList.add("collected");
-              }
-
-              const fallback = document.createElement("div");
-              fallback.className = "spot-marker-fallback";
-              fallback.innerHTML =
-                '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-                '<rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect>' +
-                '<circle cx="9" cy="10" r="1.5"></circle>' +
-                '<path d="M6.5 16.5l4.3-4.3a1.1 1.1 0 0 1 1.6 0l2.1 2.1"></path>' +
-                '<path d="M13.8 14.4l1.8-1.8a1.1 1.1 0 0 1 1.6 0l1.3 1.3"></path>' +
-                "</svg>";
-
-              if (place.imageUrl) {
-                const image = document.createElement("img");
-                image.src = place.imageUrl;
-                image.alt = place.name;
-                image.onerror = function () {
-                  button.innerHTML = "";
-                  button.appendChild(fallback);
-                };
-                button.appendChild(image);
-              } else {
-                button.appendChild(fallback);
-              }
+              const button = createSpotButton(place);
 
               button.addEventListener("click", function () {
+                const grouped = getPlacesAtSameCoord(place);
+                if (grouped.items.length > 1) {
+                  if (spiderState && spiderState.key === grouped.key) {
+                    closeSpiderfy(true);
+                    return;
+                  }
+                  spiderState = {
+                    key: grouped.key,
+                    lat: place.lat,
+                    lng: place.lng,
+                    items: grouped.items,
+                  };
+                  renderPlaces();
+                  return;
+                }
+                closeSpiderfy(false);
                 postMessage({ type: "markerPress", placeId: place.id });
               });
 
@@ -316,6 +445,8 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               overlay.setMap(map);
               overlays.push(overlay);
             });
+
+            renderSpiderfy();
           }
 
           function renderUserLocation() {
@@ -354,6 +485,7 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           window.__setPlaces = function (nextPlaces) {
             if (!Array.isArray(nextPlaces)) return;
             places = nextPlaces;
+            closeSpiderfy(false);
             renderPlaces();
           };
 
@@ -374,6 +506,12 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           kakao.maps.event.addListener(map, "idle", function () {
             renderPlaces();
             emitViewport();
+          });
+          kakao.maps.event.addListener(map, "click", function () {
+            closeSpiderfy(true);
+          });
+          kakao.maps.event.addListener(map, "zoom_start", function () {
+            closeSpiderfy(false);
           });
         }
 
