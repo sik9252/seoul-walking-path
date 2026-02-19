@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, Animated, FlatList, Pressable, Text, View } from "react-native";
-import { Button, Card } from "../../../components/ui";
+import { Card } from "../../../components/ui";
 import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
 import { PlaceItem } from "../../../types/gameTypes";
@@ -26,16 +26,21 @@ export function ExplorePlaceListSheet({
   onClose,
   onOpenDetail,
 }: ExplorePlaceListSheetProps) {
-  const { expanded, translateY, setExpandedState, panHandlers } = useBottomSheetSnap({
+  const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible,
     collapsedOffset: 200,
   });
+
+  const handleClose = React.useCallback(() => {
+    reset();
+    onClose();
+  }, [onClose, reset]);
 
   if (!visible) return null;
 
   return (
     <>
-      {expanded ? <Pressable style={styles.sheetBackdrop} onPress={onClose} /> : null}
+      {expanded ? <Pressable style={styles.sheetBackdrop} onPress={handleClose} /> : null}
       <Animated.View style={[styles.sheetPanel, { transform: [{ translateY }] }]}>
         <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
           <View style={styles.sheetHandle} />
@@ -43,7 +48,7 @@ export function ExplorePlaceListSheet({
         <View style={styles.sheetHeader}>
           <View style={styles.sheetHeaderRow}>
             <Text style={styles.cardTitle}>관광지 목록</Text>
-            <Pressable onPress={onClose}>
+            <Pressable onPress={handleClose}>
               <Ionicons name="close" size={18} color={colors.base.textSubtle} />
             </Pressable>
           </View>
@@ -62,7 +67,7 @@ export function ExplorePlaceListSheet({
           renderItem={({ item }) => (
             <Pressable
               onPress={() => {
-                onClose();
+                handleClose();
                 onOpenDetail(item);
               }}
             >

@@ -10,6 +10,11 @@ export function useBottomSheetSnap({ visible, collapsedOffset }: Params) {
   const translateY = React.useRef(new Animated.Value(collapsedOffset)).current;
   const [expanded, setExpanded] = React.useState(false);
   const expandedRef = React.useRef(false);
+  const collapsedOffsetRef = React.useRef(collapsedOffset);
+
+  React.useEffect(() => {
+    collapsedOffsetRef.current = collapsedOffset;
+  }, [collapsedOffset]);
 
   const animateTo = React.useCallback(
     (toValue: number) => {
@@ -32,10 +37,21 @@ export function useBottomSheetSnap({ visible, collapsedOffset }: Params) {
     [animateTo, collapsedOffset],
   );
 
+  const reset = React.useCallback(() => {
+    expandedRef.current = false;
+    setExpanded(false);
+    translateY.stopAnimation(() => {
+      translateY.setValue(collapsedOffsetRef.current);
+    });
+  }, [translateY]);
+
   React.useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      reset();
+      return;
+    }
     setExpandedState(false);
-  }, [setExpandedState, visible]);
+  }, [reset, setExpandedState, visible]);
 
   const panResponder = React.useMemo(
     () =>
@@ -68,6 +84,7 @@ export function useBottomSheetSnap({ visible, collapsedOffset }: Params) {
     expanded,
     translateY,
     setExpandedState,
+    reset,
     panHandlers: panResponder.panHandlers,
   };
 }

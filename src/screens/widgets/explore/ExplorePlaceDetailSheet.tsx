@@ -13,29 +13,30 @@ type ExplorePlaceDetailSheetProps = {
 };
 
 export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSheetProps) {
-  const { expanded, translateY, setExpandedState, panHandlers } = useBottomSheetSnap({
+  const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible: Boolean(place),
-    collapsedOffset: 360,
+    collapsedOffset: 530,
   });
+
+  const handleClose = React.useCallback(() => {
+    reset();
+    onClose();
+  }, [onClose, reset]);
 
   if (!place) return null;
 
   return (
     <>
-      {expanded ? <Pressable style={styles.sheetBackdrop} onPress={onClose} /> : null}
+      {expanded ? <Pressable style={styles.sheetBackdrop} onPress={handleClose} /> : null}
       <Animated.View style={[styles.placeDetailSheetPanel, { transform: [{ translateY }] }]}>
-        <Pressable
-          style={styles.sheetHandleTouch}
-          onPress={() => setExpandedState(!expanded)}
-          {...panHandlers}
-        >
+        <Pressable style={styles.sheetHandleTouch} onPress={() => setExpandedState(!expanded)} {...panHandlers}>
           <View style={styles.sheetHandle} />
         </Pressable>
         {expanded ? (
           <ScrollView contentContainerStyle={styles.placeDetailSheetContent}>
             <View style={styles.placeDetailSheetHeader}>
               <Text style={styles.title}>{place.name}</Text>
-              <Pressable onPress={onClose}>
+              <Pressable onPress={handleClose}>
                 <Ionicons name="close" size={20} color={colors.base.textSubtle} />
               </Pressable>
             </View>
@@ -87,7 +88,7 @@ export function ExplorePlaceDetailSheet({ place, onClose }: ExplorePlaceDetailSh
                   {place.category} · {place.address}
                 </Text>
               </View>
-              <Pressable onPress={onClose}>
+              <Pressable onPress={handleClose}>
                 <Ionicons name="close" size={18} color={colors.base.textSubtle} />
               </Pressable>
             </View>
