@@ -100,7 +100,7 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         justify-content: center;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       }
-      .spider-hub {
+      .overlap-hub {
         min-width: 34px;
         height: 34px;
         padding: 0 8px;
@@ -125,8 +125,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         let places = [];
         let userLocation = null;
         let userOverlay = null;
-        let spiderState = null;
-        let suppressMapClickUntil = 0;
 
         function postMessage(payload) {
           if (window.ReactNativeWebView) {
@@ -225,16 +223,18 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           return lat.toFixed(6) + "|" + lng.toFixed(6);
         }
 
-        function getPlacesAtSameCoord(targetPlace) {
-          const key = getCoordKey(targetPlace.lat, targetPlace.lng);
-          const grouped = places.filter(function (place) {
-            return getCoordKey(place.lat, place.lng) === key;
+        function buildCoordGroups(rawPlaces) {
+          const grouped = new Map();
+          rawPlaces.forEach(function (place) {
+            const key = getCoordKey(place.lat, place.lng);
+            const existing = grouped.get(key);
+            if (existing) {
+              existing.push(place);
+              return;
+            }
+            grouped.set(key, [place]);
           });
-          return { key: key, items: grouped };
-        }
-
-        function suppressMapClick(ms) {
-          suppressMapClickUntil = Date.now() + ms;
+          return grouped;
         }
 
         function init() {
@@ -313,61 +313,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
             return button;
           }
 
-          function renderSpiderfy() {
-            if (!spiderState || !spiderState.items || spiderState.items.length < 2) return;
-            const projection = map.getProjection();
-            if (!projection || !projection.pointFromCoords || !projection.coordsFromPoint) return;
-
-            const center = new kakao.maps.LatLng(spiderState.lat, spiderState.lng);
-            const centerPoint = projection.pointFromCoords(center);
-            const count = spiderState.items.length;
-            const radiusPx = Math.max(36, Math.min(82, 24 + count * 3));
-
-            spiderState.items.forEach(function (place, index) {
-              const angle = (Math.PI * 2 * index) / count - Math.PI / 2;
-              const point = new kakao.maps.Point(
-                centerPoint.x + Math.cos(angle) * radiusPx,
-                centerPoint.y + Math.sin(angle) * radiusPx,
-              );
-              const coords = projection.coordsFromPoint(point);
-
-              const leg = new kakao.maps.Polyline({
-                path: [center, coords],
-                strokeWeight: 2,
-                strokeColor: "#94A3B8",
-                strokeOpacity: 0.95,
-                strokeStyle: "solid",
-              });
-              leg.setMap(map);
-              overlays.push(leg);
-
-              const button = createSpotButton(place);
-              button.addEventListener("click", function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                suppressMapClick(250);
-                postMessage({ type: "markerPress", placeId: place.id });
-              });
-
-              const overlay = new kakao.maps.CustomOverlay({
-                position: coords,
-                content: button,
-                yAnchor: 1,
-                zIndex: 7,
-              });
-              overlay.setMap(map);
-              overlays.push(overlay);
-            });
-          }
-
-          function closeSpiderfy(shouldRender) {
-            if (!spiderState) return;
-            spiderState = null;
-            if (shouldRender) {
-              renderPlaces();
-            }
-          }
-
           function renderPlaces() {
             clearOverlays();
             const centerPoint = map.getCenter();
@@ -377,8 +322,8 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               centerPoint.getLat(),
               centerPoint.getLng(),
             );
-            const expandedCoordKey = spiderState ? spiderState.key : null;
-            const seenExpandedCoord = new Set();
+            const coordGroups = buildCoordGroups(places);
+            const seenOverlapCoord = new Set();
 
             displayItems.forEach(function (item) {
               if (item.type === "cluster") {
@@ -389,8 +334,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
                 cluster.addEventListener("click", function (event) {
                   event.preventDefault();
                   event.stopPropagation();
-                  suppressMapClick(250);
-                  closeSpiderfy(false);
                   map.setLevel(Math.max(1, map.getLevel() - 2), {
                     anchor: new kakao.maps.LatLng(item.lat, item.lng),
                   });
@@ -408,20 +351,18 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
 
               const place = item.place;
               const coordKey = getCoordKey(place.lat, place.lng);
-              if (expandedCoordKey && coordKey === expandedCoordKey) {
-                if (seenExpandedCoord.has(coordKey)) {
-                  return;
-                }
-                seenExpandedCoord.add(coordKey);
+              const overlapGroup = coordGroups.get(coordKey) || [];
+              if (overlapGroup.length > 1) {
+                if (seenOverlapCoord.has(coordKey)) return;
+                seenOverlapCoord.add(coordKey);
                 const hub = document.createElement("button");
-                hub.className = "spider-hub";
+                hub.className = "overlap-hub";
                 hub.type = "button";
-                hub.textContent = String(spiderState.items.length);
+                hub.textContent = String(overlapGroup.length);
                 hub.addEventListener("click", function (event) {
                   event.preventDefault();
                   event.stopPropagation();
-                  suppressMapClick(250);
-                  closeSpiderfy(true);
+                  postMessage({ type: "overlapPress", coordKey: coordKey });
                 });
                 const hubOverlay = new kakao.maps.CustomOverlay({
                   position: new kakao.maps.LatLng(place.lat, place.lng),
@@ -440,23 +381,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               button.addEventListener("click", function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                suppressMapClick(250);
-                const grouped = getPlacesAtSameCoord(place);
-                if (grouped.items.length > 1) {
-                  if (spiderState && spiderState.key === grouped.key) {
-                    closeSpiderfy(true);
-                    return;
-                  }
-                  spiderState = {
-                    key: grouped.key,
-                    lat: place.lat,
-                    lng: place.lng,
-                    items: grouped.items,
-                  };
-                  renderPlaces();
-                  return;
-                }
-                closeSpiderfy(false);
                 postMessage({ type: "markerPress", placeId: place.id });
               });
 
@@ -469,8 +393,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               overlay.setMap(map);
               overlays.push(overlay);
             });
-
-            renderSpiderfy();
           }
 
           function renderUserLocation() {
@@ -509,7 +431,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           window.__setPlaces = function (nextPlaces) {
             if (!Array.isArray(nextPlaces)) return;
             places = nextPlaces;
-            closeSpiderfy(false);
             renderPlaces();
           };
 
@@ -530,13 +451,6 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           kakao.maps.event.addListener(map, "idle", function () {
             renderPlaces();
             emitViewport();
-          });
-          kakao.maps.event.addListener(map, "click", function () {
-            if (Date.now() < suppressMapClickUntil) return;
-            closeSpiderfy(true);
-          });
-          kakao.maps.event.addListener(map, "zoom_start", function () {
-            closeSpiderfy(false);
           });
         }
 

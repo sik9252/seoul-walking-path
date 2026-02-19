@@ -11,6 +11,7 @@ import {
   ExploreFloatingControls,
   ExploreLocationErrorModal,
   ExplorePlaceDetailSheet,
+  ExplorePlaceListSheet,
   ExploreMapView,
   ExploreVisitResultModal,
 } from "./widgets/explore";
@@ -76,6 +77,7 @@ export function ExploreScreen({
   const [locationErrorMessage, setLocationErrorMessage] = React.useState("현재 위치를 가져오지 못했습니다.");
   const [mapPlaces, setMapPlaces] = React.useState<PlaceItem[]>([]);
   const [isViewportLoading, setIsViewportLoading] = React.useState(false);
+  const [sheetPlaces, setSheetPlaces] = React.useState<PlaceItem[]>([]);
   const userLocationRef = React.useRef(userLocation);
 
   React.useEffect(() => {
@@ -139,6 +141,7 @@ export function ExploreScreen({
         const payload = JSON.parse(event.nativeEvent.data) as {
           type?: string;
           placeId?: string;
+          coordKey?: string;
           viewport?: MapViewportBounds;
         };
 
@@ -148,6 +151,15 @@ export function ExploreScreen({
             setIsSheetOpen(false);
             setFocusedPlace(selected);
           }
+          return;
+        }
+        if (payload.type === "overlapPress" && payload.coordKey) {
+          const grouped = markerPlaces.filter(
+            (place) => `${place.lat.toFixed(6)}|${place.lng.toFixed(6)}` === payload.coordKey,
+          );
+          setFocusedPlace(null);
+          setSheetPlaces(grouped);
+          setIsSheetOpen(true);
           return;
         }
 
@@ -273,6 +285,7 @@ export function ExploreScreen({
           onRefreshLocation={() => void handleRefreshLocation()}
           onOpenList={() => {
             setFocusedPlace(null);
+            setSheetPlaces(markerPlaces);
             setIsSheetOpen(true);
           }}
           onCheckVisit={onCheckVisit}
@@ -287,6 +300,20 @@ export function ExploreScreen({
         visible={isLocationErrorOpen}
         message={locationErrorMessage}
         onClose={() => setIsLocationErrorOpen(false)}
+      />
+
+      <ExplorePlaceListSheet
+        visible={isSheetOpen}
+        places={sheetPlaces}
+        loading={isViewportLoading}
+        hasNext={false}
+        onLoadMore={() => {}}
+        onClose={() => setIsSheetOpen(false)}
+        onOpenDetail={(place) => {
+          onOpenDetail(place);
+          setFocusedPlace(place);
+        }}
+        bottomOffset={bottomOverlayOffset}
       />
 
       <ExplorePlaceDetailSheet
