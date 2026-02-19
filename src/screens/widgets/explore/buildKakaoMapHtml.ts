@@ -126,6 +126,7 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         let userLocation = null;
         let userOverlay = null;
         let spiderState = null;
+        let suppressMapClickUntil = 0;
 
         function postMessage(payload) {
           if (window.ReactNativeWebView) {
@@ -232,6 +233,10 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
           return { key: key, items: grouped };
         }
 
+        function suppressMapClick(ms) {
+          suppressMapClickUntil = Date.now() + ms;
+        }
+
         function init() {
           const initialCenter = ${initialCenterJson};
           const mapContainer = document.getElementById("map");
@@ -298,6 +303,13 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               button.appendChild(fallback);
             }
 
+            button.addEventListener("mousedown", function (event) {
+              event.stopPropagation();
+            });
+            button.addEventListener("touchstart", function (event) {
+              event.stopPropagation();
+            });
+
             return button;
           }
 
@@ -330,7 +342,10 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               overlays.push(leg);
 
               const button = createSpotButton(place);
-              button.addEventListener("click", function () {
+              button.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                suppressMapClick(250);
                 postMessage({ type: "markerPress", placeId: place.id });
               });
 
@@ -371,7 +386,10 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
                 cluster.className = "cluster-marker";
                 cluster.type = "button";
                 cluster.textContent = String(item.count);
-                cluster.addEventListener("click", function () {
+                cluster.addEventListener("click", function (event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  suppressMapClick(250);
                   closeSpiderfy(false);
                   map.setLevel(Math.max(1, map.getLevel() - 2), {
                     anchor: new kakao.maps.LatLng(item.lat, item.lng),
@@ -399,7 +417,10 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
                 hub.className = "spider-hub";
                 hub.type = "button";
                 hub.textContent = String(spiderState.items.length);
-                hub.addEventListener("click", function () {
+                hub.addEventListener("click", function (event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  suppressMapClick(250);
                   closeSpiderfy(true);
                 });
                 const hubOverlay = new kakao.maps.CustomOverlay({
@@ -416,7 +437,10 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               const position = new kakao.maps.LatLng(place.lat, place.lng);
               const button = createSpotButton(place);
 
-              button.addEventListener("click", function () {
+              button.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                suppressMapClick(250);
                 const grouped = getPlacesAtSameCoord(place);
                 if (grouped.items.length > 1) {
                   if (spiderState && spiderState.key === grouped.key) {
@@ -508,6 +532,7 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
             emitViewport();
           });
           kakao.maps.event.addListener(map, "click", function () {
+            if (Date.now() < suppressMapClickUntil) return;
             closeSpiderfy(true);
           });
           kakao.maps.event.addListener(map, "zoom_start", function () {
