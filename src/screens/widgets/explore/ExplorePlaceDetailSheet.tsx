@@ -14,9 +14,10 @@ type ExplorePlaceDetailSheetProps = {
 };
 
 export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: ExplorePlaceDetailSheetProps) {
+  const collapsedOffset = 560;
   const { expanded, translateY, setExpandedState, reset, panHandlers } = useBottomSheetSnap({
     visible: Boolean(place),
-    collapsedOffset: 560,
+    collapsedOffset,
   });
 
   const handleClose = React.useCallback(() => {
@@ -26,13 +27,22 @@ export function ExplorePlaceDetailSheet({ place, onClose, bottomOffset = 0 }: Ex
 
   if (!place) return null;
 
+  const tabBarCoverShift = translateY.interpolate({
+    inputRange: [0, collapsedOffset],
+    outputRange: [bottomOffset, 0],
+    extrapolate: "clamp",
+  });
+
   return (
     <>
       {expanded ? <Pressable style={styles.sheetBackdrop} onPress={handleClose} /> : null}
       <Animated.View
         style={[
           styles.placeDetailSheetPanel,
-          { bottom: expanded ? -bottomOffset : bottomOffset, transform: [{ translateY }] },
+          {
+            bottom: bottomOffset,
+            transform: [{ translateY: Animated.add(translateY, tabBarCoverShift) }],
+          },
         ]}
       >
         <View style={styles.sheetHandleTouch} {...panHandlers}>
