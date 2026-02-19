@@ -58,8 +58,15 @@ export function ExploreScreen({
   const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
   const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
   const [locationErrorMessage, setLocationErrorMessage] = React.useState("현재 위치를 가져오지 못했습니다.");
+  const [mapPlaces, setMapPlaces] = React.useState<PlaceItem[]>([]);
 
-  const markerPlaces = places.slice(0, 200);
+  React.useEffect(() => {
+    if (mapPlaces.length === 0 && places.length > 0) {
+      setMapPlaces(places.slice(0, 200));
+    }
+  }, [mapPlaces.length, places]);
+
+  const markerPlaces = mapPlaces;
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
     longitude: userLocation?.longitude ?? 126.978,
