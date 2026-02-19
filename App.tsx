@@ -80,7 +80,7 @@ function AppShell() {
           userLocation={location}
           isLoadingLocation={isLoadingLocation}
           locationError={locationError}
-          onRefreshLocation={() => void refreshLocation()}
+          onRefreshLocation={refreshLocation}
           onCheckVisit={() => visitMutation.mutate()}
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}

@@ -7,6 +7,10 @@ export type UserLocationState = {
   heading?: number | null;
 };
 
+export type RefreshLocationResult =
+  | { ok: true }
+  | { ok: false; reason: string };
+
 const DEFAULT_SEOUL_LOCATION: UserLocationState = {
   latitude: 37.5665,
   longitude: 126.978,
@@ -18,15 +22,16 @@ export function useUserLocation() {
   const [isLoadingLocation, setIsLoadingLocation] = React.useState(false);
   const [locationError, setLocationError] = React.useState<string | null>(null);
 
-  const refreshLocation = React.useCallback(async () => {
+  const refreshLocation = React.useCallback(async (): Promise<RefreshLocationResult> => {
     setIsLoadingLocation(true);
     setLocationError(null);
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== "granted") {
-        setLocationError("위치 권한이 거부되었습니다.");
+        const reason = "위치 권한이 거부되었습니다.";
+        setLocationError(reason);
         setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
-        return;
+        return { ok: false, reason };
       }
 
       const current = await Location.getCurrentPositionAsync({
@@ -38,10 +43,13 @@ export function useUserLocation() {
         longitude: current.coords.longitude,
         heading: typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
       });
+      return { ok: true };
     } catch (error) {
       console.warn("[location] failed to get location", error);
-      setLocationError("현재 위치를 가져오지 못했습니다.");
+      const reason = "현재 위치를 가져오지 못했습니다.";
+      setLocationError(reason);
       setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
+      return { ok: false, reason };
     } finally {
       setIsLoadingLocation(false);
     }

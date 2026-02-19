@@ -4,9 +4,12 @@ import { ActivityIndicator, FlatList, Image, Modal, Pressable, Text, View } from
 import { WebView } from "react-native-webview";
 import type { WebViewMessageEvent } from "react-native-webview";
 import { Button, Card } from "../components/ui";
+import type { RefreshLocationResult } from "../hooks/useUserLocation";
 import { colors } from "../theme/tokens";
 import { gameStyles as styles } from "../styles/gameStyles";
 import { PlaceItem } from "../types/gameTypes";
+
+let hasShownInitialLocationError = false;
 
 type Props = {
   places: PlaceItem[];
@@ -17,7 +20,7 @@ type Props = {
   userLocation: { latitude: number; longitude: number; heading?: number | null } | null;
   isLoadingLocation: boolean;
   locationError: string | null;
-  onRefreshLocation: () => void;
+  onRefreshLocation: () => Promise<RefreshLocationResult>;
   onCheckVisit: () => void;
   onOpenDetail: (place: PlaceItem) => void;
   onLoadMore: () => void;
@@ -40,6 +43,7 @@ export function ExploreScreen({
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
   const [focusedPlace, setFocusedPlace] = React.useState<PlaceItem | null>(null);
   const [isLocationErrorOpen, setIsLocationErrorOpen] = React.useState(false);
+  const [locationErrorMessage, setLocationErrorMessage] = React.useState("현재 위치를 가져오지 못했습니다.");
   const markerPlaces = places.slice(0, 200);
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
@@ -219,10 +223,20 @@ export function ExploreScreen({
   const previewPlace = focusedPlace ?? markerPlaces[0] ?? null;
 
   React.useEffect(() => {
-    if (locationError) {
+    if (locationError && !hasShownInitialLocationError) {
+      hasShownInitialLocationError = true;
+      setLocationErrorMessage(locationError);
       setIsLocationErrorOpen(true);
     }
   }, [locationError]);
+
+  const handleRefreshLocation = React.useCallback(async () => {
+    const result = await onRefreshLocation();
+    if (!result.ok) {
+      setLocationErrorMessage(result.reason);
+      setIsLocationErrorOpen(true);
+    }
+  }, [onRefreshLocation]);
 
   return (
     <View style={styles.mapScreen}>
@@ -243,7 +257,7 @@ export function ExploreScreen({
         )}
 
         <View style={styles.floatingRightControls}>
-          <Pressable style={styles.floatingCircleButton} onPress={onRefreshLocation}>
+          <Pressable style={styles.floatingCircleButton} onPress={() => void handleRefreshLocation()}>
             <Ionicons name="locate" size={20} color={colors.brand[700]} />
           </Pressable>
           <Pressable style={styles.floatingCircleButton} onPress={() => setIsSheetOpen(true)}>
@@ -252,11 +266,6 @@ export function ExploreScreen({
           <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
             <Ionicons name="sparkles" size={20} color={colors.base.text} />
           </Pressable>
-        </View>
-
-        <View style={styles.mapMetaRow}>
-          <Text style={styles.cardBody}>지도 핀: {markerPlaces.length}개</Text>
-          <Text style={styles.moreText}>{isLoadingLocation ? "위치 확인중..." : "내 위치 준비됨"}</Text>
         </View>
 
         {previewPlace ? (
@@ -289,11 +298,11 @@ export function ExploreScreen({
         {isError ? <Text style={styles.errorText}>관광지 목록을 불러오지 못했습니다.</Text> : null}
       </View>
 
-      <Modal visible={isLocationErrorOpen && Boolean(locationError)} transparent animationType="fade">
+      <Modal visible={isLocationErrorOpen} transparent animationType="fade">
         <Pressable style={styles.sheetBackdrop} onPress={() => setIsLocationErrorOpen(false)} />
         <View style={styles.locationErrorModal}>
           <Text style={styles.cardTitle}>위치 확인 실패</Text>
-          <Text style={styles.cardBody}>{locationError ?? "현재 위치를 가져오지 못했습니다."}</Text>
+          <Text style={styles.cardBody}>{locationErrorMessage}</Text>
           <Button label="확인" onPress={() => setIsLocationErrorOpen(false)} />
         </View>
       </Modal>
@@ -341,7 +350,9 @@ export function ExploreScreen({
                       <Text style={styles.moreText}>더 보기</Text>
                     </Pressable>
                   ) : null}
-                  {!loading && !hasNext && places.length > 0 ? <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text> : null}
+                  {!loading && !hasNext && places.length > 0 ? (
+                    <Text style={styles.endText}>모든 관광지를 불러왔어요.</Text>
+                  ) : null}
                 </View>
               }
               ListEmptyComponent={
