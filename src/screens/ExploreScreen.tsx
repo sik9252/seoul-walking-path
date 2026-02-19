@@ -271,7 +271,7 @@ export function ExploreScreen({
           </View>
         )}
 
-        <View style={styles.floatingTopRightControls}>
+        <View style={styles.floatingBottomLeftControls}>
           <Pressable style={styles.floatingCircleButton} onPress={handleZoomIn}>
             <Ionicons name="add" size={20} color={colors.base.text} />
           </Pressable>
@@ -280,19 +280,20 @@ export function ExploreScreen({
           </Pressable>
         </View>
 
-        <View style={styles.floatingMidRightControls}>
-          <Pressable style={styles.floatingCircleButton} onPress={() => void handleRefreshLocation()}>
-            <Ionicons name="locate" size={20} color={colors.brand[700]} />
-          </Pressable>
-        </View>
-
-        <View style={styles.floatingBottomRightControls}>
-          <Pressable style={styles.floatingCircleButton} onPress={() => setIsSheetOpen(true)}>
-            <Ionicons name="list" size={20} color={colors.base.text} />
-          </Pressable>
-          <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
-            <Ionicons name="sparkles" size={20} color={colors.base.text} />
-          </Pressable>
+        <View style={styles.floatingBottomRightCluster}>
+          <View style={styles.sparkRow}>
+            <Pressable style={styles.floatingCircleButton} onPress={onCheckVisit}>
+              <Ionicons name="sparkles" size={20} color={colors.base.text} />
+            </Pressable>
+          </View>
+          <View style={styles.bottomRightRow}>
+            <Pressable style={styles.floatingCircleButton} onPress={() => setIsSheetOpen(true)}>
+              <Ionicons name="list" size={20} color={colors.base.text} />
+            </Pressable>
+            <Pressable style={styles.floatingCircleButton} onPress={() => void handleRefreshLocation()}>
+              <Ionicons name="locate" size={20} color={colors.brand[700]} />
+            </Pressable>
+          </View>
         </View>
 
         {previewPlace ? (

@@ -54,28 +54,28 @@ export const gameStyles = StyleSheet.create({
     flex: 1,
     width: "100%",
   },
-  floatingTopRightControls: {
+  floatingBottomLeftControls: {
     position: "absolute",
-    right: spacing.xl,
-    top: spacing.xl,
+    left: spacing.xl,
+    bottom: spacing.x3,
     gap: spacing.sm,
     zIndex: 11,
     elevation: 4,
   },
-  floatingMidRightControls: {
-    position: "absolute",
-    right: spacing.xl,
-    top: "38%",
-    zIndex: 11,
-    elevation: 4,
-  },
-  floatingBottomRightControls: {
+  floatingBottomRightCluster: {
     position: "absolute",
     right: spacing.xl,
     bottom: spacing.x3,
     gap: spacing.sm,
     zIndex: 11,
     elevation: 4,
+  },
+  sparkRow: {
+    alignItems: "flex-end",
+  },
+  bottomRightRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
   },
   floatingCircleButton: {
     width: 46,
