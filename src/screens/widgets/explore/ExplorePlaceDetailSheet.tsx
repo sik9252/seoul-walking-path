@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Animated, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { Card } from "../../../components/ui";
 import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
 import { PlaceItem } from "../../../types/gameTypes";
+import { useBottomSheetSnap } from "./useBottomSheetSnap";
 
 type ExplorePlaceDetailSheetProps = {
   place: PlaceItem | null;
@@ -13,13 +14,24 @@ type ExplorePlaceDetailSheetProps = {
 };
 
 export function ExplorePlaceDetailSheet({ place, onClose, onOpenDetail }: ExplorePlaceDetailSheetProps) {
+  const { expanded, translateY, setExpandedState, panHandlers } = useBottomSheetSnap({
+    visible: Boolean(place),
+    collapsedOffset: 360,
+  });
+
   if (!place) return null;
 
   return (
     <>
-      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <View style={styles.placeDetailSheetPanel}>
-        <View style={styles.sheetHandle} />
+      {expanded ? <Pressable style={styles.sheetBackdrop} onPress={onClose} /> : null}
+      <Animated.View style={[styles.placeDetailSheetPanel, { transform: [{ translateY }] }]}>
+        <Pressable
+          style={styles.sheetHandleTouch}
+          onPress={() => setExpandedState(!expanded)}
+          {...panHandlers}
+        >
+          <View style={styles.sheetHandle} />
+        </Pressable>
         <ScrollView contentContainerStyle={styles.placeDetailSheetContent}>
           <View style={styles.placeDetailSheetHeader}>
             <Text style={styles.title}>{place.name}</Text>
@@ -57,7 +69,7 @@ export function ExplorePlaceDetailSheet({ place, onClose, onOpenDetail }: Explor
             </Text>
           </Card>
         </ScrollView>
-      </View>
+      </Animated.View>
     </>
   );
 }

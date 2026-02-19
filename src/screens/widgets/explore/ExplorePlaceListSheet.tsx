@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Animated, FlatList, Pressable, Text, View } from "react-native";
 import { Button, Card } from "../../../components/ui";
 import { gameStyles as styles } from "../../../styles/gameStyles";
 import { colors } from "../../../theme/tokens";
 import { PlaceItem } from "../../../types/gameTypes";
+import { useBottomSheetSnap } from "./useBottomSheetSnap";
 
 type ExplorePlaceListSheetProps = {
   visible: boolean;
@@ -27,13 +28,24 @@ export function ExplorePlaceListSheet({
   onCheckVisit,
   onOpenDetail,
 }: ExplorePlaceListSheetProps) {
+  const { expanded, translateY, setExpandedState, panHandlers } = useBottomSheetSnap({
+    visible,
+    collapsedOffset: 300,
+  });
+
   if (!visible) return null;
 
   return (
     <>
-      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <View style={styles.sheetPanel}>
-        <View style={styles.sheetHandle} />
+      {expanded ? <Pressable style={styles.sheetBackdrop} onPress={onClose} /> : null}
+      <Animated.View style={[styles.sheetPanel, { transform: [{ translateY }] }]}>
+        <Pressable
+          style={styles.sheetHandleTouch}
+          onPress={() => setExpandedState(!expanded)}
+          {...panHandlers}
+        >
+          <View style={styles.sheetHandle} />
+        </Pressable>
         <View style={styles.sheetHeader}>
           <Text style={styles.cardTitle}>관광지 목록</Text>
           <Text style={styles.cardBody}>지도 마커와 연동된 장소를 확인할 수 있어요.</Text>
@@ -85,7 +97,7 @@ export function ExplorePlaceListSheet({
             ) : null
           }
         />
-      </View>
+      </Animated.View>
     </>
   );
 }

@@ -163,6 +163,10 @@ export const gameStyles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
   },
+  sheetHandleTouch: {
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+  },
   sheetHeader: {
     padding: spacing.md,
     gap: spacing.xs,
