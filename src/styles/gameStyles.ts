@@ -535,6 +535,14 @@ export const gameStyles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.base.border,
-    backgroundColor: colors.base.subtle,
+    backgroundColor: "#E7EEE3",
+    overflow: "hidden",
+  },
+  collectionSkeletonCardShimmer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 120,
+    backgroundColor: "rgba(255,255,255,0.42)",
   },
 });
