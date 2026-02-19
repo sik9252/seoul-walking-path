@@ -18,6 +18,8 @@ type Props = {
   apiBaseUrl?: string;
   loadingMyCards: boolean;
   myCardsError: boolean;
+  selectedCategory: CollectionCategory;
+  onSelectCategory: (category: CollectionCategory) => void;
 };
 
 const DEFAULT_REGIONS = [
@@ -44,9 +46,14 @@ const REGION_LABELS_BY_CODE: Record<string, string> = Object.fromEntries(
   DEFAULT_REGIONS.map((item) => [item.areaCode, item.label]),
 );
 
-export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsError }: Props) {
-  const [selectedCategory, setSelectedCategory] = React.useState<CollectionCategory>("all");
-
+export function CollectionScreen({
+  cards,
+  apiBaseUrl,
+  loadingMyCards,
+  myCardsError,
+  selectedCategory,
+  onSelectCategory,
+}: Props) {
   const selectedAreaCode = selectedCategory === "all" ? undefined : selectedCategory;
   const selectedRegion = selectedAreaCode ? REGION_LABELS_BY_CODE[selectedAreaCode] : undefined;
   const catalogQuery = useCardCatalogQuery(apiBaseUrl, selectedRegion);
@@ -90,7 +97,7 @@ export function CollectionScreen({ cards, apiBaseUrl, loadingMyCards, myCardsErr
       <CollectionCategoryTabs
         categories={availableRegions}
         selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
+        onSelectCategory={onSelectCategory}
       />
 
       {loading ? <CollectionLoadingSkeleton /> : null}

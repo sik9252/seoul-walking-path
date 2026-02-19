@@ -457,7 +457,7 @@ export const gameStyles = StyleSheet.create({
     borderColor: colors.base.border,
     backgroundColor: colors.base.surface,
     padding: spacing.md,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   collectionCardImageWrap: {
     borderRadius: radius.lg,
@@ -467,6 +467,7 @@ export const gameStyles = StyleSheet.create({
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 12,
   },
   collectionCardImage: {
     width: "100%",
@@ -491,13 +492,12 @@ export const gameStyles = StyleSheet.create({
     justifyContent: "center",
   },
   collectionCardName: {
-    fontSize: 40 / 2,
-    lineHeight: 48 / 2,
+    fontSize: typography.size.bodySm,
     color: "#0F172A",
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
   },
   collectionCardStatus: {
-    fontSize: typography.size.titleSm,
+    fontSize: typography.size.labelSm,
     color: "#15C85F",
     fontWeight: typography.weight.medium,
   },
@@ -521,7 +521,7 @@ export const gameStyles = StyleSheet.create({
     color: "#7C879A",
   },
   collectionCardStatusLocked: {
-    fontSize: typography.size.titleSm,
+    fontSize: typography.size.labelSm,
     color: "#9AA3B2",
     fontWeight: typography.weight.medium,
   },

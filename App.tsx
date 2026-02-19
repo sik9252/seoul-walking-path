@@ -11,6 +11,7 @@ import { ExploreScreen } from "./src/screens/ExploreScreen";
 import { useUserLocation } from "./src/hooks/useUserLocation";
 import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
+import { CollectionCategory } from "./src/screens/widgets/collection";
 import { getOnboardingCompleted, setOnboardingCompleted } from "./src/storage/startupFlags";
 import { gameStyles as styles } from "./src/styles/gameStyles";
 import { GameTab, PlaceItem } from "./src/types/gameTypes";
@@ -59,6 +60,7 @@ function AppShell() {
   const [splashProgress, setSplashProgress] = React.useState(0.1);
   const [splashStatus, setSplashStatus] = React.useState("권한 상태를 확인하는 중...");
   const [tab, setTab] = React.useState<GameTab>("explore");
+  const [collectionCategory, setCollectionCategory] = React.useState<CollectionCategory>("all");
   const [tabBarHeight, setTabBarHeight] = React.useState(0);
   const [isExploreDetailExpanded, setIsExploreDetailExpanded] = React.useState(false);
   const [selectedPlace, setSelectedPlace] = React.useState<PlaceItem | null>(null);
@@ -345,8 +347,10 @@ function AppShell() {
         <CollectionScreen
           cards={cardsQuery.data ?? []}
           apiBaseUrl={apiBaseUrl}
-          loadingMyCards={cardsQuery.isPending || cardsQuery.isFetching}
+          loadingMyCards={cardsQuery.isPending}
           myCardsError={cardsQuery.isError}
+          selectedCategory={collectionCategory}
+          onSelectCategory={setCollectionCategory}
         />
       ) : null}
 
