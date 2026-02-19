@@ -3,10 +3,7 @@ type MapCenter = {
   longitude: number;
 };
 
-export function buildKakaoMapHtml(params: {
-  kakaoJavascriptKey: string;
-  initialCenter: MapCenter;
-}) {
+export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialCenter: MapCenter }) {
   const { kakaoJavascriptKey, initialCenter } = params;
   const initialCenterJson = JSON.stringify(initialCenter);
 
@@ -92,9 +89,7 @@ export function buildKakaoMapHtml(params: {
         function createDisplayItems(rawPlaces, level, centerLat, centerLng) {
           if (!rawPlaces || rawPlaces.length === 0) return [];
 
-          // Uncluster when user is zoomed in enough or viewport item count is small.
-          // Kakao map: lower level means closer zoom.
-          if (level <= 4 || rawPlaces.length <= 10) {
+          if (rawPlaces.length <= 20) {
             return rawPlaces
               .map((place) => ({
                 type: "single",
@@ -109,11 +104,14 @@ export function buildKakaoMapHtml(params: {
           }
 
           function clusterCellByLevel(targetLevel) {
-            if (targetLevel >= 11) return 0.08;
-            if (targetLevel >= 9) return 0.04;
-            if (targetLevel >= 7) return 0.02;
-            if (targetLevel >= 5) return 0.01;
-            return 0.005;
+            if (targetLevel >= 11) return 0.1;
+            if (targetLevel >= 9) return 0.06;
+            if (targetLevel >= 7) return 0.03;
+            if (targetLevel >= 6) return 0.01;
+            if (targetLevel >= 5) return 0.005;
+            if (targetLevel >= 4) return 0.003;
+            
+            return 0.001;
           }
 
           function buildGroupedDisplay(cellSize) {
@@ -137,6 +135,7 @@ export function buildKakaoMapHtml(params: {
                 items.push({ type: "single", place: group.items[0] });
                 return;
               }
+
               const lat =
                 group.items.reduce((sum, item) => sum + item.lat, 0) / group.items.length;
               const lng =
@@ -148,6 +147,7 @@ export function buildKakaoMapHtml(params: {
                 lng,
               });
             });
+
             return items;
           }
 
@@ -178,8 +178,9 @@ export function buildKakaoMapHtml(params: {
           const mapContainer = document.getElementById("map");
           const map = new kakao.maps.Map(mapContainer, {
             center: new kakao.maps.LatLng(initialCenter.latitude, initialCenter.longitude),
-            level: 7,
+            level: 3,
           });
+
           const overlays = [];
 
           function clearOverlays() {
@@ -283,6 +284,7 @@ export function buildKakaoMapHtml(params: {
               userOverlay.setMap(null);
               userOverlay = null;
             }
+
             if (!userLocation || !userLocation.latitude || !userLocation.longitude) return;
             const heading = typeof userLocation.heading === "number" ? userLocation.heading : null;
 
@@ -300,6 +302,7 @@ export function buildKakaoMapHtml(params: {
               yAnchor: 0.5,
               zIndex: 6,
             });
+
             userOverlay.setMap(map);
           }
 
@@ -308,15 +311,18 @@ export function buildKakaoMapHtml(params: {
             const nextLevel = Math.min(14, Math.max(1, currentLevel + delta));
             map.setLevel(nextLevel);
           };
+
           window.__setPlaces = function (nextPlaces) {
             if (!Array.isArray(nextPlaces)) return;
             places = nextPlaces;
             renderPlaces();
           };
+
           window.__setUserLocation = function (nextUserLocation) {
             userLocation = nextUserLocation || null;
             renderUserLocation();
           };
+
           window.__moveTo = function (lat, lng) {
             if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
             map.setCenter(new kakao.maps.LatLng(lat, lng));
@@ -325,6 +331,7 @@ export function buildKakaoMapHtml(params: {
           renderPlaces();
           renderUserLocation();
           emitViewport();
+
           kakao.maps.event.addListener(map, "idle", function () {
             renderPlaces();
             emitViewport();

@@ -145,12 +145,10 @@ export function ExploreScreen({
           Number.isFinite(payload.viewport.maxLng) &&
           Number.isFinite(payload.viewport.level)
         ) {
-          console.log(
-            `[explore-map] targetLevel=${payload.viewport.level} bbox=(${payload.viewport.minLat.toFixed(5)},${payload.viewport.minLng.toFixed(5)})~(${payload.viewport.maxLat.toFixed(5)},${payload.viewport.maxLng.toFixed(5)})`,
-          );
           if (viewportDebounceRef.current) {
             clearTimeout(viewportDebounceRef.current);
           }
+
           viewportDebounceRef.current = setTimeout(() => {
             void fetchViewportPlaces(payload.viewport as MapViewportBounds);
           }, 300);
@@ -222,7 +220,9 @@ export function ExploreScreen({
   React.useEffect(() => {
     if (!isMapReady || !mapWebViewRef.current) return;
     const locationPayload = JSON.stringify(userLocation ?? null);
-    mapWebViewRef.current.injectJavaScript(`window.__setUserLocation && window.__setUserLocation(${locationPayload}); true;`);
+    mapWebViewRef.current.injectJavaScript(
+      `window.__setUserLocation && window.__setUserLocation(${locationPayload}); true;`,
+    );
   }, [isMapReady, userLocation]);
 
   return (
