@@ -9,6 +9,7 @@ import { useBottomSheetSnap } from "./useBottomSheetSnap";
 
 type ExplorePlaceDetailSheetProps = {
   place: PlaceItem | null;
+  isCollected: boolean;
   onClose: () => void;
   bottomOffset?: number;
   onExpandedChange?: (expanded: boolean) => void;
@@ -16,6 +17,7 @@ type ExplorePlaceDetailSheetProps = {
 
 export function ExplorePlaceDetailSheet({
   place,
+  isCollected,
   onClose,
   bottomOffset = 0,
   onExpandedChange,
@@ -70,6 +72,12 @@ export function ExplorePlaceDetailSheet({
               </Text>
             </View>
             <Text style={styles.cardBody}>{place.address}</Text>
+            {isCollected ? (
+              <View style={styles.collectedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color={colors.brand[700]} />
+                <Text style={styles.collectedBadgeText}>수집 완료</Text>
+              </View>
+            ) : null}
           </View>
           <Pressable style={styles.placeDetailCloseButtonRaised} onPress={handleClose}>
             <Ionicons name="close" size={24} color={colors.base.textSubtle} />

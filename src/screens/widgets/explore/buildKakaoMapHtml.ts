@@ -34,6 +34,10 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
         background: #e8efe3;
         padding: 0;
       }
+      .spot-marker.collected {
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.25), 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
       .spot-marker img {
         width: 100%;
         height: 100%;
@@ -272,6 +276,9 @@ export function buildKakaoMapHtml(params: { kakaoJavascriptKey: string; initialC
               button.className = "spot-marker";
               button.type = "button";
               button.ariaLabel = place.name;
+              if (place.collected) {
+                button.classList.add("collected");
+              }
 
               const fallback = document.createElement("div");
               fallback.className = "spot-marker-fallback";

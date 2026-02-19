@@ -36,6 +36,7 @@ type Props = {
   onLoadMore: () => void;
   bottomOverlayOffset?: number;
   onDetailExpandedChange?: (expanded: boolean) => void;
+  collectedPlaceIds: string[];
 };
 
 export function ExploreScreen({
@@ -56,6 +57,7 @@ export function ExploreScreen({
   onLoadMore,
   bottomOverlayOffset = 0,
   onDetailExpandedChange,
+  collectedPlaceIds,
 }: Props) {
   const mapWebViewRef = React.useRef<WebView>(null);
   const viewportDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -75,6 +77,7 @@ export function ExploreScreen({
   }, [userLocation]);
 
   const markerPlaces = mapPlaces;
+  const collectedPlaceIdSet = React.useMemo(() => new Set(collectedPlaceIds), [collectedPlaceIds]);
   const mapCenter = {
     latitude: userLocation?.latitude ?? 37.5665,
     longitude: userLocation?.longitude ?? 126.978,
@@ -218,10 +221,11 @@ export function ExploreScreen({
         lat: place.lat,
         lng: place.lng,
         imageUrl: place.imageUrl ?? null,
+        collected: collectedPlaceIdSet.has(place.id),
       })),
     );
     mapWebViewRef.current.injectJavaScript(`window.__setPlaces && window.__setPlaces(${placesPayload}); true;`);
-  }, [isMapReady, markerPlaces]);
+  }, [collectedPlaceIdSet, isMapReady, markerPlaces]);
 
   React.useEffect(() => {
     if (!isMapReady || !mapWebViewRef.current) return;
@@ -266,6 +270,7 @@ export function ExploreScreen({
 
       <ExplorePlaceDetailSheet
         place={focusedPlace}
+        isCollected={focusedPlace ? collectedPlaceIdSet.has(focusedPlace.id) : false}
         onClose={() => setFocusedPlace(null)}
         bottomOffset={bottomOverlayOffset}
         onExpandedChange={onDetailExpandedChange}

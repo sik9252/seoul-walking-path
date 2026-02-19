@@ -92,6 +92,13 @@ function AppShell() {
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
     [placesQuery.data?.pages],
   );
+  const collectedPlaceIds = React.useMemo(
+    () =>
+      (cardsQuery.data ?? [])
+        .map((card) => card.place?.id)
+        .filter((id): id is string => Boolean(id)),
+    [cardsQuery.data],
+  );
 
   useNearbyCollectionAlert({
     places,
@@ -340,6 +347,7 @@ function AppShell() {
           onLoadMore={() => void placesQuery.fetchNextPage()}
           bottomOverlayOffset={tabBarHeight}
           onDetailExpandedChange={setIsExploreDetailExpanded}
+          collectedPlaceIds={collectedPlaceIds}
         />
       ) : null}
 
