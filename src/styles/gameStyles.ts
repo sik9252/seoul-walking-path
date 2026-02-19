@@ -358,7 +358,7 @@ export const gameStyles = StyleSheet.create({
   },
   collectionProgressTitle: {
     color: "#0F172A",
-    fontSize: 22 / 2 * 2,
+    fontSize: (22 / 2) * 2,
     fontWeight: typography.weight.bold,
   },
   collectionProgressTrophyWrap: {
@@ -400,7 +400,7 @@ export const gameStyles = StyleSheet.create({
   },
   collectionTabChip: {
     minWidth: 136,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.base.border,
     backgroundColor: colors.base.surface,

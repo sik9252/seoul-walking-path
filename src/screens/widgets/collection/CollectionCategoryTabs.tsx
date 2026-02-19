@@ -17,7 +17,11 @@ type CollectionCategoryTabsProps = {
   onSelectCategory: (category: CollectionCategory) => void;
 };
 
-export function CollectionCategoryTabs({ categories, selectedCategory, onSelectCategory }: CollectionCategoryTabsProps) {
+export function CollectionCategoryTabs({
+  categories,
+  selectedCategory,
+  onSelectCategory,
+}: CollectionCategoryTabsProps) {
   return (
     <View style={styles.collectionTabsWrap}>
       <ScrollView
@@ -32,12 +36,9 @@ export function CollectionCategoryTabs({ categories, selectedCategory, onSelectC
           style={[styles.collectionTabChip, selectedCategory === "all" && styles.collectionTabChipActive]}
         >
           <View style={styles.collectionTabChipInner}>
-            <Ionicons
-              name="grid"
-              size={18}
-              color={selectedCategory === "all" ? colors.brand[700] : colors.base.textSubtle}
-            />
-            <Text style={[styles.collectionTabChipLabel, selectedCategory === "all" && styles.collectionTabChipLabelActive]}>
+            <Text
+              style={[styles.collectionTabChipLabel, selectedCategory === "all" && styles.collectionTabChipLabelActive]}
+            >
               전체
             </Text>
           </View>
@@ -52,11 +53,6 @@ export function CollectionCategoryTabs({ categories, selectedCategory, onSelectC
               style={[styles.collectionTabChip, active && styles.collectionTabChipActive]}
             >
               <View style={styles.collectionTabChipInner}>
-                <Ionicons
-                  name="location"
-                  size={18}
-                  color={active ? colors.brand[700] : colors.base.textSubtle}
-                />
                 <Text style={[styles.collectionTabChipLabel, active && styles.collectionTabChipLabelActive]}>
                   {item.label || "지역"}
                 </Text>

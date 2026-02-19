@@ -10,7 +10,7 @@ export function CollectionHeader() {
       <Pressable style={styles.collectionHeaderIconBtn}>
         <Ionicons name="arrow-back" size={24} color={colors.base.textSubtle} />
       </Pressable>
-      <Text style={styles.collectionHeaderTitle}>My Collection</Text>
+      <Text style={styles.collectionHeaderTitle}>나의 컬렉션</Text>
       <Pressable style={styles.collectionHeaderIconBtn}>
         <Ionicons name="ellipsis-vertical" size={22} color={colors.base.textSubtle} />
       </Pressable>

@@ -26,9 +26,9 @@ export function CollectionProgressCard({ collectedCount, totalCount }: Collectio
     <View style={styles.collectionProgressCard}>
       <View style={styles.collectionProgressTop}>
         <View style={styles.collectionProgressTextWrap}>
-          <Text style={styles.collectionProgressLevel}>LEVEL {level} EXPLORER</Text>
+          <Text style={styles.collectionProgressLevel}>탐험가 레벨 {level}</Text>
           <Text style={styles.collectionProgressTitle}>
-            {collectedCount} / {totalCount} Cards Collected
+            {collectedCount} / {totalCount}
           </Text>
         </View>
         <View style={styles.collectionProgressTrophyWrap}>
@@ -38,7 +38,7 @@ export function CollectionProgressCard({ collectedCount, totalCount }: Collectio
       <View style={styles.collectionProgressTrack}>
         <View style={[styles.collectionProgressFill, { width: `${percent}%` }]} />
       </View>
-      <Text style={styles.collectionProgressPercent}>{percent}% Complete</Text>
+      <Text style={styles.collectionProgressPercent}>{percent}% 수집</Text>
     </View>
   );
 }
