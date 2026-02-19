@@ -100,16 +100,17 @@ function AppShell() {
     let cancelled = false;
     const startedAt = Date.now();
     const minSplashMs = 1200;
-    const progressTimer = setInterval(() => {
-      setSplashProgress((prev) => Math.min(0.92, prev + 0.04));
-    }, 150);
+
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const runBootstrap = async () => {
       try {
         setSplashStatus("온보딩 상태를 확인하는 중...");
+        setSplashProgress(0.28);
         const onboardingCompleted = await getOnboardingCompleted();
 
         setSplashStatus("권한 상태를 확인하는 중...");
+        setSplashProgress(0.56);
         const permissionStatus = await getPermissionStatus();
 
         let nextStep: StartupStep;
@@ -117,6 +118,7 @@ function AppShell() {
           nextStep = "onboarding";
         } else if (permissionStatus === "granted") {
           setSplashStatus("위치 정보를 준비하는 중...");
+          setSplashProgress(0.82);
           await refreshLocationWithOptions({ requestIfNeeded: false });
           nextStep = "home";
         } else {
@@ -129,12 +131,15 @@ function AppShell() {
         }
         if (cancelled) return;
         setSplashProgress(1);
+        await sleep(220);
+        if (cancelled) return;
         setStartupStep(nextStep);
       } catch {
         if (cancelled) return;
+        setSplashProgress(1);
+        await sleep(220);
+        if (cancelled) return;
         setStartupStep("onboarding");
-      } finally {
-        clearInterval(progressTimer);
       }
     };
 
@@ -142,7 +147,6 @@ function AppShell() {
 
     return () => {
       cancelled = true;
-      clearInterval(progressTimer);
     };
   }, [getPermissionStatus, refreshLocationWithOptions]);
 
