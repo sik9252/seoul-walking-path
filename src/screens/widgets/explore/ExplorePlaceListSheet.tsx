@@ -37,7 +37,6 @@ export function ExplorePlaceListSheet({
         <View style={styles.sheetHeader}>
           <Text style={styles.cardTitle}>관광지 목록</Text>
           <Text style={styles.cardBody}>지도 마커와 연동된 장소를 확인할 수 있어요.</Text>
-          <Button label="현재 위치 방문 판정 (데모)" onPress={onCheckVisit} />
         </View>
         <FlatList
           data={places}
