@@ -99,7 +99,16 @@ export function buildKakaoMapHtml(params: {
             0;
 
           if (!clusterCell) {
-            return rawPlaces.map((place) => ({ type: "single", place }));
+            const sorted = rawPlaces
+              .map((place) => ({
+                place,
+                score:
+                  Math.abs(place.lat - centerLat) +
+                  Math.abs(place.lng - centerLng),
+              }))
+              .sort((a, b) => a.score - b.score)
+              .slice(0, 180);
+            return sorted.map((item) => ({ type: "single", place: item.place }));
           }
 
           const grouped = new Map();
