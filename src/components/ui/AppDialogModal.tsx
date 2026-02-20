@@ -51,9 +51,14 @@ export function AppDialogModal({
           <Text style={styles.message}>{message}</Text>
           <View style={[styles.actions, hasTwoActions ? styles.actionsRow : styles.actionsColumn]}>
             {cancelLabel ? (
-              <Button label={cancelLabel} variant="secondary" onPress={handleCancel} style={styles.actionButton} />
+              <Button
+                label={cancelLabel}
+                variant="secondary"
+                onPress={handleCancel}
+                style={hasTwoActions ? styles.actionButton : undefined}
+              />
             ) : null}
-            <Button label={confirmLabel} onPress={handleConfirm} style={styles.actionButton} />
+            <Button label={confirmLabel} onPress={handleConfirm} style={hasTwoActions ? styles.actionButton : undefined} />
           </View>
         </View>
       </View>
