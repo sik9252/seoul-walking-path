@@ -7,6 +7,7 @@ export const colors = {
     border: "#E5E7EB",
     text: "#1A1C18",
     textSubtle: "#43473E",
+    placeholder: "#98A2B3",
   },
   brand: {
     50: "#F3F8F0",
