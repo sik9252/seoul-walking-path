@@ -126,7 +126,7 @@ function AppShell() {
   useNearbyCollectionAlert({
     places,
     location,
-    radiusM: 120,
+    radiusM: 30,
     enabled: tab === "explore" && Boolean(authSession),
   });
 

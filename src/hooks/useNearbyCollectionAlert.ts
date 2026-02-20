@@ -67,7 +67,7 @@ async function tryPushLocalNotification(title: string, body: string) {
 export function useNearbyCollectionAlert({
   places,
   location,
-  radiusM = 120,
+  radiusM = 30,
   enabled = true,
 }: Props) {
   const notifiedPlaceIdsRef = React.useRef<Set<string>>(new Set());
