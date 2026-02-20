@@ -6,7 +6,7 @@ import { AppState, Image, Linking, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getSessionUser, logoutSession, refreshSession, updateNickname } from "./src/apis/authApi";
 import { getApiBaseUrl } from "./src/apis/gameApi";
-import { AppDialogModal, Button, TabBar, TabItem } from "./src/components/ui";
+import { AppDialogModal, Button, FullScreenLoadingOverlay, TabBar, TabItem } from "./src/components/ui";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
 import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
 import { useUserLocation } from "./src/hooks/useUserLocation";
@@ -746,6 +746,12 @@ function AppShell() {
           }
           setVisitDialog((prev) => ({ ...prev, visible: false }));
         }}
+      />
+
+      <FullScreenLoadingOverlay
+        visible={visitMutation.isPending}
+        title="탐색중이에요..."
+        description="근처 스팟을 확인하고 카드 수집 가능 여부를 계산하고 있어요."
       />
     </SafeAreaView>
   );
