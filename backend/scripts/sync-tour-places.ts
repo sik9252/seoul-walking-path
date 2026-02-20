@@ -45,7 +45,10 @@ type PlaceRow = {
   lat: number;
   lng: number;
   imageUrl: string | null;
+  rarity: PlaceRarity;
 };
+
+type PlaceRarity = "common" | "rare" | "epic" | "legendary";
 
 const rootDir = path.resolve(__dirname, "..");
 const outputPath = path.join(rootDir, "data/generated/tour-places.normalized.json");
@@ -71,6 +74,12 @@ const REGION_BY_AREA_CODE: Record<string, string> = {
 };
 
 const DEFAULT_AREA_CODES = Object.keys(REGION_BY_AREA_CODE);
+const RARITY_DISTRIBUTION: Array<{ rarity: PlaceRarity; threshold: number }> = [
+  { rarity: "common", threshold: 0.72 },
+  { rarity: "rare", threshold: 0.92 },
+  { rarity: "epic", threshold: 0.99 },
+  { rarity: "legendary", threshold: 1.0 },
+];
 
 function toNumber(input: string | number | undefined): number | null {
   if (typeof input === "number" && Number.isFinite(input)) return input;
@@ -88,29 +97,75 @@ function extractItems(payload: TourApiResponse): TourApiItem[] {
 }
 
 function normalizeItems(items: TourApiItem[], fallbackAreaCode: string): PlaceRow[] {
-  return items
-    .map((item) => {
-      const lat = toNumber(item.mapy);
-      const lng = toNumber(item.mapx);
-      if (lat === null || lng === null) return null;
-      const areaCode = item.areacode ? String(item.areacode) : fallbackAreaCode;
-      const region = REGION_BY_AREA_CODE[areaCode] ?? "기타";
-      const sourceId = item.contentid ? String(item.contentid) : "";
-      const title = (item.title ?? "").trim();
-      if (!sourceId || !title) return null;
-      return {
-        sourceId,
-        areaCode,
-        region,
-        title,
-        category: item.cat3 ?? item.cat2 ?? item.cat1 ?? "ETC",
-        address: [item.addr1, item.addr2].filter(Boolean).join(" ").trim(),
-        lat,
-        lng,
-        imageUrl: item.firstimage || item.firstimage2 || null,
-      } satisfies PlaceRow;
-    })
-    .filter((item): item is PlaceRow => !!item);
+  const rows: PlaceRow[] = [];
+  for (const item of items) {
+    const lat = toNumber(item.mapy);
+    const lng = toNumber(item.mapx);
+    if (lat === null || lng === null) continue;
+    const areaCode = item.areacode ? String(item.areacode) : fallbackAreaCode;
+    const region = REGION_BY_AREA_CODE[areaCode] ?? "기타";
+    const sourceId = item.contentid ? String(item.contentid) : "";
+    const title = (item.title ?? "").trim();
+    if (!sourceId || !title) continue;
+    rows.push({
+      sourceId,
+      areaCode,
+      region,
+      title,
+      category: item.cat3 ?? item.cat2 ?? item.cat1 ?? "ETC",
+      address: [item.addr1, item.addr2].filter(Boolean).join(" ").trim(),
+      lat,
+      lng,
+      imageUrl: item.firstimage || item.firstimage2 || null,
+      rarity: "common",
+    });
+  }
+  return rows;
+}
+
+function loadExistingRarityMap(): Map<string, PlaceRarity> {
+  if (!fs.existsSync(outputPath)) {
+    return new Map<string, PlaceRarity>();
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(outputPath, "utf8")) as {
+      places?: Array<{ sourceId?: string; rarity?: string }>;
+    };
+    const rows = Array.isArray(parsed.places) ? parsed.places : [];
+    const result = new Map<string, PlaceRarity>();
+    for (const row of rows) {
+      const sourceId = typeof row.sourceId === "string" ? row.sourceId : "";
+      const rarity = row.rarity;
+      if (!sourceId) continue;
+      if (rarity === "common" || rarity === "rare" || rarity === "epic" || rarity === "legendary") {
+        result.set(sourceId, rarity);
+      }
+    }
+    return result;
+  } catch {
+    return new Map<string, PlaceRarity>();
+  }
+}
+
+function hashToUnitInterval(input: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  const unsigned = hash >>> 0;
+  return unsigned / 4294967296;
+}
+
+function assignRarityForSourceId(sourceId: string): PlaceRarity {
+  const value = hashToUnitInterval(sourceId);
+  for (const bucket of RARITY_DISTRIBUTION) {
+    if (value < bucket.threshold) {
+      return bucket.rarity;
+    }
+  }
+  return "common";
 }
 
 function encodeServiceKey(raw: string): string {
@@ -156,6 +211,7 @@ async function main() {
   const totalByAreaCode: Record<string, number> = {};
 
   try {
+    const existingRarityBySourceId = loadExistingRarityMap();
     for (const areaCode of areaCodes) {
       const params = new URLSearchParams({
         MobileOS: "ETC",
@@ -196,7 +252,10 @@ async function main() {
     const normalized = allItems.flatMap((item) => normalizeItems([item], item.areacode ? String(item.areacode) : "0"));
     const dedup = new Map<string, PlaceRow>();
     normalized.forEach((row) => dedup.set(row.sourceId, row));
-    const places = [...dedup.values()];
+    const places = [...dedup.values()].map((row) => ({
+      ...row,
+      rarity: existingRarityBySourceId.get(row.sourceId) ?? assignRarityForSourceId(row.sourceId),
+    }));
     const totalCount = Object.values(totalByAreaCode).reduce((acc, value) => acc + value, 0);
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });

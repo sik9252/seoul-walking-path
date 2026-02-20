@@ -21,7 +21,7 @@ create table if not exists place_cards (
   id uuid primary key,
   place_id uuid not null references places(id) on delete cascade,
   title varchar not null,
-  rarity varchar not null check (rarity in ('common', 'rare', 'epic')),
+  rarity varchar not null check (rarity in ('common', 'rare', 'epic', 'legendary')),
   image_url varchar,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

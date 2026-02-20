@@ -15,7 +15,7 @@ export type PlaceCard = {
   cardId: string;
   placeId: string;
   title: string;
-  rarity: "common" | "rare" | "epic";
+  rarity: "common" | "rare" | "epic" | "legendary";
   imageUrl?: string | null;
 };
 

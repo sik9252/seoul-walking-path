@@ -23,7 +23,7 @@ export type PlacePage = {
 export type MyCard = {
   cardId: string;
   title: string;
-  rarity: "common" | "rare" | "epic";
+  rarity: "common" | "rare" | "epic" | "legendary";
   place: PlaceItem | null;
 };
 
@@ -31,7 +31,7 @@ export type CatalogCardItem = {
   cardId: string;
   placeId: string;
   title: string;
-  rarity: "common" | "rare" | "epic";
+  rarity: "common" | "rare" | "epic" | "legendary";
   imageUrl?: string | null;
   place: PlaceItem | null;
   collected: boolean;

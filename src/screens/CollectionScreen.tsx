@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { useCardCatalogQuery } from "../hooks/useGameData";
 import { gameStyles as styles } from "../styles/gameStyles";
 import { MyCard, PlaceItem } from "../types/gameTypes";
+import { calculateExpFromCards, getLevelProgressByExp } from "../utils/leveling";
 import {
   CollectionCategory,
   CollectionCategoryItem,
@@ -60,11 +61,17 @@ export function CollectionScreen({
 }: Props) {
   const selectedAreaCode = selectedCategory === "all" ? undefined : selectedCategory;
   const selectedRegion = selectedAreaCode ? REGION_LABELS_BY_CODE[selectedAreaCode] : undefined;
+  const allCatalogQuery = useCardCatalogQuery(apiBaseUrl, userId, undefined);
   const catalogQuery = useCardCatalogQuery(apiBaseUrl, userId, selectedRegion);
   const catalogItems = React.useMemo(
     () => (catalogQuery.data?.pages ?? []).flatMap((page) => page.items),
     [catalogQuery.data?.pages],
   );
+  const totalCardCount = React.useMemo(
+    () => allCatalogQuery.data?.pages?.[0]?.total ?? 0,
+    [allCatalogQuery.data?.pages],
+  );
+  const levelProgress = React.useMemo(() => getLevelProgressByExp(calculateExpFromCards(cards)), [cards]);
 
   const availableRegions = React.useMemo<CollectionCategoryItem[]>(
     () =>
@@ -91,13 +98,13 @@ export function CollectionScreen({
     return [...items, ...lockedItems];
   }, [catalogItems, selectedCategory]);
 
-  const loading = loadingMyCards || catalogQuery.isPending;
-  const isError = myCardsError || catalogQuery.isError;
+  const loading = loadingMyCards || catalogQuery.isPending || allCatalogQuery.isPending;
+  const isError = myCardsError || catalogQuery.isError || allCatalogQuery.isError;
 
   return (
     <View style={styles.collectionScreen}>
       <CollectionHeader />
-      <CollectionProgressCard collectedCount={cards.length} totalCount={50} />
+      <CollectionProgressCard collectedCount={cards.length} totalCount={totalCardCount} levelProgress={levelProgress} />
       <CollectionCategoryTabs
         categories={availableRegions}
         selectedCategory={selectedCategory}

@@ -21,6 +21,7 @@ type TourPlaceSnapshot = {
     lat: number;
     lng: number;
     imageUrl?: string | null;
+    rarity?: "common" | "rare" | "epic" | "legendary";
   }>;
 };
 
@@ -69,7 +70,8 @@ function inferRegionFromAddress(address: string): string {
   return "기타";
 }
 
-function rarityByIndex(index: number): "common" | "rare" | "epic" {
+function rarityByIndex(index: number): "common" | "rare" | "epic" | "legendary" {
+  if (index % 97 === 0) return "legendary";
   if (index % 17 === 0) return "epic";
   if (index % 5 === 0) return "rare";
   return "common";
@@ -219,7 +221,7 @@ export class MockStoreService {
         cardId: `card-${place.id}`,
         placeId: place.id,
         title: `${place.name}`,
-        rarity: rarityByIndex(index + 1),
+        rarity: rows[index]?.rarity ?? rarityByIndex(index + 1),
         imageUrl: place.imageUrl ?? null,
       }));
       console.log(`[mock-store] loaded ${this.places.length} places from ${placesPath}`);

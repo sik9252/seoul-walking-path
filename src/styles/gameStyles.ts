@@ -398,6 +398,11 @@ export const gameStyles = StyleSheet.create({
     fontSize: (22 / 2) * 2,
     fontWeight: typography.weight.bold,
   },
+  collectionProgressSubtle: {
+    color: colors.base.textSubtle,
+    fontSize: typography.size.caption,
+    lineHeight: typography.lineHeight.caption,
+  },
   collectionProgressTrophyWrap: {
     width: 84,
     height: 84,
