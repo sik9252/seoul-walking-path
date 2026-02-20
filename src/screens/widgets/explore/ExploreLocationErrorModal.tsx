@@ -1,7 +1,5 @@
 import React from "react";
-import { Modal, Pressable, Text, View } from "react-native";
-import { Button } from "../../../components/ui";
-import { gameStyles as styles } from "../../../styles/gameStyles";
+import { AppDialogModal } from "../../../components/ui";
 
 type ExploreLocationErrorModalProps = {
   visible: boolean;
@@ -15,15 +13,6 @@ export function ExploreLocationErrorModal({
   onClose,
 }: ExploreLocationErrorModalProps) {
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <View style={styles.centerModalWrap} pointerEvents="box-none">
-        <View style={styles.locationErrorModal}>
-          <Text style={styles.cardTitle}>위치 확인 실패</Text>
-          <Text style={styles.cardBody}>{message}</Text>
-          <Button label="확인" onPress={onClose} />
-        </View>
-      </View>
-    </Modal>
+    <AppDialogModal visible={visible} title="위치 확인 실패" message={message} onClose={onClose} />
   );
 }

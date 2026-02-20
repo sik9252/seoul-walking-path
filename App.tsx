@@ -6,7 +6,7 @@ import { AppState, Image, Linking, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getSessionUser, logoutSession, refreshSession, updateNickname } from "./src/apis/authApi";
 import { getApiBaseUrl } from "./src/apis/gameApi";
-import { Button, TabBar, TabItem } from "./src/components/ui";
+import { AppDialogModal, Button, TabBar, TabItem } from "./src/components/ui";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
 import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
 import { useUserLocation } from "./src/hooks/useUserLocation";
@@ -90,6 +90,15 @@ function AppShell() {
     message: "",
   });
   const [authRequiredDialogVisible, setAuthRequiredDialogVisible] = React.useState(false);
+  const [nearbySpotDialog, setNearbySpotDialog] = React.useState<{
+    visible: boolean;
+    nearestPlaceName: string;
+    nearbyCount: number;
+  }>({
+    visible: false,
+    nearestPlaceName: "",
+    nearbyCount: 0,
+  });
   const [collectChainExcludePlaceIds, setCollectChainExcludePlaceIds] = React.useState<string[]>([]);
   const [rewardModalState, setRewardModalState] = React.useState<{
     visible: boolean;
@@ -458,7 +467,7 @@ function AppShell() {
         const payload = await visitMutation.mutateAsync({
           lat: location.latitude,
           lng: location.longitude,
-          radiusM: 1000,
+          radiusM: 500,
           excludePlaceIds,
         });
         handleCollectResult(payload, excludePlaceIds);
@@ -477,10 +486,15 @@ function AppShell() {
   useNearbyCollectionAlert({
     places,
     location,
-    radiusM: 1000,
+    radiusM: 500,
     enabled: tab === "explore" && Boolean(authSession),
-    onCollectNearby: () => {
-      void collectOnePlace([]);
+    apiBaseUrl,
+    onNearbySpotsFound: ({ nearestPlace, nearbyCount }) => {
+      setNearbySpotDialog({
+        visible: true,
+        nearestPlaceName: nearestPlace.name,
+        nearbyCount,
+      });
     },
   });
 
@@ -700,6 +714,24 @@ function AppShell() {
           setRewardModalState((prev) => ({ ...prev, visible: false, hasNext: false }));
           setCollectChainExcludePlaceIds([]);
         }}
+      />
+
+      <AppDialogModal
+        visible={nearbySpotDialog.visible}
+        title="근처 스팟 발견"
+        message={
+          nearbySpotDialog.nearbyCount > 1
+            ? `주변에 ${nearbySpotDialog.nearbyCount}곳의 스팟이 있어요.\n우선 ${nearbySpotDialog.nearestPlaceName} 카드를 수집할 수 있어요.`
+            : `${nearbySpotDialog.nearestPlaceName} 카드를 수집할 수 있어요.`
+        }
+        cancelLabel="닫기"
+        onCancel={() => setNearbySpotDialog((prev) => ({ ...prev, visible: false }))}
+        confirmLabel="수집하기"
+        onConfirm={() => {
+          setNearbySpotDialog((prev) => ({ ...prev, visible: false }));
+          void collectOnePlace([]);
+        }}
+        onClose={() => setNearbySpotDialog((prev) => ({ ...prev, visible: false }))}
       />
 
       <ExploreVisitResultModal
