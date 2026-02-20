@@ -80,6 +80,7 @@ export function useNearbyCollectionAlert({
     if (!enabled || !location || places.length === 0) return;
 
     let nearest: { place: PlaceItem; distance: number } | null = null;
+    let nearbyCount = 0;
     for (const place of places) {
       const distance = getDistanceMeters(
         location.latitude,
@@ -88,6 +89,7 @@ export function useNearbyCollectionAlert({
         place.lng,
       );
       if (distance > radiusM) continue;
+      nearbyCount += 1;
       if (!nearest || distance < nearest.distance) {
         nearest = { place, distance };
       }
@@ -101,7 +103,10 @@ export function useNearbyCollectionAlert({
 
     notifiedPlaceIdsRef.current.add(nearest.place.id);
     lastAlertAtRef.current = now;
-    const message = `${nearest.place.name} 카드를 수집할 수 있어요`;
+    const message =
+      nearbyCount > 1
+        ? `주변에 ${nearbyCount}곳의 스팟이 있어요. 우선 ${nearest.place.name} 카드를 수집할 수 있어요.`
+        : `${nearest.place.name} 카드를 수집할 수 있어요.`;
     Vibration.vibrate(250);
     isAlertOpenRef.current = true;
     Alert.alert(
