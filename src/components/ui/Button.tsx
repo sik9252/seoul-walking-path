@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextStyle,
-  View,
-  ViewStyle,
-} from "react-native";
+import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
 import { colors, radius, spacing, typography } from "../../theme/tokens";
 
 type ButtonVariant = "primary" | "secondary" | "destructive" | "ghost";
@@ -48,9 +40,7 @@ export function Button({
     >
       <View style={styles.content}>
         {leftIcon}
-        <Text style={[styles.label, labelStyles[variant], disabled && styles.labelDisabled, labelStyle]}>
-          {label}
-        </Text>
+        <Text style={[styles.label, labelStyles[variant], disabled && styles.labelDisabled, labelStyle]}>{label}</Text>
         {rightIcon}
       </View>
     </Pressable>
@@ -59,7 +49,7 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 56,
+    minHeight: 52,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.xl,
     justifyContent: "center",
@@ -72,9 +62,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   label: {
-    fontSize: typography.size.labelLg,
-    lineHeight: typography.lineHeight.labelLg,
-    fontWeight: typography.weight.bold,
+    fontSize: typography.size.labelMd,
+    lineHeight: typography.lineHeight.labelMd,
+    fontWeight: typography.weight.semibold,
   },
   pressed: {
     opacity: 0.9,
