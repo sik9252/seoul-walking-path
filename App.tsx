@@ -114,6 +114,14 @@ function AppShell() {
   } = useUserLocation();
   const didBootstrapLocationRef = React.useRef(false);
 
+  const syncLocationPermissionState = React.useCallback(async () => {
+    const permission = await getPermissionInfo();
+    const granted = permission.status === "granted";
+    setLocationPermissionEnabled(granted);
+    setLocationCanAskAgain(permission.canAskAgain);
+    return granted;
+  }, [getPermissionInfo]);
+
   const places = React.useMemo(
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
     [placesQuery.data?.pages],
@@ -223,6 +231,17 @@ function AppShell() {
       cancelled = true;
     };
   }, [getPermissionInfo]);
+
+  React.useEffect(() => {
+    if (startupStep === "splash") return;
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") return;
+      void syncLocationPermissionState();
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [startupStep, syncLocationPermissionState]);
 
   React.useEffect(() => {
     if (didBootstrapLocationRef.current) return;
@@ -387,7 +406,6 @@ function AppShell() {
         }
         return;
       }
-      setLocationPermissionEnabled(false);
       try {
         await Linking.openSettings();
       } catch {
