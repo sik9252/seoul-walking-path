@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Image, Linking, StyleSheet, Text, View } from "react-native";
+import { AppState, Image, Linking, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getSessionUser, logoutSession, refreshSession, updateNickname } from "./src/apis/authApi";
 import { getApiBaseUrl } from "./src/apis/gameApi";
@@ -24,7 +24,7 @@ import { GameTab, PlaceItem } from "./src/types/gameTypes";
 import { colors } from "./src/theme/tokens";
 
 const queryClient = new QueryClient();
-type StartupStep = "splash" | "onboarding" | "auth" | "home";
+type StartupStep = "splash" | "onboarding" | "auth" | "location-gate" | "home";
 type OnboardingSlide = {
   title: string;
   body: string;
@@ -64,10 +64,12 @@ function AppShell() {
   const [authSession, setAuthSessionState] = React.useState<AuthSession | null>(null);
   const [persistAuthSession, setPersistAuthSession] = React.useState(true);
   const [locationPermissionEnabled, setLocationPermissionEnabled] = React.useState(false);
+  const [locationCanAskAgain, setLocationCanAskAgain] = React.useState(true);
   const [isRequestingAuthFlow, setIsRequestingAuthFlow] = React.useState(false);
   const [onboardingIndex, setOnboardingIndex] = React.useState(0);
   const [splashProgress, setSplashProgress] = React.useState(0.1);
   const [splashStatus, setSplashStatus] = React.useState("초기 상태를 확인하는 중...");
+  const [postGateStep, setPostGateStep] = React.useState<"auth" | "home">("home");
   const [tab, setTab] = React.useState<GameTab>("explore");
   const [collectionCategory, setCollectionCategory] = React.useState<CollectionCategory>("all");
   const [tabBarHeight, setTabBarHeight] = React.useState(0);
@@ -102,17 +104,22 @@ function AppShell() {
         message,
       }),
   });
-  const { location, isLoadingLocation, locationError, refreshLocation, getPermissionStatus } = useUserLocation();
+  const {
+    location,
+    isLoadingLocation,
+    locationError,
+    refreshLocation,
+    refreshLocationWithOptions,
+    getPermissionInfo,
+  } = useUserLocation();
+  const didBootstrapLocationRef = React.useRef(false);
 
   const places = React.useMemo(
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
     [placesQuery.data?.pages],
   );
   const collectedPlaceIds = React.useMemo(
-    () =>
-      (cardsQuery.data ?? [])
-        .map((card) => card.place?.id)
-        .filter((id): id is string => Boolean(id)),
+    () => (cardsQuery.data ?? []).map((card) => card.place?.id).filter((id): id is string => Boolean(id)),
     [cardsQuery.data],
   );
 
@@ -163,10 +170,18 @@ function AppShell() {
 
         setAuthSessionState(restoredSession);
 
-        setSplashStatus("앱 진입 준비 중...");
+        setSplashStatus("위치 권한 상태를 확인하는 중...");
         setSplashProgress(0.9);
+        const permission = await getPermissionInfo();
+        const locationGranted = permission.status === "granted";
+        setLocationPermissionEnabled(locationGranted);
+        setLocationCanAskAgain(permission.canAskAgain);
 
         const nextStep: StartupStep = !onboardingCompleted ? "onboarding" : restoredSession ? "home" : "auth";
+        const gatedStep: StartupStep = nextStep === "home" && !locationGranted ? "location-gate" : nextStep;
+        if (gatedStep === "location-gate") {
+          setPostGateStep("home");
+        }
 
         const elapsed = Date.now() - startedAt;
         if (elapsed < minSplashMs) {
@@ -177,7 +192,7 @@ function AppShell() {
         setSplashProgress(1);
         await new Promise((resolve) => setTimeout(resolve, 220));
         if (cancelled) return;
-        setStartupStep(nextStep);
+        setStartupStep(gatedStep);
       } catch {
         if (cancelled) return;
         setSplashProgress(1);
@@ -192,21 +207,52 @@ function AppShell() {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, getPermissionInfo]);
 
   React.useEffect(() => {
     let cancelled = false;
     const syncPermission = async () => {
-      const status = await getPermissionStatus();
+      const permission = await getPermissionInfo();
       if (!cancelled) {
-        setLocationPermissionEnabled(status === "granted");
+        setLocationPermissionEnabled(permission.status === "granted");
+        setLocationCanAskAgain(permission.canAskAgain);
       }
     };
     void syncPermission();
     return () => {
       cancelled = true;
     };
-  }, [getPermissionStatus]);
+  }, [getPermissionInfo]);
+
+  React.useEffect(() => {
+    if (didBootstrapLocationRef.current) return;
+    if (startupStep !== "home") return;
+    if (!locationPermissionEnabled) return;
+
+    didBootstrapLocationRef.current = true;
+    void refreshLocationWithOptions({ requestIfNeeded: false });
+  }, [locationPermissionEnabled, refreshLocationWithOptions, startupStep]);
+
+  React.useEffect(() => {
+    if (startupStep !== "location-gate") return;
+
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") return;
+      void (async () => {
+        const permission = await getPermissionInfo();
+        const granted = permission.status === "granted";
+        setLocationPermissionEnabled(granted);
+        setLocationCanAskAgain(permission.canAskAgain);
+        if (granted) {
+          setStartupStep(postGateStep);
+        }
+      })();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [getPermissionInfo, postGateStep, startupStep]);
 
   const handleOnboardingNext = React.useCallback(async () => {
     const isLast = onboardingIndex >= ONBOARDING_SLIDES.length - 1;
@@ -218,11 +264,24 @@ function AppShell() {
     setIsRequestingAuthFlow(true);
     try {
       await setOnboardingCompleted(true);
-      setStartupStep(authSession ? "home" : "auth");
+      if (!authSession) {
+        setStartupStep("auth");
+        return;
+      }
+      const permission = await getPermissionInfo();
+      const locationGranted = permission.status === "granted";
+      setLocationPermissionEnabled(locationGranted);
+      setLocationCanAskAgain(permission.canAskAgain);
+      if (locationGranted) {
+        setStartupStep("home");
+        return;
+      }
+      setPostGateStep("home");
+      setStartupStep("location-gate");
     } finally {
       setIsRequestingAuthFlow(false);
     }
-  }, [authSession, onboardingIndex]);
+  }, [authSession, getPermissionInfo, onboardingIndex]);
 
   const handleReplayTutorial = React.useCallback(() => {
     setOnboardingIndex(0);
@@ -238,8 +297,17 @@ function AppShell() {
     }
     setPersistAuthSession(persistSession);
     setAuthSessionState(session);
-    setStartupStep("home");
-  }, []);
+    const permission = await getPermissionInfo();
+    const locationGranted = permission.status === "granted";
+    setLocationPermissionEnabled(locationGranted);
+    setLocationCanAskAgain(permission.canAskAgain);
+    if (locationGranted) {
+      setStartupStep("home");
+      return;
+    }
+    setPostGateStep("home");
+    setStartupStep("location-gate");
+  }, [getPermissionInfo]);
 
   const handleLogout = React.useCallback(async () => {
     if (apiBaseUrl && authSession?.refreshToken) {
@@ -305,6 +373,18 @@ function AppShell() {
       if (enabled) {
         const result = await refreshLocation();
         setLocationPermissionEnabled(result.ok);
+        if (result.ok) {
+          const permission = await getPermissionInfo();
+          setLocationCanAskAgain(permission.canAskAgain);
+        }
+        if (!result.ok && result.needsSettings) {
+          setLocationCanAskAgain(false);
+          try {
+            await Linking.openSettings();
+          } catch {
+            // noop
+          }
+        }
         return;
       }
       setLocationPermissionEnabled(false);
@@ -314,7 +394,7 @@ function AppShell() {
         // noop
       }
     },
-    [refreshLocation],
+    [getPermissionInfo, refreshLocation],
   );
 
   const tabs: TabItem[] = [
@@ -322,21 +402,33 @@ function AppShell() {
       key: "explore",
       label: "탐험",
       renderIcon: (active) => (
-        <Ionicons name={active ? "compass" : "compass-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+        <Ionicons
+          name={active ? "compass" : "compass-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
       ),
     },
     {
       key: "collection",
       label: "컬렉션",
       renderIcon: (active) => (
-        <Ionicons name={active ? "albums" : "albums-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+        <Ionicons
+          name={active ? "albums" : "albums-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
       ),
     },
     {
       key: "my",
       label: "설정",
       renderIcon: (active) => (
-        <Ionicons name={active ? "person" : "person-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
+        <Ionicons
+          name={active ? "person" : "person-outline"}
+          size={18}
+          color={active ? colors.brand[700] : colors.base.text}
+        />
       ),
     },
   ];
@@ -395,6 +487,52 @@ function AppShell() {
           onToggleAutoLoginEnabled={(enabled) => void handleToggleAutoLogin(enabled)}
           onAuthenticated={handleAuthenticated}
         />
+      </SafeAreaView>
+    );
+  }
+
+  if (startupStep === "location-gate") {
+    return (
+      <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
+        <StatusBar style="dark" />
+        <View style={startupStyles.center}>
+          <View style={startupStyles.locationGateIconWrap}>
+            <Ionicons name="location-outline" size={30} color={colors.brand[700]} />
+          </View>
+          <Text style={startupStyles.onboardingTitle}>위치 권한이 필요해요</Text>
+          <Text style={startupStyles.onboardingBody}>
+            위치 권한을 허용해야 내 주변 스팟을 탐험하고 수집할 수 있어요.
+          </Text>
+        </View>
+        <View style={startupStyles.footer}>
+          {locationCanAskAgain ? (
+            <Button
+              label="권한 허용하기"
+              onPress={() => {
+                void (async () => {
+                  const result = await refreshLocationWithOptions({ requestIfNeeded: true });
+                  setLocationPermissionEnabled(result.ok);
+                  if (result.ok) {
+                    const permission = await getPermissionInfo();
+                    setLocationCanAskAgain(permission.canAskAgain);
+                    setStartupStep(postGateStep);
+                    return;
+                  }
+                  if (result.needsSettings) {
+                    setLocationCanAskAgain(false);
+                  }
+                })();
+              }}
+            />
+          ) : (
+            <Button
+              label="설정으로 이동"
+              onPress={() => {
+                void Linking.openSettings();
+              }}
+            />
+          )}
+        </View>
       </SafeAreaView>
     );
   }
@@ -462,7 +600,12 @@ function AppShell() {
       ) : null}
 
       {!isExploreDetailExpanded ? (
-        <TabBar tabs={tabs} activeKey={tab} onPressTab={(key) => setTab(key as GameTab)} onHeightChange={setTabBarHeight} />
+        <TabBar
+          tabs={tabs}
+          activeKey={tab}
+          onPressTab={(key) => setTab(key as GameTab)}
+          onHeightChange={setTabBarHeight}
+        />
       ) : null}
 
       <ExploreVisitResultModal
@@ -555,5 +698,15 @@ const startupStyles = StyleSheet.create({
   footer: {
     gap: 12,
     paddingBottom: 12,
+  },
+  locationGateIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1,
+    borderColor: colors.brand[100],
+    backgroundColor: colors.brand[50],
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

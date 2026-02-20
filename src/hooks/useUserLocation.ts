@@ -7,12 +7,15 @@ export type UserLocationState = {
   heading?: number | null;
 };
 
-export type RefreshLocationResult =
-  | { ok: true }
-  | { ok: false; reason: string };
+export type RefreshLocationResult = { ok: true } | { ok: false; reason: string; needsSettings?: boolean };
 
 type RefreshLocationOptions = {
   requestIfNeeded?: boolean;
+};
+
+export type LocationPermissionInfo = {
+  status: Location.PermissionStatus;
+  canAskAgain: boolean;
 };
 
 const DEFAULT_SEOUL_LOCATION: UserLocationState = {
@@ -32,8 +35,8 @@ export function useUserLocation() {
     watcherRef.current = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 15,
-        timeInterval: 5000,
+        distanceInterval: 0,
+        timeInterval: 2000,
       },
       (next) => {
         setLocation({
@@ -50,65 +53,80 @@ export function useUserLocation() {
     return permission.status;
   }, []);
 
-  const refreshLocationWithOptions = React.useCallback(async (options?: RefreshLocationOptions): Promise<RefreshLocationResult> => {
-    const requestIfNeeded = options?.requestIfNeeded ?? true;
-    setIsLoadingLocation(true);
-    setLocationError(null);
-    try {
-      const currentPermission = await Location.getForegroundPermissionsAsync();
-      let permission = currentPermission;
-      if (permission.status !== "granted" && requestIfNeeded) {
-        permission = await Location.requestForegroundPermissionsAsync();
-      }
+  const getPermissionInfo = React.useCallback(async (): Promise<LocationPermissionInfo> => {
+    const permission = await Location.getForegroundPermissionsAsync();
+    return {
+      status: permission.status,
+      canAskAgain: permission.canAskAgain,
+    };
+  }, []);
 
-      if (permission.status !== "granted") {
-        const reason = "위치 권한이 거부되었습니다.";
+  const refreshLocationWithOptions = React.useCallback(
+    async (options?: RefreshLocationOptions): Promise<RefreshLocationResult> => {
+      const requestIfNeeded = options?.requestIfNeeded ?? true;
+      setIsLoadingLocation(true);
+      setLocationError(null);
+      try {
+        const currentPermission = await Location.getForegroundPermissionsAsync();
+        let permission = currentPermission;
+        if (permission.status !== "granted" && requestIfNeeded) {
+          permission = await Location.requestForegroundPermissionsAsync();
+        }
+
+        if (permission.status !== "granted") {
+          const needsSettings = !permission.canAskAgain;
+          const reason = needsSettings
+            ? "위치 권한이 거부되어 설정에서 허용이 필요합니다."
+            : "위치 권한이 거부되었습니다.";
+          setLocationError(reason);
+          setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
+          return { ok: false, reason, needsSettings };
+        }
+
+        const lastKnown = await Location.getLastKnownPositionAsync({
+          requiredAccuracy: 150,
+        });
+        if (lastKnown?.coords) {
+          setLocation({
+            latitude: lastKnown.coords.latitude,
+            longitude: lastKnown.coords.longitude,
+            heading:
+              typeof lastKnown.coords.heading === "number" && lastKnown.coords.heading >= 0
+                ? lastKnown.coords.heading
+                : null,
+          });
+        }
+
+        const current = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+        ]);
+
+        if (current?.coords) {
+          setLocation({
+            latitude: current.coords.latitude,
+            longitude: current.coords.longitude,
+            heading:
+              typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
+          });
+        }
+
+        await startWatching();
+        return { ok: true };
+      } catch (error) {
+        console.warn("[location] failed to get location", error);
+        const reason = "현재 위치를 가져오지 못했습니다.";
         setLocationError(reason);
         setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
         return { ok: false, reason };
+      } finally {
+        setIsLoadingLocation(false);
       }
-
-      const lastKnown = await Location.getLastKnownPositionAsync({
-        requiredAccuracy: 150,
-      });
-      if (lastKnown?.coords) {
-        setLocation({
-          latitude: lastKnown.coords.latitude,
-          longitude: lastKnown.coords.longitude,
-          heading:
-            typeof lastKnown.coords.heading === "number" && lastKnown.coords.heading >= 0
-              ? lastKnown.coords.heading
-              : null,
-        });
-      }
-
-      const current = await Promise.race([
-        Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        }),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
-      ]);
-
-      if (current?.coords) {
-        setLocation({
-          latitude: current.coords.latitude,
-          longitude: current.coords.longitude,
-          heading: typeof current.coords.heading === "number" && current.coords.heading >= 0 ? current.coords.heading : null,
-        });
-      }
-
-      await startWatching();
-      return { ok: true };
-    } catch (error) {
-      console.warn("[location] failed to get location", error);
-      const reason = "현재 위치를 가져오지 못했습니다.";
-      setLocationError(reason);
-      setLocation((prev) => prev ?? DEFAULT_SEOUL_LOCATION);
-      return { ok: false, reason };
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  }, [startWatching]);
+    },
+    [startWatching],
+  );
 
   const refreshLocation = React.useCallback(async (): Promise<RefreshLocationResult> => {
     return refreshLocationWithOptions({ requestIfNeeded: true });
@@ -133,6 +151,7 @@ export function useUserLocation() {
     refreshLocation,
     refreshLocationWithOptions,
     getPermissionStatus,
+    getPermissionInfo,
     clearLocationError,
   };
 }

@@ -79,6 +79,7 @@ export function ExploreScreen({
   const [isViewportLoading, setIsViewportLoading] = React.useState(false);
   const [sheetPlaces, setSheetPlaces] = React.useState<PlaceItem[]>([]);
   const userLocationRef = React.useRef(userLocation);
+  const didAutoCenterToUserRef = React.useRef(false);
 
   React.useEffect(() => {
     userLocationRef.current = userLocation;
@@ -259,6 +260,15 @@ export function ExploreScreen({
     mapWebViewRef.current.injectJavaScript(
       `window.__setUserLocation && window.__setUserLocation(${locationPayload}); true;`,
     );
+  }, [isMapReady, userLocation]);
+
+  React.useEffect(() => {
+    if (!isMapReady || !mapWebViewRef.current) return;
+    if (!userLocation || didAutoCenterToUserRef.current) return;
+    mapWebViewRef.current.injectJavaScript(
+      `window.__moveTo && window.__moveTo(${userLocation.latitude}, ${userLocation.longitude}); true;`,
+    );
+    didAutoCenterToUserRef.current = true;
   }, [isMapReady, userLocation]);
 
   React.useEffect(() => {
