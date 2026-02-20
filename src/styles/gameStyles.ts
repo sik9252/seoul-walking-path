@@ -354,14 +354,14 @@ export const gameStyles = StyleSheet.create({
   collectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg,
+    justifyContent: "center",
+    marginVertical: spacing.lg,
   },
   collectionHeaderTitle: {
-    fontSize: 46 / 2,
-    lineHeight: 56 / 2,
+    fontSize: typography.size.titleMd,
+    lineHeight: typography.lineHeight.titleMd,
     fontWeight: typography.weight.bold,
-    color: "#111827",
+    color: colors.base.text,
   },
   collectionHeaderIconBtn: {
     width: 40,

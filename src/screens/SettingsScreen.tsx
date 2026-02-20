@@ -78,9 +78,6 @@ export function SettingsScreen({
     >
       <View style={settingsStyles.headerRow}>
         <Text style={settingsStyles.headerTitle}>마이페이지</Text>
-        <Pressable style={settingsStyles.iconBtn}>
-          <Ionicons name="ellipsis-vertical" size={20} color={colors.base.text} />
-        </Pressable>
       </View>
 
       <View style={settingsStyles.profileBlock}>
@@ -201,10 +198,12 @@ const settingsStyles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    marginVertical: spacing.lg,
   },
   headerTitle: {
     fontSize: typography.size.titleMd,
+    lineHeight: typography.lineHeight.titleMd,
     fontWeight: typography.weight.bold,
     color: colors.base.text,
   },
