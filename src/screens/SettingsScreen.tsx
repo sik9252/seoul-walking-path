@@ -8,7 +8,9 @@ import { colors, radius, spacing, typography } from "../theme/tokens";
 type Props = {
   authSession: AuthSession | null;
   locationEnabled: boolean;
+  autoLoginEnabled: boolean;
   onRefreshLocation: () => void;
+  onToggleAutoLogin: (enabled: boolean) => void;
   onReplayTutorial: () => void;
   onLogout: () => void;
   onRequireAuth: () => void;
@@ -18,7 +20,9 @@ type Props = {
 export function SettingsScreen({
   authSession,
   locationEnabled,
+  autoLoginEnabled,
   onRefreshLocation,
+  onToggleAutoLogin,
   onReplayTutorial,
   onLogout,
   onRequireAuth,
@@ -109,6 +113,18 @@ export function SettingsScreen({
           </View>
           <Switch value={locationEnabled} onValueChange={onRefreshLocation} />
         </Pressable>
+
+        <View style={settingsStyles.row}>
+          <View style={settingsStyles.rowLeft}>
+            <Ionicons name="key-outline" size={20} color={colors.base.text} />
+            <Text style={settingsStyles.rowText}>자동 로그인</Text>
+          </View>
+          <Switch
+            value={autoLoginEnabled}
+            onValueChange={onToggleAutoLogin}
+            disabled={!authSession}
+          />
+        </View>
 
         <View style={settingsStyles.row}>
           <View style={settingsStyles.rowLeft}>

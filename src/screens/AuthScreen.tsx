@@ -13,13 +13,14 @@ WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   apiBaseUrl?: string;
-  onAuthenticated: (session: StoredAuthSession) => void;
+  onAuthenticated: (session: StoredAuthSession, persistSession: boolean) => void;
 };
 
 export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
   const [mode, setMode] = React.useState<"login" | "signup">("login");
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [persistSession, setPersistSession] = React.useState(true);
   const [agreeTerms, setAgreeTerms] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -57,7 +58,7 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
         user: result.user,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-      });
+      }, persistSession);
     } catch (err) {
       const reason = err instanceof Error ? err.message : "";
       const fallback = mode === "signup" ? "회원가입에 실패했습니다. 아이디 중복 여부를 확인해주세요." : "로그인에 실패했습니다.";
@@ -65,7 +66,7 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [agreeTerms, apiBaseUrl, baseUrl, mode, onAuthenticated, password, username]);
+  }, [agreeTerms, apiBaseUrl, baseUrl, mode, onAuthenticated, password, persistSession, username]);
 
   const handleKakao = React.useCallback(async () => {
     if (!baseUrl) {
@@ -131,14 +132,14 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
         user: result.user,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-      });
+      }, persistSession);
     } catch (err) {
       const reason = err instanceof Error ? err.message : "";
       setError(reason || "카카오 로그인에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [apiBaseUrl, baseUrl, kakaoRestApiKey, onAuthenticated]);
+  }, [apiBaseUrl, baseUrl, kakaoRestApiKey, onAuthenticated, persistSession]);
 
   return (
     <View style={authStyles.container}>
@@ -205,6 +206,14 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
             <Text style={authStyles.termsText}>
               약관 및 <Text style={authStyles.termsHighlight}>개인정보처리방침</Text>에 동의합니다.
             </Text>
+          </Pressable>
+        ) : null}
+        {mode === "login" ? (
+          <Pressable style={authStyles.termsRow} onPress={() => setPersistSession((prev) => !prev)}>
+            <View style={[authStyles.checkbox, persistSession && authStyles.checkboxActive]}>
+              {persistSession ? <Ionicons name="checkmark" size={14} color={colors.base.surface} /> : null}
+            </View>
+            <Text style={authStyles.termsText}>자동 로그인</Text>
           </Pressable>
         ) : null}
 

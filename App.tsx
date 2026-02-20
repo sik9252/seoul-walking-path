@@ -61,6 +61,7 @@ export default function App() {
 function AppShell() {
   const [startupStep, setStartupStep] = React.useState<StartupStep>("splash");
   const [authSession, setAuthSessionState] = React.useState<AuthSession | null>(null);
+  const [persistAuthSession, setPersistAuthSession] = React.useState(true);
   const [isRequestingAuthFlow, setIsRequestingAuthFlow] = React.useState(false);
   const [onboardingIndex, setOnboardingIndex] = React.useState(0);
   const [splashProgress, setSplashProgress] = React.useState(0.1);
@@ -157,6 +158,7 @@ function AppShell() {
         }
 
         setAuthSessionState(restoredSession);
+        setPersistAuthSession(Boolean(restoredSession));
 
         setSplashStatus("앱 진입 준비 중...");
         setSplashProgress(0.9);
@@ -210,8 +212,13 @@ function AppShell() {
     setStartupStep("onboarding");
   }, []);
 
-  const handleAuthenticated = React.useCallback(async (session: AuthSession) => {
-    await setAuthSession(session);
+  const handleAuthenticated = React.useCallback(async (session: AuthSession, persistSession: boolean) => {
+    if (persistSession) {
+      await setAuthSession(session);
+    } else {
+      await clearAuthSession();
+    }
+    setPersistAuthSession(persistSession);
     setAuthSessionState(session);
     setStartupStep("home");
   }, []);
@@ -225,6 +232,7 @@ function AppShell() {
       }
     }
     await clearAuthSession();
+    setPersistAuthSession(false);
     setAuthSessionState(null);
     setStartupStep("auth");
   }, [apiBaseUrl, authSession?.refreshToken]);
@@ -241,13 +249,15 @@ function AppShell() {
           user: result.user,
         };
         setAuthSessionState(nextSession);
-        await setAuthSession(nextSession);
+        if (persistAuthSession) {
+          await setAuthSession(nextSession);
+        }
         return;
       } catch (error) {
         return error instanceof Error ? error.message : "닉네임 저장에 실패했습니다.";
       }
     },
-    [apiBaseUrl, authSession],
+    [apiBaseUrl, authSession, persistAuthSession],
   );
 
   const handleLocatePlaceFromCollection = React.useCallback((place: PlaceItem) => {
@@ -258,6 +268,19 @@ function AppShell() {
       longitude: place.lng,
     });
   }, []);
+
+  const handleToggleAutoLogin = React.useCallback(
+    async (enabled: boolean) => {
+      setPersistAuthSession(enabled);
+      if (!authSession) return;
+      if (enabled) {
+        await setAuthSession(authSession);
+      } else {
+        await clearAuthSession();
+      }
+    },
+    [authSession],
+  );
 
   const tabs: TabItem[] = [
     {
@@ -388,7 +411,9 @@ function AppShell() {
         <SettingsScreen
           authSession={authSession}
           locationEnabled={Boolean(location)}
+          autoLoginEnabled={persistAuthSession}
           onRefreshLocation={refreshLocation}
+          onToggleAutoLogin={(enabled) => void handleToggleAutoLogin(enabled)}
           onReplayTutorial={handleReplayTutorial}
           onLogout={() => void handleLogout()}
           onRequireAuth={() => setStartupStep("auth")}
