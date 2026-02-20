@@ -27,6 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>seoulwalkingpath</string>
           <string>com.beank.seoulwalkingpath</string>
         </array>
       </dict>

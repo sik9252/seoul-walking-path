@@ -77,35 +77,56 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
       return;
     }
 
-    const redirectUri = AuthSession.makeRedirectUri({
+    const appRedirectUri = AuthSession.makeRedirectUri({
       scheme: "seoulwalkingpath",
       path: "oauth/kakao",
     });
+    const kakaoRedirectUri =
+      process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI ??
+      (baseUrl ? `${baseUrl.replace(/\/$/, "")}/auth/kakao/callback` : undefined);
+    if (!kakaoRedirectUri) {
+      setError("카카오 리다이렉트 URI가 설정되지 않았습니다.");
+      return;
+    }
+
+    const state = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     const authUrl =
       "https://kauth.kakao.com/oauth/authorize?" +
       new URLSearchParams({
         response_type: "code",
         client_id: kakaoRestApiKey,
-        redirect_uri: redirectUri,
+        redirect_uri: kakaoRedirectUri,
+        state,
       }).toString();
 
     setError(null);
     setIsSubmitting(true);
     try {
-      const authResult = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+      const authResult = await WebBrowser.openAuthSessionAsync(authUrl, appRedirectUri);
       if (authResult.type !== "success" || !authResult.url) {
         setError("카카오 로그인이 취소되었습니다.");
         return;
       }
 
       const callbackUrl = new URL(authResult.url);
+      const error = callbackUrl.searchParams.get("error");
+      const errorDescription = callbackUrl.searchParams.get("error_description");
+      if (error) {
+        setError(errorDescription ?? "카카오 로그인에 실패했습니다.");
+        return;
+      }
       const code = callbackUrl.searchParams.get("code");
+      const returnedState = callbackUrl.searchParams.get("state");
       if (!code) {
         setError("인가코드를 가져오지 못했습니다.");
         return;
       }
+      if (!returnedState || returnedState !== state) {
+        setError("로그인 요청 검증(state)에 실패했습니다.");
+        return;
+      }
 
-      const result = await loginWithKakaoCode(baseUrl, { code, redirectUri });
+      const result = await loginWithKakaoCode(baseUrl, { code, redirectUri: kakaoRedirectUri });
       onAuthenticated({
         user: result.user,
         accessToken: result.accessToken,

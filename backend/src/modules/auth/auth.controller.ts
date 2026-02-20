@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Headers, Post, Query, Res, UnauthorizedException } from "@nestjs/common";
 import { MockStoreService } from "../../common/mock-store.service";
 import {
   KakaoAuthRequestDto,
@@ -11,6 +11,26 @@ import {
 @Controller("auth")
 export class AuthController {
   constructor(private readonly store: MockStoreService) {}
+
+  @Get("kakao/callback")
+  kakaoCallback(
+    @Query("code") code: string | undefined,
+    @Query("state") state: string | undefined,
+    @Query("error") error: string | undefined,
+    @Query("error_description") errorDescription: string | undefined,
+    @Res() response: any,
+  ) {
+    const appScheme = process.env.KAKAO_OAUTH_APP_SCHEME ?? "seoulwalkingpath";
+    const appPath = process.env.KAKAO_OAUTH_APP_PATH ?? "oauth/kakao";
+    const deepLinkBase = `${appScheme}://${appPath}`;
+    const params = new URLSearchParams();
+    if (code) params.set("code", code);
+    if (state) params.set("state", state);
+    if (error) params.set("error", error);
+    if (errorDescription) params.set("error_description", errorDescription);
+    const redirectUrl = params.toString().length > 0 ? `${deepLinkBase}?${params.toString()}` : deepLinkBase;
+    return response.redirect(302, redirectUrl);
+  }
 
   @Post("signup")
   signup(@Body() body: SignupRequestDto) {
@@ -39,6 +59,7 @@ export class AuthController {
   @Post("kakao")
   async kakao(@Body() body: KakaoAuthRequestDto) {
     const restApiKey = process.env.KAKAO_REST_API_KEY;
+    const clientSecret = process.env.KAKAO_CLIENT_SECRET;
 
     // 개발 환경: mockKakaoUserId 또는 code=dev-* 를 허용해 빠르게 연동 확인
     if (body.mockKakaoUserId || (body.code && body.code.startsWith("dev-"))) {
@@ -67,6 +88,9 @@ export class AuthController {
       code: body.code,
       redirect_uri: body.redirectUri,
     });
+    if (clientSecret) {
+      tokenParams.set("client_secret", clientSecret);
+    }
 
     const tokenRes = await fetch("https://kauth.kakao.com/oauth/token", {
       method: "POST",
@@ -77,7 +101,8 @@ export class AuthController {
     });
 
     if (!tokenRes.ok) {
-      throw new UnauthorizedException("카카오 토큰 교환에 실패했습니다.");
+      const errorBody = await tokenRes.text();
+      throw new UnauthorizedException(`카카오 토큰 교환에 실패했습니다. ${errorBody}`);
     }
 
     const tokenJson = (await tokenRes.json()) as { access_token?: string };
