@@ -123,9 +123,8 @@ export class MockStoreService {
     this.users = [
       {
         id: DEMO_USER_ID,
-        email: "demo@seoulwalk.app",
+        username: "demo",
         passwordHash: passwordHash("demo1234"),
-        displayName: "Demo",
         createdAt: now,
       },
     ];
@@ -258,8 +257,7 @@ export class MockStoreService {
     return {
       user: {
         id: user.id,
-        email: user.email,
-        displayName: user.displayName,
+        username: user.username,
       },
       accessToken: this.createAccessToken(user.id),
       refreshToken,
@@ -267,17 +265,16 @@ export class MockStoreService {
     };
   }
 
-  signup(payload: { email: string; password: string; displayName?: string }) {
-    const email = payload.email.trim().toLowerCase();
-    if (this.users.some((user) => user.email.toLowerCase() === email)) {
-      return { ok: false as const, reason: "email_exists" };
+  signup(payload: { username: string; password: string }) {
+    const username = payload.username.trim().toLowerCase();
+    if (this.users.some((user) => user.username.toLowerCase() === username)) {
+      return { ok: false as const, reason: "username_exists" };
     }
     const now = new Date().toISOString();
     const user: AuthUser = {
       id: randomId("user"),
-      email,
+      username,
       passwordHash: passwordHash(payload.password),
-      displayName: payload.displayName?.trim() || email.split("@")[0] || "사용자",
       createdAt: now,
     };
     this.users.push(user);
@@ -285,9 +282,9 @@ export class MockStoreService {
     return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
   }
 
-  login(payload: { email: string; password: string }) {
-    const email = payload.email.trim().toLowerCase();
-    const user = this.users.find((item) => item.email.toLowerCase() === email);
+  login(payload: { username: string; password: string }) {
+    const username = payload.username.trim().toLowerCase();
+    const user = this.users.find((item) => item.username.toLowerCase() === username);
     if (!user?.passwordHash) {
       return { ok: false as const, reason: "invalid_credentials" };
     }
@@ -298,7 +295,7 @@ export class MockStoreService {
     return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
   }
 
-  loginWithKakao(payload: { kakaoUserId: string; email?: string; nickname?: string }) {
+  loginWithKakao(payload: { kakaoUserId: string; username?: string; nickname?: string }) {
     const providerUserId = payload.kakaoUserId.trim();
     const linked = this.authProviders.find((item) => item.provider === "kakao" && item.providerUserId === providerUserId);
     if (linked) {
@@ -311,13 +308,17 @@ export class MockStoreService {
     }
 
     const now = new Date().toISOString();
-    const email = payload.email?.trim().toLowerCase() || `kakao_${providerUserId}@seoulwalk.local`;
-    let user = this.users.find((item) => item.email.toLowerCase() === email);
+    const usernameCandidate = payload.username?.trim().toLowerCase() || `kakao_${providerUserId}`;
+    let user = this.users.find((item) => item.username.toLowerCase() === usernameCandidate);
+    const username =
+      user?.username ??
+      (this.users.some((item) => item.username.toLowerCase() === usernameCandidate)
+        ? `${usernameCandidate}_${providerUserId.slice(-4)}`
+        : usernameCandidate);
     if (!user) {
       user = {
         id: randomId("user"),
-        email,
-        displayName: payload.nickname?.trim() || "카카오 사용자",
+        username,
         createdAt: now,
       };
       this.users.push(user);
@@ -369,8 +370,7 @@ export class MockStoreService {
     if (!user) return null;
     return {
       id: user.id,
-      email: user.email,
-      displayName: user.displayName,
+      username: user.username,
     };
   }
 

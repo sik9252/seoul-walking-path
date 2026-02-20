@@ -1,7 +1,6 @@
 export type AuthUser = {
   id: string;
-  email: string;
-  displayName: string;
+  username: string;
 };
 
 export type AuthResponse = {
@@ -17,7 +16,12 @@ type SessionResponse = {
 };
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const response = await fetch(url, {
+    ...init,
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeoutId));
   if (!response.ok) {
     const text = await response.text();
     throw new Error(text || `request_failed_${response.status}`);
@@ -25,7 +29,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function signupWithPassword(apiBaseUrl: string, payload: { email: string; password: string; displayName?: string }) {
+export async function signupWithPassword(apiBaseUrl: string, payload: { username: string; password: string }) {
   return fetchJson<AuthResponse>(`${apiBaseUrl}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -33,7 +37,7 @@ export async function signupWithPassword(apiBaseUrl: string, payload: { email: s
   });
 }
 
-export async function loginWithPassword(apiBaseUrl: string, payload: { email: string; password: string }) {
+export async function loginWithPassword(apiBaseUrl: string, payload: { username: string; password: string }) {
   return fetchJson<AuthResponse>(`${apiBaseUrl}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

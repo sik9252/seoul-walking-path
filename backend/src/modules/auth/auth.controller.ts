@@ -15,12 +15,11 @@ export class AuthController {
   @Post("signup")
   signup(@Body() body: SignupRequestDto) {
     const result = this.store.signup({
-      email: body.email,
+      username: body.username,
       password: body.password,
-      displayName: body.displayName,
     });
     if (!result.ok) {
-      throw new BadRequestException("이미 가입된 이메일입니다.");
+      throw new BadRequestException("이미 사용 중인 아이디입니다.");
     }
     return result;
   }
@@ -28,11 +27,11 @@ export class AuthController {
   @Post("login")
   login(@Body() body: LoginRequestDto) {
     const result = this.store.login({
-      email: body.email,
+      username: body.username,
       password: body.password,
     });
     if (!result.ok) {
-      throw new UnauthorizedException("이메일 또는 비밀번호가 올바르지 않습니다.");
+      throw new UnauthorizedException("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
     return result;
   }
@@ -46,7 +45,7 @@ export class AuthController {
       const mockId = body.mockKakaoUserId ?? body.code?.replace("dev-", "") ?? "kakao-dev-user";
       const result = this.store.loginWithKakao({
         kakaoUserId: mockId,
-        email: `kakao_${mockId}@seoulwalk.local`,
+        username: `kakao_${mockId}`,
         nickname: "카카오 사용자",
       });
       if (!result.ok) {
@@ -108,7 +107,7 @@ export class AuthController {
 
     const result = this.store.loginWithKakao({
       kakaoUserId: String(userJson.id),
-      email: userJson.kakao_account?.email,
+      username: userJson.properties?.nickname,
       nickname: userJson.properties?.nickname,
     });
     if (!result.ok) {

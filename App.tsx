@@ -60,7 +60,6 @@ export default function App() {
 function AppShell() {
   const [startupStep, setStartupStep] = React.useState<StartupStep>("splash");
   const [authSession, setAuthSessionState] = React.useState<AuthSession | null>(null);
-  const [isGuestMode, setIsGuestMode] = React.useState(false);
   const [isRequestingAuthFlow, setIsRequestingAuthFlow] = React.useState(false);
   const [onboardingIndex, setOnboardingIndex] = React.useState(0);
   const [splashProgress, setSplashProgress] = React.useState(0.1);
@@ -87,7 +86,7 @@ function AppShell() {
   const [authRequiredDialogVisible, setAuthRequiredDialogVisible] = React.useState(false);
 
   const apiBaseUrl = getApiBaseUrl();
-  const activeUserId = authSession?.user.id ?? (isGuestMode ? "guest-user" : undefined);
+  const activeUserId = authSession?.user.id;
 
   const placesQuery = usePlacesQuery(apiBaseUrl);
   const cardsQuery = useMyCardsQuery(apiBaseUrl, authSession?.user.id);
@@ -157,7 +156,6 @@ function AppShell() {
         }
 
         setAuthSessionState(restoredSession);
-        setIsGuestMode(false);
 
         setSplashStatus("앱 진입 준비 중...");
         setSplashProgress(0.9);
@@ -200,11 +198,11 @@ function AppShell() {
     setIsRequestingAuthFlow(true);
     try {
       await setOnboardingCompleted(true);
-      setStartupStep(authSession || isGuestMode ? "home" : "auth");
+      setStartupStep(authSession ? "home" : "auth");
     } finally {
       setIsRequestingAuthFlow(false);
     }
-  }, [authSession, isGuestMode, onboardingIndex]);
+  }, [authSession, onboardingIndex]);
 
   const handleReplayTutorial = React.useCallback(() => {
     setOnboardingIndex(0);
@@ -214,13 +212,6 @@ function AppShell() {
   const handleAuthenticated = React.useCallback(async (session: AuthSession) => {
     await setAuthSession(session);
     setAuthSessionState(session);
-    setIsGuestMode(false);
-    setStartupStep("home");
-  }, []);
-
-  const handleContinueGuest = React.useCallback(() => {
-    setAuthSessionState(null);
-    setIsGuestMode(true);
     setStartupStep("home");
   }, []);
 
@@ -234,7 +225,6 @@ function AppShell() {
     }
     await clearAuthSession();
     setAuthSessionState(null);
-    setIsGuestMode(false);
     setStartupStep("auth");
   }, [apiBaseUrl, authSession?.refreshToken]);
 
@@ -319,7 +309,7 @@ function AppShell() {
     return (
       <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
         <StatusBar style="dark" />
-        <AuthScreen apiBaseUrl={apiBaseUrl} onAuthenticated={handleAuthenticated} onContinueGuest={handleContinueGuest} />
+        <AuthScreen apiBaseUrl={apiBaseUrl} onAuthenticated={handleAuthenticated} />
       </SafeAreaView>
     );
   }
@@ -376,7 +366,7 @@ function AppShell() {
         <View style={styles.screen}>
           <Text style={styles.title}>설정</Text>
           <Text style={styles.description}>
-            {authSession ? `${authSession.user.displayName} (${authSession.user.email})` : "게스트 모드로 둘러보는 중"}
+            {authSession ? `아이디: ${authSession.user.username}` : "로그인이 필요합니다"}
           </Text>
           <Button label="튜토리얼 다시보기" variant="secondary" onPress={handleReplayTutorial} />
           {authSession ? (

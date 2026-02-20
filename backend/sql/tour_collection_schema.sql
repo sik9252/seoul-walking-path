@@ -57,9 +57,8 @@ create index if not exists idx_user_cards_user_id on user_cards(user_id);
 -- auth domain
 create table if not exists users (
   id varchar primary key,
-  email varchar not null unique,
+  username varchar not null unique,
   password_hash varchar,
-  display_name varchar not null,
   created_at timestamptz not null default now()
 );
 
