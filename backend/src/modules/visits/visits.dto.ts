@@ -13,7 +13,7 @@ export class VisitCheckRequestDto {
   @IsOptional()
   @IsNumber()
   @Min(10)
-  @Max(2000)
+  @Max(1000)
   radiusM?: number;
 
   @IsOptional()

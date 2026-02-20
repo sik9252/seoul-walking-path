@@ -467,7 +467,7 @@ function AppShell() {
         const payload = await visitMutation.mutateAsync({
           lat: location.latitude,
           lng: location.longitude,
-          radiusM: 500,
+          radiusM: 30,
           excludePlaceIds,
         });
         handleCollectResult(payload, excludePlaceIds);
@@ -486,7 +486,7 @@ function AppShell() {
   useNearbyCollectionAlert({
     places,
     location,
-    radiusM: 500,
+    radiusM: 30,
     enabled: tab === "explore" && Boolean(authSession),
     apiBaseUrl,
     onNearbySpotsFound: ({ nearestPlace, nearbyCount }) => {
