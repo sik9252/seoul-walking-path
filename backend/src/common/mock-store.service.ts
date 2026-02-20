@@ -7,6 +7,8 @@ import { AuthProviderLink, AuthUser, PlaceCard, PlaceItem, RefreshTokenSession, 
 const DEMO_USER_ID = "demo-user";
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 30;
 const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 14;
+const NICKNAME_COOLDOWN_DAYS = 7;
+const NICKNAME_COOLDOWN_MS = NICKNAME_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 type TourPlaceSnapshot = {
   places: Array<{
@@ -100,6 +102,36 @@ function sha256(value: string) {
 
 function randomId(prefix: string) {
   return `${prefix}_${randomBytes(8).toString("hex")}`;
+}
+
+const BANNED_NICKNAME_KEYWORDS = [
+  "씨발",
+  "시발",
+  "병신",
+  "개새",
+  "좆",
+  "fuck",
+  "bitch",
+  "sex",
+  "porn",
+  "도박",
+  "카지노",
+  "토토",
+];
+
+function normalizeNicknameForModeration(value: string) {
+  return value.toLowerCase().replace(/[\s\-_.,/\\!@#$%^&*()+=[\]{}:;"'`~<>?|]/g, "");
+}
+
+function isInappropriateNickname(value: string) {
+  const normalized = normalizeNicknameForModeration(value);
+  if (!normalized) return true;
+  if (BANNED_NICKNAME_KEYWORDS.some((keyword) => normalized.includes(keyword))) return true;
+  if (/https?:\/\//i.test(value) || /www\./i.test(value)) return true;
+  if (/010[-\s]?\d{3,4}[-\s]?\d{4}/.test(value)) return true;
+  if (/(kakao|카카오|텔레그램|telegram|insta|instagram|line|wechat)/i.test(value)) return true;
+  if (/(.)\1{5,}/.test(normalized)) return true;
+  return false;
 }
 
 @Injectable()
@@ -274,10 +306,11 @@ export class MockStoreService {
     const now = new Date().toISOString();
     const user: AuthUser = {
       id: randomId("user"),
-      username,
-      passwordHash: passwordHash(payload.password),
-      createdAt: now,
-    };
+        username,
+        passwordHash: passwordHash(payload.password),
+        nicknameChangeCount: 0,
+        createdAt: now,
+      };
     this.users.push(user);
     const { rawToken } = this.createRefreshTokenSession(user.id);
     return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
@@ -324,6 +357,7 @@ export class MockStoreService {
         id: randomId("user"),
         username,
         nickname: payload.nickname?.trim() || undefined,
+        nicknameChangeCount: 0,
         createdAt: now,
       };
       this.users.push(user);
@@ -385,7 +419,27 @@ export class MockStoreService {
     if (!user) {
       return { ok: false as const, reason: "user_not_found" };
     }
-    user.nickname = payload.nickname.trim();
+    const nickname = payload.nickname.trim();
+    if (isInappropriateNickname(nickname)) {
+      return { ok: false as const, reason: "inappropriate_nickname" };
+    }
+
+    const changeCount = user.nicknameChangeCount ?? 0;
+    const nowMs = Date.now();
+    if (changeCount > 0 && user.nicknameUpdatedAt) {
+      const lastChangedMs = new Date(user.nicknameUpdatedAt).getTime();
+      if (Number.isFinite(lastChangedMs) && nowMs - lastChangedMs < NICKNAME_COOLDOWN_MS) {
+        return {
+          ok: false as const,
+          reason: "nickname_cooldown",
+          retryAt: new Date(lastChangedMs + NICKNAME_COOLDOWN_MS).toISOString(),
+        };
+      }
+    }
+
+    user.nickname = nickname;
+    user.nicknameUpdatedAt = new Date(nowMs).toISOString();
+    user.nicknameChangeCount = changeCount + 1;
     return {
       ok: true as const,
       user: {

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Linking, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getSessionUser, logoutSession, refreshSession, updateNickname } from "./src/apis/authApi";
 import { getApiBaseUrl } from "./src/apis/gameApi";
@@ -17,6 +17,7 @@ import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { ExploreVisitResultModal } from "./src/screens/widgets/explore";
 import { CollectionCategory } from "./src/screens/widgets/collection";
 import { AuthSession, clearAuthSession, getAuthSession, setAuthSession } from "./src/storage/authSession";
+import { getAutoLoginEnabled, setAutoLoginEnabled } from "./src/storage/preferences";
 import { getOnboardingCompleted, setOnboardingCompleted } from "./src/storage/startupFlags";
 import { gameStyles as styles } from "./src/styles/gameStyles";
 import { GameTab, PlaceItem } from "./src/types/gameTypes";
@@ -62,6 +63,7 @@ function AppShell() {
   const [startupStep, setStartupStep] = React.useState<StartupStep>("splash");
   const [authSession, setAuthSessionState] = React.useState<AuthSession | null>(null);
   const [persistAuthSession, setPersistAuthSession] = React.useState(true);
+  const [locationPermissionEnabled, setLocationPermissionEnabled] = React.useState(false);
   const [isRequestingAuthFlow, setIsRequestingAuthFlow] = React.useState(false);
   const [onboardingIndex, setOnboardingIndex] = React.useState(0);
   const [splashProgress, setSplashProgress] = React.useState(0.1);
@@ -100,7 +102,7 @@ function AppShell() {
         message,
       }),
   });
-  const { location, isLoadingLocation, locationError, refreshLocation } = useUserLocation();
+  const { location, isLoadingLocation, locationError, refreshLocation, getPermissionStatus } = useUserLocation();
 
   const places = React.useMemo(
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
@@ -135,10 +137,12 @@ function AppShell() {
 
         setSplashStatus("로그인 세션을 확인하는 중...");
         setSplashProgress(0.66);
+        const autoLoginEnabled = await getAutoLoginEnabled();
+        setPersistAuthSession(autoLoginEnabled);
         const savedSession = await getAuthSession();
 
         let restoredSession: AuthSession | null = null;
-        if (savedSession && apiBaseUrl) {
+        if (autoLoginEnabled && savedSession && apiBaseUrl) {
           try {
             await getSessionUser(apiBaseUrl, savedSession.accessToken);
             restoredSession = savedSession;
@@ -158,7 +162,6 @@ function AppShell() {
         }
 
         setAuthSessionState(restoredSession);
-        setPersistAuthSession(Boolean(restoredSession));
 
         setSplashStatus("앱 진입 준비 중...");
         setSplashProgress(0.9);
@@ -191,6 +194,20 @@ function AppShell() {
     };
   }, [apiBaseUrl]);
 
+  React.useEffect(() => {
+    let cancelled = false;
+    const syncPermission = async () => {
+      const status = await getPermissionStatus();
+      if (!cancelled) {
+        setLocationPermissionEnabled(status === "granted");
+      }
+    };
+    void syncPermission();
+    return () => {
+      cancelled = true;
+    };
+  }, [getPermissionStatus]);
+
   const handleOnboardingNext = React.useCallback(async () => {
     const isLast = onboardingIndex >= ONBOARDING_SLIDES.length - 1;
     if (!isLast) {
@@ -213,6 +230,7 @@ function AppShell() {
   }, []);
 
   const handleAuthenticated = React.useCallback(async (session: AuthSession, persistSession: boolean) => {
+    await setAutoLoginEnabled(persistSession);
     if (persistSession) {
       await setAuthSession(session);
     } else {
@@ -232,7 +250,6 @@ function AppShell() {
       }
     }
     await clearAuthSession();
-    setPersistAuthSession(false);
     setAuthSessionState(null);
     setStartupStep("auth");
   }, [apiBaseUrl, authSession?.refreshToken]);
@@ -271,6 +288,7 @@ function AppShell() {
 
   const handleToggleAutoLogin = React.useCallback(
     async (enabled: boolean) => {
+      await setAutoLoginEnabled(enabled);
       setPersistAuthSession(enabled);
       if (!authSession) return;
       if (enabled) {
@@ -280,6 +298,23 @@ function AppShell() {
       }
     },
     [authSession],
+  );
+
+  const handleToggleLocationPermission = React.useCallback(
+    async (enabled: boolean) => {
+      if (enabled) {
+        const result = await refreshLocation();
+        setLocationPermissionEnabled(result.ok);
+        return;
+      }
+      setLocationPermissionEnabled(false);
+      try {
+        await Linking.openSettings();
+      } catch {
+        // noop
+      }
+    },
+    [refreshLocation],
   );
 
   const tabs: TabItem[] = [
@@ -354,7 +389,12 @@ function AppShell() {
     return (
       <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
         <StatusBar style="dark" />
-        <AuthScreen apiBaseUrl={apiBaseUrl} onAuthenticated={handleAuthenticated} />
+        <AuthScreen
+          apiBaseUrl={apiBaseUrl}
+          autoLoginEnabled={persistAuthSession}
+          onToggleAutoLoginEnabled={(enabled) => void handleToggleAutoLogin(enabled)}
+          onAuthenticated={handleAuthenticated}
+        />
       </SafeAreaView>
     );
   }
@@ -410,9 +450,9 @@ function AppShell() {
       {tab === "my" ? (
         <SettingsScreen
           authSession={authSession}
-          locationEnabled={Boolean(location)}
+          locationPermissionEnabled={locationPermissionEnabled}
           autoLoginEnabled={persistAuthSession}
-          onRefreshLocation={refreshLocation}
+          onToggleLocationPermission={(enabled) => void handleToggleLocationPermission(enabled)}
           onToggleAutoLogin={(enabled) => void handleToggleAutoLogin(enabled)}
           onReplayTutorial={handleReplayTutorial}
           onLogout={() => void handleLogout()}

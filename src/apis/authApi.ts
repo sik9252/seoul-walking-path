@@ -30,7 +30,20 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   }).finally(() => clearTimeout(timeoutId));
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `request_failed_${response.status}`);
+    if (text) {
+      let parsedMessage: string | null = null;
+      try {
+        const parsed = JSON.parse(text) as { message?: string | string[] };
+        const message = Array.isArray(parsed.message) ? parsed.message.join(", ") : parsed.message;
+        if (message) {
+          parsedMessage = message;
+        }
+      } catch {
+        // keep fallback as raw text
+      }
+      throw new Error(parsedMessage ?? text);
+    }
+    throw new Error(`request_failed_${response.status}`);
   }
   return (await response.json()) as T;
 }

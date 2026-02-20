@@ -7,9 +7,9 @@ import { colors, radius, spacing, typography } from "../theme/tokens";
 
 type Props = {
   authSession: AuthSession | null;
-  locationEnabled: boolean;
+  locationPermissionEnabled: boolean;
   autoLoginEnabled: boolean;
-  onRefreshLocation: () => void;
+  onToggleLocationPermission: (enabled: boolean) => void;
   onToggleAutoLogin: (enabled: boolean) => void;
   onReplayTutorial: () => void;
   onLogout: () => void;
@@ -19,9 +19,9 @@ type Props = {
 
 export function SettingsScreen({
   authSession,
-  locationEnabled,
+  locationPermissionEnabled,
   autoLoginEnabled,
-  onRefreshLocation,
+  onToggleLocationPermission,
   onToggleAutoLogin,
   onReplayTutorial,
   onLogout,
@@ -32,10 +32,12 @@ export function SettingsScreen({
   const [nickname, setNickname] = React.useState(initialNickname);
   const [saving, setSaving] = React.useState(false);
   const [message, setMessage] = React.useState<string | null>(null);
+  const [messageType, setMessageType] = React.useState<"success" | "error">("success");
 
   React.useEffect(() => {
     setNickname(authSession?.user.nickname ?? "");
     setMessage(null);
+    setMessageType("success");
   }, [authSession?.user.nickname, authSession?.user.id]);
 
   const displayName = authSession?.user.nickname?.trim() || authSession?.user.username || "게스트";
@@ -47,17 +49,21 @@ export function SettingsScreen({
     }
     if (!nickname.trim()) {
       setMessage("닉네임을 입력해주세요.");
+      setMessageType("error");
       return;
     }
     setSaving(true);
     setMessage(null);
+    setMessageType("success");
     try {
       const error = await onSaveNickname(nickname.trim());
       if (error) {
         setMessage(error);
+        setMessageType("error");
         return;
       }
       setMessage("닉네임이 저장되었습니다.");
+      setMessageType("success");
     } finally {
       setSaving(false);
     }
@@ -90,7 +96,7 @@ export function SettingsScreen({
           value={nickname}
           onChangeText={setNickname}
           placeholder="닉네임 설정 (2~20자)"
-          placeholderTextColor={colors.base.textSubtle}
+          placeholderTextColor={colors.base.placeholder}
           style={settingsStyles.nicknameInput}
           editable={Boolean(authSession)}
         />
@@ -102,16 +108,25 @@ export function SettingsScreen({
           labelStyle={settingsStyles.saveBtnLabel}
         />
       </View>
-      {message ? <Text style={settingsStyles.messageText}>{message}</Text> : null}
+      {message ? (
+        <Text
+          style={[
+            settingsStyles.messageText,
+            messageType === "error" ? settingsStyles.errorText : settingsStyles.successText,
+          ]}
+        >
+          {message}
+        </Text>
+      ) : null}
 
       <Text style={settingsStyles.sectionLabel}>시스템</Text>
       <View style={settingsStyles.sectionCard}>
-        <Pressable style={settingsStyles.row} onPress={onRefreshLocation}>
+        <Pressable style={settingsStyles.row} onPress={() => onToggleLocationPermission(!locationPermissionEnabled)}>
           <View style={settingsStyles.rowLeft}>
             <Ionicons name="location-outline" size={20} color={colors.base.text} />
             <Text style={settingsStyles.rowText}>위치 권한 설정</Text>
           </View>
-          <Switch value={locationEnabled} onValueChange={onRefreshLocation} />
+          <Switch value={locationPermissionEnabled} onValueChange={onToggleLocationPermission} />
         </Pressable>
 
         <View style={settingsStyles.row}>
@@ -119,11 +134,7 @@ export function SettingsScreen({
             <Ionicons name="key-outline" size={20} color={colors.base.text} />
             <Text style={settingsStyles.rowText}>자동 로그인</Text>
           </View>
-          <Switch
-            value={autoLoginEnabled}
-            onValueChange={onToggleAutoLogin}
-            disabled={!authSession}
-          />
+          <Switch value={autoLoginEnabled} onValueChange={onToggleAutoLogin} disabled={!authSession} />
         </View>
 
         <View style={settingsStyles.row}>
@@ -254,7 +265,12 @@ const settingsStyles = StyleSheet.create({
   messageText: {
     marginTop: spacing.xs,
     fontSize: typography.size.caption,
+  },
+  successText: {
     color: colors.base.textSubtle,
+  },
+  errorText: {
+    color: colors.semantic.error,
   },
   saveBtn: {
     minHeight: 44,

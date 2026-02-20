@@ -31,6 +31,8 @@ export type AuthUser = {
   id: string;
   username: string;
   nickname?: string;
+  nicknameUpdatedAt?: string;
+  nicknameChangeCount?: number;
   passwordHash?: string;
   createdAt: string;
 };

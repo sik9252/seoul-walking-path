@@ -59,6 +59,8 @@ create table if not exists users (
   id varchar primary key,
   username varchar not null unique,
   nickname varchar,
+  nickname_updated_at timestamptz,
+  nickname_change_count integer not null default 0,
   password_hash varchar,
   created_at timestamptz not null default now()
 );

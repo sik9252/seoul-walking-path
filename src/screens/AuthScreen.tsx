@@ -13,14 +13,15 @@ WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   apiBaseUrl?: string;
+  autoLoginEnabled: boolean;
+  onToggleAutoLoginEnabled: (enabled: boolean) => void;
   onAuthenticated: (session: StoredAuthSession, persistSession: boolean) => void;
 };
 
-export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
+export function AuthScreen({ apiBaseUrl, autoLoginEnabled, onToggleAutoLoginEnabled, onAuthenticated }: Props) {
   const [mode, setMode] = React.useState<"login" | "signup">("login");
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [persistSession, setPersistSession] = React.useState(true);
   const [agreeTerms, setAgreeTerms] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -58,7 +59,7 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
         user: result.user,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-      }, persistSession);
+      }, autoLoginEnabled);
     } catch (err) {
       const reason = err instanceof Error ? err.message : "";
       const fallback = mode === "signup" ? "회원가입에 실패했습니다. 아이디 중복 여부를 확인해주세요." : "로그인에 실패했습니다.";
@@ -66,7 +67,7 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [agreeTerms, apiBaseUrl, baseUrl, mode, onAuthenticated, password, persistSession, username]);
+  }, [agreeTerms, apiBaseUrl, autoLoginEnabled, baseUrl, mode, onAuthenticated, password, username]);
 
   const handleKakao = React.useCallback(async () => {
     if (!baseUrl) {
@@ -132,14 +133,14 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
         user: result.user,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-      }, persistSession);
+      }, autoLoginEnabled);
     } catch (err) {
       const reason = err instanceof Error ? err.message : "";
       setError(reason || "카카오 로그인에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [apiBaseUrl, baseUrl, kakaoRestApiKey, onAuthenticated, persistSession]);
+  }, [apiBaseUrl, autoLoginEnabled, baseUrl, kakaoRestApiKey, onAuthenticated]);
 
   return (
     <View style={authStyles.container}>
@@ -209,9 +210,9 @@ export function AuthScreen({ apiBaseUrl, onAuthenticated }: Props) {
           </Pressable>
         ) : null}
         {mode === "login" ? (
-          <Pressable style={authStyles.termsRow} onPress={() => setPersistSession((prev) => !prev)}>
-            <View style={[authStyles.checkbox, persistSession && authStyles.checkboxActive]}>
-              {persistSession ? <Ionicons name="checkmark" size={14} color={colors.base.surface} /> : null}
+          <Pressable style={authStyles.termsRow} onPress={() => onToggleAutoLoginEnabled(!autoLoginEnabled)}>
+            <View style={[authStyles.checkbox, autoLoginEnabled && authStyles.checkboxActive]}>
+              {autoLoginEnabled ? <Ionicons name="checkmark" size={14} color={colors.base.surface} /> : null}
             </View>
             <Text style={authStyles.termsText}>자동 로그인</Text>
           </Pressable>

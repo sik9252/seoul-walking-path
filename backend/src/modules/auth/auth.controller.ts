@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post, Query, Res, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  Query,
+  Res,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { MockStoreService } from "../../common/mock-store.service";
 import {
   KakaoAuthRequestDto,
@@ -168,6 +178,13 @@ export class AuthController {
       nickname: body.nickname,
     });
     if (!result.ok) {
+      if (result.reason === "inappropriate_nickname") {
+        throw new BadRequestException("부적절한 닉네임입니다.");
+      }
+      if (result.reason === "nickname_cooldown") {
+        const dateText = result.retryAt ? new Date(result.retryAt).toLocaleString("ko-KR") : "7일 후";
+        throw new BadRequestException(`닉네임은 7일에 1회만 변경할 수 있어요.\n다음 변경 가능: ${dateText}`);
+      }
       throw new BadRequestException("닉네임 저장에 실패했습니다.");
     }
     return result;
