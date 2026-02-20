@@ -69,15 +69,18 @@ export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, use
   return fetchJson<CatalogCardPage>(`${apiBaseUrl}/cards/catalog?${params.toString()}`);
 }
 
-export async function checkVisitWithUser(apiBaseUrl: string, userId: string) {
+export type CheckVisitRequest = {
+  userId: string;
+  lat: number;
+  lng: number;
+  radiusM?: number;
+  excludePlaceIds?: string[];
+};
+
+export async function checkVisitWithUser(apiBaseUrl: string, payload: CheckVisitRequest) {
   return fetchJson<VisitCheckResponse>(`${apiBaseUrl}/visits/check`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      lat: DEMO_LAT,
-      lng: DEMO_LNG,
-      radiusM: 50,
-    }),
+    body: JSON.stringify(payload),
   });
 }

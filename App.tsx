@@ -14,13 +14,13 @@ import { AuthScreen } from "./src/screens/AuthScreen";
 import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
-import { ExploreVisitResultModal } from "./src/screens/widgets/explore";
+import { ExploreCardRewardModal, ExploreVisitResultModal } from "./src/screens/widgets/explore";
 import { CollectionCategory } from "./src/screens/widgets/collection";
 import { AuthSession, clearAuthSession, getAuthSession, setAuthSession } from "./src/storage/authSession";
 import { getAutoLoginEnabled, setAutoLoginEnabled } from "./src/storage/preferences";
 import { getOnboardingCompleted, setOnboardingCompleted } from "./src/storage/startupFlags";
 import { gameStyles as styles } from "./src/styles/gameStyles";
-import { GameTab, PlaceItem } from "./src/types/gameTypes";
+import { GameTab, PlaceItem, VisitCheckResponse } from "./src/types/gameTypes";
 import { colors } from "./src/theme/tokens";
 
 const queryClient = new QueryClient();
@@ -90,28 +90,31 @@ function AppShell() {
     message: "",
   });
   const [authRequiredDialogVisible, setAuthRequiredDialogVisible] = React.useState(false);
+  const [collectChainExcludePlaceIds, setCollectChainExcludePlaceIds] = React.useState<string[]>([]);
+  const [rewardModalState, setRewardModalState] = React.useState<{
+    visible: boolean;
+    placeName: string;
+    address?: string;
+    imageUrl?: string | null;
+    rarity: "common" | "rare" | "epic" | "legendary";
+    hasNext: boolean;
+  }>({
+    visible: false,
+    placeName: "",
+    address: "",
+    imageUrl: null,
+    rarity: "common",
+    hasNext: false,
+  });
 
   const apiBaseUrl = getApiBaseUrl();
   const activeUserId = authSession?.user.id;
 
   const placesQuery = usePlacesQuery(apiBaseUrl);
   const cardsQuery = useMyCardsQuery(apiBaseUrl, authSession?.user.id);
-  const visitMutation = useVisitMutation(apiBaseUrl, authSession?.user.id, {
-    onOpenDialog: ({ title, message }) =>
-      setVisitDialog({
-        visible: true,
-        title,
-        message,
-      }),
-  });
-  const {
-    location,
-    isLoadingLocation,
-    locationError,
-    refreshLocation,
-    refreshLocationWithOptions,
-    getPermissionInfo,
-  } = useUserLocation();
+  const visitMutation = useVisitMutation(apiBaseUrl, authSession?.user.id);
+  const { location, isLoadingLocation, locationError, refreshLocation, refreshLocationWithOptions, getPermissionInfo } =
+    useUserLocation();
   const didBootstrapLocationRef = React.useRef(false);
 
   const syncLocationPermissionState = React.useCallback(async () => {
@@ -130,13 +133,6 @@ function AppShell() {
     () => (cardsQuery.data ?? []).map((card) => card.place?.id).filter((id): id is string => Boolean(id)),
     [cardsQuery.data],
   );
-
-  useNearbyCollectionAlert({
-    places,
-    location,
-    radiusM: 30,
-    enabled: tab === "explore" && Boolean(authSession),
-  });
 
   React.useEffect(() => {
     let cancelled = false;
@@ -307,26 +303,29 @@ function AppShell() {
     setStartupStep("onboarding");
   }, []);
 
-  const handleAuthenticated = React.useCallback(async (session: AuthSession, persistSession: boolean) => {
-    await setAutoLoginEnabled(persistSession);
-    if (persistSession) {
-      await setAuthSession(session);
-    } else {
-      await clearAuthSession();
-    }
-    setPersistAuthSession(persistSession);
-    setAuthSessionState(session);
-    const permission = await getPermissionInfo();
-    const locationGranted = permission.status === "granted";
-    setLocationPermissionEnabled(locationGranted);
-    setLocationCanAskAgain(permission.canAskAgain);
-    if (locationGranted) {
-      setStartupStep("home");
-      return;
-    }
-    setPostGateStep("home");
-    setStartupStep("location-gate");
-  }, [getPermissionInfo]);
+  const handleAuthenticated = React.useCallback(
+    async (session: AuthSession, persistSession: boolean) => {
+      await setAutoLoginEnabled(persistSession);
+      if (persistSession) {
+        await setAuthSession(session);
+      } else {
+        await clearAuthSession();
+      }
+      setPersistAuthSession(persistSession);
+      setAuthSessionState(session);
+      const permission = await getPermissionInfo();
+      const locationGranted = permission.status === "granted";
+      setLocationPermissionEnabled(locationGranted);
+      setLocationCanAskAgain(permission.canAskAgain);
+      if (locationGranted) {
+        setStartupStep("home");
+        return;
+      }
+      setPostGateStep("home");
+      setStartupStep("location-gate");
+    },
+    [getPermissionInfo],
+  );
 
   const handleLogout = React.useCallback(async () => {
     if (apiBaseUrl && authSession?.refreshToken) {
@@ -414,6 +413,76 @@ function AppShell() {
     },
     [getPermissionInfo, refreshLocation],
   );
+
+  const handleCollectResult = React.useCallback((payload: VisitCheckResponse, excludePlaceIds: string[]) => {
+    if (!payload.matched || !payload.collected) {
+      setVisitDialog({
+        visible: true,
+        title: "수집 실패",
+        message: "근처 수집 가능한 스팟이 없어요.",
+      });
+      setCollectChainExcludePlaceIds([]);
+      setRewardModalState((prev) => ({ ...prev, visible: false, hasNext: false }));
+      return;
+    }
+
+    const collectedPlaceId = payload.place?.id;
+    const nextExcludeIds = collectedPlaceId ? [...excludePlaceIds, collectedPlaceId] : excludePlaceIds;
+    setCollectChainExcludePlaceIds(nextExcludeIds);
+    setRewardModalState({
+      visible: true,
+      placeName: payload.place?.name ?? payload.card?.title ?? "관광지",
+      address: payload.place?.address ?? "",
+      imageUrl: payload.place?.imageUrl ?? payload.card?.imageUrl ?? null,
+      rarity: payload.card?.rarity ?? "common",
+      hasNext: (payload.remainingCollectableCount ?? 0) > 0,
+    });
+  }, []);
+
+  const collectOnePlace = React.useCallback(
+    async (excludePlaceIds: string[] = []) => {
+      if (!authSession) {
+        setAuthRequiredDialogVisible(true);
+        return;
+      }
+      if (!location) {
+        setVisitDialog({
+          visible: true,
+          title: "위치 확인 필요",
+          message: "현재 위치를 먼저 확인한 뒤 다시 시도해주세요.",
+        });
+        return;
+      }
+
+      try {
+        const payload = await visitMutation.mutateAsync({
+          lat: location.latitude,
+          lng: location.longitude,
+          radiusM: 1000,
+          excludePlaceIds,
+        });
+        handleCollectResult(payload, excludePlaceIds);
+      } catch (error) {
+        console.warn("[app] checkVisit failed", error);
+        setVisitDialog({
+          visible: true,
+          title: "오류",
+          message: "방문 판정 중 문제가 발생했어요.",
+        });
+      }
+    },
+    [authSession, handleCollectResult, location, visitMutation],
+  );
+
+  useNearbyCollectionAlert({
+    places,
+    location,
+    radiusM: 1000,
+    enabled: tab === "explore" && Boolean(authSession),
+    onCollectNearby: () => {
+      void collectOnePlace([]);
+    },
+  });
 
   const tabs: TabItem[] = [
     {
@@ -570,17 +639,7 @@ function AppShell() {
           isLoadingLocation={isLoadingLocation}
           locationError={locationError}
           onRefreshLocation={refreshLocation}
-          onCheckVisit={() => {
-            if (!authSession) {
-              setAuthRequiredDialogVisible(true);
-              return;
-            }
-            visitMutation.mutate();
-          }}
-          visitDialogVisible={visitDialog.visible}
-          visitDialogTitle={visitDialog.title}
-          visitDialogMessage={visitDialog.message}
-          onCloseVisitDialog={() => setVisitDialog((prev) => ({ ...prev, visible: false }))}
+          onCheckVisit={() => void collectOnePlace([])}
           onOpenDetail={setSelectedPlace}
           onLoadMore={() => void placesQuery.fetchNextPage()}
           bottomOverlayOffset={tabBarHeight}
@@ -626,13 +685,34 @@ function AppShell() {
         />
       ) : null}
 
-      <ExploreVisitResultModal
-        visible={authRequiredDialogVisible}
-        title="로그인이 필요해요"
-        message="수집 기능은 로그인/가입 후 사용할 수 있어요."
+      <ExploreCardRewardModal
+        visible={rewardModalState.visible}
+        card={{
+          placeName: rewardModalState.placeName,
+          address: rewardModalState.address,
+          imageUrl: rewardModalState.imageUrl,
+          rarity: rewardModalState.rarity,
+        }}
+        hasNext={rewardModalState.hasNext}
+        isCollectingNext={visitMutation.isPending}
+        onCollectNext={() => void collectOnePlace(collectChainExcludePlaceIds)}
         onClose={() => {
-          setAuthRequiredDialogVisible(false);
-          setStartupStep("auth");
+          setRewardModalState((prev) => ({ ...prev, visible: false, hasNext: false }));
+          setCollectChainExcludePlaceIds([]);
+        }}
+      />
+
+      <ExploreVisitResultModal
+        visible={authRequiredDialogVisible || visitDialog.visible}
+        title={authRequiredDialogVisible ? "로그인이 필요해요" : visitDialog.title}
+        message={authRequiredDialogVisible ? "수집 기능은 로그인/가입 후 사용할 수 있어요." : visitDialog.message}
+        onClose={() => {
+          if (authRequiredDialogVisible) {
+            setAuthRequiredDialogVisible(false);
+            setStartupStep("auth");
+            return;
+          }
+          setVisitDialog((prev) => ({ ...prev, visible: false }));
         }}
       />
     </SafeAreaView>

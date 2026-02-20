@@ -77,6 +77,13 @@ function rarityByIndex(index: number): "common" | "rare" | "epic" | "legendary" 
   return "common";
 }
 
+function rarityPriority(rarity?: "common" | "rare" | "epic" | "legendary") {
+  if (rarity === "legendary") return 4;
+  if (rarity === "epic") return 3;
+  if (rarity === "rare") return 2;
+  return 1;
+}
+
 function toBase64Url(value: string) {
   return Buffer.from(value, "utf8").toString("base64url");
 }
@@ -505,30 +512,35 @@ export class MockStoreService {
     };
   }
 
-  checkPlaceVisit(payload: { userId: string; lat: number; lng: number; radiusM: number }) {
-    const { userId, lat, lng, radiusM } = payload;
-    const candidate = this.places
-      .map((place) => ({ place, distanceM: distanceInMeters(lat, lng, place.lat, place.lng) }))
+  checkPlaceVisit(payload: { userId: string; lat: number; lng: number; radiusM: number; excludePlaceIds?: string[] }) {
+    const { userId, lat, lng, radiusM, excludePlaceIds = [] } = payload;
+    const excluded = new Set(excludePlaceIds);
+    const collected = new Set(
+      this.userPlaceVisits.filter((visit) => visit.userId === userId).map((visit) => visit.placeId),
+    );
+    const candidates = this.places
+      .map((place) => ({
+        place,
+        distanceM: distanceInMeters(lat, lng, place.lat, place.lng),
+        card: this.cards.find((item) => item.placeId === place.id) ?? null,
+      }))
       .filter((row) => row.distanceM <= radiusM)
-      .sort((a, b) => a.distanceM - b.distanceM)[0];
+      .filter((row) => !excluded.has(row.place.id))
+      .filter((row) => !collected.has(row.place.id))
+      .sort((a, b) => {
+        const distanceDiff = a.distanceM - b.distanceM;
+        if (Math.abs(distanceDiff) > 0.1) return distanceDiff;
+        const rarityDiff = rarityPriority(b.card?.rarity) - rarityPriority(a.card?.rarity);
+        if (rarityDiff !== 0) return rarityDiff;
+        return a.place.id.localeCompare(b.place.id);
+      });
+    const candidate = candidates[0];
 
     if (!candidate) {
       return {
         matched: false,
         collected: false,
-      };
-    }
-
-    const existing = this.userPlaceVisits.find(
-      (visit) => visit.userId === userId && visit.placeId === candidate.place.id,
-    );
-    if (existing) {
-      return {
-        matched: true,
-        collected: false,
-        reason: "already_collected",
-        place: candidate.place,
-        distanceM: Math.round(candidate.distanceM),
+        remainingCollectableCount: 0,
       };
     }
 
@@ -540,7 +552,7 @@ export class MockStoreService {
       lat,
       lng,
     });
-    const card = this.cards.find((item) => item.placeId === candidate.place.id) ?? null;
+    const card = candidate.card;
 
     return {
       matched: true,
@@ -549,6 +561,7 @@ export class MockStoreService {
       card,
       distanceM: Math.round(candidate.distanceM),
       collectedAt: now,
+      remainingCollectableCount: Math.max(0, candidates.length - 1),
     };
   }
 

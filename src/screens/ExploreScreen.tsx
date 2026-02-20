@@ -13,7 +13,6 @@ import {
   ExplorePlaceDetailSheet,
   ExplorePlaceListSheet,
   ExploreMapView,
-  ExploreVisitResultModal,
 } from "./widgets/explore";
 
 let hasShownInitialLocationError = false;
@@ -29,10 +28,6 @@ type Props = {
   locationError: string | null;
   onRefreshLocation: () => Promise<RefreshLocationResult>;
   onCheckVisit: () => void;
-  visitDialogVisible: boolean;
-  visitDialogTitle: string;
-  visitDialogMessage: string;
-  onCloseVisitDialog: () => void;
   onOpenDetail: (place: PlaceItem) => void;
   onLoadMore: () => void;
   bottomOverlayOffset?: number;
@@ -55,10 +50,6 @@ export function ExploreScreen({
   locationError,
   onRefreshLocation,
   onCheckVisit,
-  visitDialogVisible,
-  visitDialogTitle,
-  visitDialogMessage,
-  onCloseVisitDialog,
   onOpenDetail,
   onLoadMore,
   bottomOverlayOffset = 0,
@@ -333,13 +324,6 @@ export function ExploreScreen({
         onClose={() => setFocusedPlace(null)}
         bottomOffset={bottomOverlayOffset}
         onExpandedChange={onDetailExpandedChange}
-      />
-
-      <ExploreVisitResultModal
-        visible={visitDialogVisible}
-        title={visitDialogTitle}
-        message={visitDialogMessage}
-        onClose={onCloseVisitDialog}
       />
     </View>
   );

@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsArray, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class VisitCheckRequestDto {
   @IsString()
@@ -13,6 +13,11 @@ export class VisitCheckRequestDto {
   @IsOptional()
   @IsNumber()
   @Min(10)
-  @Max(500)
+  @Max(2000)
   radiusM?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  excludePlaceIds?: string[];
 }

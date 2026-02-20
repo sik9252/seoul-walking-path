@@ -49,6 +49,9 @@ export type VisitCheckResponse = {
   matched?: boolean;
   collected?: boolean;
   place?: PlaceItem;
-  card?: { title?: string };
+  card?: { title?: string; rarity?: "common" | "rare" | "epic" | "legendary"; imageUrl?: string | null };
   reason?: string;
+  distanceM?: number;
+  collectedAt?: string;
+  remainingCollectableCount?: number;
 };

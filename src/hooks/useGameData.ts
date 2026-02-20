@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import {
   CATALOG_PAGE_SIZE,
   checkVisitWithUser,
+  CheckVisitRequest,
   fetchCardCatalogPage,
   fetchMyCards,
   fetchPlacesPage,
@@ -50,51 +51,26 @@ export type VisitDialogPayload = {
 export function useVisitMutation(
   apiBaseUrl?: string,
   userId?: string,
-  options?: {
-    onOpenDialog?: (payload: VisitDialogPayload) => void;
-  },
 ) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => checkVisitWithUser(apiBaseUrl as string, userId as string),
+    mutationFn: (payload: Omit<CheckVisitRequest, "userId">) =>
+      checkVisitWithUser(apiBaseUrl as string, {
+        userId: userId as string,
+        ...payload,
+      }),
     onSuccess: async (payload) => {
-      if (!payload.matched) {
-        options?.onOpenDialog?.({
-          title: "방문 실패",
-          message: "반경 내 관광지가 없어요.",
-        });
-        return;
-      }
-      if (payload.collected) {
-        options?.onOpenDialog?.({
-          title: "카드 획득",
-          message: `${payload.place?.name ?? "관광지"} 카드를 획득했어요.`,
-        });
-      } else {
-        options?.onOpenDialog?.({
-          title: "이미 수집됨",
-          message: `${payload.place?.name ?? "관광지"}는 이미 수집한 장소예요.`,
-        });
-      }
-      if (payload.collected) {
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ["cards", "my", apiBaseUrl, userId],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["cards", "catalog", apiBaseUrl],
-            refetchType: "all",
-          }),
-        ]);
-      }
-    },
-    onError: (error) => {
-      console.warn("[app] checkVisit failed", error);
-      options?.onOpenDialog?.({
-        title: "오류",
-        message: "방문 판정 중 문제가 발생했어요.",
-      });
+      if (!payload.collected) return;
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["cards", "my", apiBaseUrl, userId],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["cards", "catalog", apiBaseUrl],
+          refetchType: "all",
+        }),
+      ]);
     },
   });
 }

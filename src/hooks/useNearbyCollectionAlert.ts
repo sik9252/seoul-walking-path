@@ -8,6 +8,7 @@ type Props = {
   location: UserLocationState | null;
   radiusM?: number;
   enabled?: boolean;
+  onCollectNearby?: (place: PlaceItem) => void;
 };
 
 let isNotificationConfigured = false;
@@ -69,8 +70,11 @@ export function useNearbyCollectionAlert({
   location,
   radiusM = 30,
   enabled = true,
+  onCollectNearby,
 }: Props) {
   const notifiedPlaceIdsRef = React.useRef<Set<string>>(new Set());
+  const isAlertOpenRef = React.useRef(false);
+  const lastAlertAtRef = React.useRef(0);
 
   React.useEffect(() => {
     if (!enabled || !location || places.length === 0) return;
@@ -91,11 +95,41 @@ export function useNearbyCollectionAlert({
 
     if (!nearest) return;
     if (notifiedPlaceIdsRef.current.has(nearest.place.id)) return;
+    if (isAlertOpenRef.current) return;
+    const now = Date.now();
+    if (now - lastAlertAtRef.current < 4000) return;
 
     notifiedPlaceIdsRef.current.add(nearest.place.id);
+    lastAlertAtRef.current = now;
     const message = `${nearest.place.name} 카드를 수집할 수 있어요`;
     Vibration.vibrate(250);
-    Alert.alert("근처 스팟 발견", message);
+    isAlertOpenRef.current = true;
+    Alert.alert(
+      "근처 스팟 발견",
+      message,
+      [
+        {
+          text: "닫기",
+          style: "cancel",
+          onPress: () => {
+            isAlertOpenRef.current = false;
+          },
+        },
+        {
+          text: "수집하기",
+          onPress: () => {
+            isAlertOpenRef.current = false;
+            onCollectNearby?.(nearest.place);
+          },
+        },
+      ],
+      {
+        cancelable: true,
+        onDismiss: () => {
+          isAlertOpenRef.current = false;
+        },
+      },
+    );
     void tryPushLocalNotification("근처 스팟 발견", message);
-  }, [enabled, location, places, radiusM]);
+  }, [enabled, location, onCollectNearby, places, radiusM]);
 }

@@ -13,6 +13,7 @@ export class VisitsController {
       lat: body.lat,
       lng: body.lng,
       radiusM: body.radiusM ?? 50,
+      excludePlaceIds: body.excludePlaceIds ?? [],
     });
   }
 }

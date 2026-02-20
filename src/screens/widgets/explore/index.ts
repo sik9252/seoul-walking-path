@@ -5,3 +5,4 @@ export * from "./ExploreMapView";
 export * from "./ExplorePlaceListSheet";
 export * from "./ExplorePlaceDetailSheet";
 export * from "./ExploreVisitResultModal";
+export * from "./ExploreCardRewardModal";
