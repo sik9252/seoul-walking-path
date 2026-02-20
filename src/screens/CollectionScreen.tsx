@@ -61,8 +61,8 @@ export function CollectionScreen({
 }: Props) {
   const selectedAreaCode = selectedCategory === "all" ? undefined : selectedCategory;
   const selectedRegion = selectedAreaCode ? REGION_LABELS_BY_CODE[selectedAreaCode] : undefined;
-  const allCatalogQuery = useCardCatalogQuery(apiBaseUrl, userId, undefined);
-  const catalogQuery = useCardCatalogQuery(apiBaseUrl, userId, selectedRegion);
+  const allCatalogQuery = useCardCatalogQuery(apiBaseUrl, userId, undefined, "collected_first");
+  const catalogQuery = useCardCatalogQuery(apiBaseUrl, userId, selectedRegion, "collected_first");
   const catalogItems = React.useMemo(
     () => (catalogQuery.data?.pages ?? []).flatMap((page) => page.items),
     [catalogQuery.data?.pages],

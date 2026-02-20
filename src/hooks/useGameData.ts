@@ -30,12 +30,18 @@ export function useMyCardsQuery(apiBaseUrl?: string, userId?: string) {
   });
 }
 
-export function useCardCatalogQuery(apiBaseUrl?: string, userId?: string, region?: string) {
+export function useCardCatalogQuery(
+  apiBaseUrl?: string,
+  userId?: string,
+  region?: string,
+  sort: "collected_first" | "default" = "collected_first",
+) {
   return useInfiniteQuery({
-    queryKey: ["cards", "catalog", apiBaseUrl, userId, region ?? "all", CATALOG_PAGE_SIZE],
+    queryKey: ["cards", "catalog", apiBaseUrl, userId, region ?? "all", sort, CATALOG_PAGE_SIZE],
     enabled: Boolean(apiBaseUrl && userId),
     initialPageParam: 1,
-    queryFn: ({ pageParam }) => fetchCardCatalogPage(apiBaseUrl as string, pageParam, userId as string, region),
+    queryFn: ({ pageParam }) =>
+      fetchCardCatalogPage(apiBaseUrl as string, pageParam, userId as string, region, sort),
     getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,

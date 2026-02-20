@@ -565,11 +565,18 @@ export class MockStoreService {
     };
   }
 
-  getCardCatalog(params?: { page?: number; pageSize?: number; userId?: string; region?: string }) {
+  getCardCatalog(params?: {
+    page?: number;
+    pageSize?: number;
+    userId?: string;
+    region?: string;
+    sort?: string;
+  }) {
     const safePage = Math.max(1, Math.floor(params?.page ?? 1));
     const safePageSize = Math.min(100, Math.max(1, Math.floor(params?.pageSize ?? 20)));
     const userId = params?.userId ?? DEMO_USER_ID;
     const region = params?.region?.trim();
+    const sort = params?.sort?.trim();
     const acquiredPlaceIds = new Set(
       this.userPlaceVisits.filter((visit) => visit.userId === userId).map((visit) => visit.placeId),
     );
@@ -585,6 +592,16 @@ export class MockStoreService {
 
     if (region) {
       rows = rows.filter((row) => row.place?.region === region);
+    }
+
+    if (sort === "collected_first") {
+      rows = [...rows].sort((a, b) => {
+        const collectedDiff = Number(b.collected) - Number(a.collected);
+        if (collectedDiff !== 0) return collectedDiff;
+        const rarityDiff = rarityPriority(b.rarity) - rarityPriority(a.rarity);
+        if (rarityDiff !== 0) return rarityDiff;
+        return a.title.localeCompare(b.title);
+      });
     }
 
     const startIndex = (safePage - 1) * safePageSize;

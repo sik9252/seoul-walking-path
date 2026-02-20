@@ -11,12 +11,14 @@ export class CardsController {
     @Query("pageSize") pageSize?: string,
     @Query("userId") userId?: string,
     @Query("region") region?: string,
+    @Query("sort") sort?: string,
   ) {
     return this.store.getCardCatalog({
       page: page ? Number(page) : 1,
       pageSize: pageSize ? Number(pageSize) : 20,
       userId: userId ?? "demo-user",
       region,
+      sort,
     });
   }
 

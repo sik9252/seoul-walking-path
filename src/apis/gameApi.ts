@@ -57,7 +57,13 @@ export async function fetchMyCards(apiBaseUrl: string, userId: string) {
   return fetchJson<MyCard[]>(`${apiBaseUrl}/cards/my?userId=${encodeURIComponent(userId)}`);
 }
 
-export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, userId: string, region?: string) {
+export async function fetchCardCatalogPage(
+  apiBaseUrl: string,
+  page: number,
+  userId: string,
+  region?: string,
+  sort: "collected_first" | "default" = "collected_first",
+) {
   const params = new URLSearchParams({
     userId,
     page: String(page),
@@ -65,6 +71,9 @@ export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, use
   });
   if (region) {
     params.set("region", region);
+  }
+  if (sort !== "default") {
+    params.set("sort", sort);
   }
   return fetchJson<CatalogCardPage>(`${apiBaseUrl}/cards/catalog?${params.toString()}`);
 }
