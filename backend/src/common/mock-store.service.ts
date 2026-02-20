@@ -1,9 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { Injectable } from "@nestjs/common";
-import { PlaceCard, PlaceItem, UserVisitItem } from "./models";
+import { AuthProviderLink, AuthUser, PlaceCard, PlaceItem, RefreshTokenSession, UserVisitItem } from "./models";
 
 const DEMO_USER_ID = "demo-user";
+const ACCESS_TOKEN_TTL_SECONDS = 60 * 30;
+const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 14;
 
 type TourPlaceSnapshot = {
   places: Array<{
@@ -70,15 +73,62 @@ function rarityByIndex(index: number): "common" | "rare" | "epic" {
   return "common";
 }
 
+function toBase64Url(value: string) {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+
+function fromBase64Url(value: string) {
+  return Buffer.from(value, "base64url").toString("utf8");
+}
+
+function passwordHash(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const digest = scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${digest}`;
+}
+
+function verifyPassword(password: string, stored: string) {
+  const [salt, digest] = stored.split(":");
+  if (!salt || !digest) return false;
+  const compared = scryptSync(password, salt, 64).toString("hex");
+  return timingSafeEqual(Buffer.from(digest, "hex"), Buffer.from(compared, "hex"));
+}
+
+function sha256(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function randomId(prefix: string) {
+  return `${prefix}_${randomBytes(8).toString("hex")}`;
+}
+
 @Injectable()
 export class MockStoreService {
   private places: PlaceItem[] = [];
   private cards: PlaceCard[] = [];
   private userPlaceVisits: UserVisitItem[] = [];
+  private users: AuthUser[] = [];
+  private authProviders: AuthProviderLink[] = [];
+  private refreshSessions: RefreshTokenSession[] = [];
+  private readonly jwtSecret = process.env.AUTH_JWT_SECRET ?? "dev-auth-secret";
 
   constructor() {
+    this.bootstrapAuthData();
     this.bootstrapPlaceData();
     this.bootstrapDemoVisits();
+  }
+
+  private bootstrapAuthData() {
+    const now = new Date().toISOString();
+    this.users = [
+      {
+        id: DEMO_USER_ID,
+        email: "demo@seoulwalk.app",
+        passwordHash: passwordHash("demo1234"),
+        displayName: "Demo",
+        createdAt: now,
+      },
+    ];
   }
 
   private bootstrapPlaceData() {
@@ -159,6 +209,169 @@ export class MockStoreService {
       lat: place.lat,
       lng: place.lng,
     }));
+  }
+
+  private createAccessToken(userId: string) {
+    const payload = {
+      sub: userId,
+      type: "access",
+      exp: Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECONDS,
+    };
+    const headerEncoded = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payloadEncoded = toBase64Url(JSON.stringify(payload));
+    const signature = createHmac("sha256", this.jwtSecret)
+      .update(`${headerEncoded}.${payloadEncoded}`)
+      .digest("base64url");
+    return `${headerEncoded}.${payloadEncoded}.${signature}`;
+  }
+
+  private verifyAccessToken(token: string) {
+    const [headerEncoded, payloadEncoded, signature] = token.split(".");
+    if (!headerEncoded || !payloadEncoded || !signature) return null;
+    const expected = createHmac("sha256", this.jwtSecret).update(`${headerEncoded}.${payloadEncoded}`).digest("base64url");
+    if (expected !== signature) return null;
+    try {
+      const payload = JSON.parse(fromBase64Url(payloadEncoded)) as { sub?: string; exp?: number; type?: string };
+      if (payload.type !== "access" || !payload.sub || !payload.exp) return null;
+      if (payload.exp * 1000 < Date.now()) return null;
+      return payload.sub;
+    } catch {
+      return null;
+    }
+  }
+
+  private createRefreshTokenSession(userId: string) {
+    const token = randomBytes(48).toString("base64url");
+    const now = Date.now();
+    const session: RefreshTokenSession = {
+      id: randomId("rt"),
+      userId,
+      refreshTokenHash: sha256(token),
+      expiresAt: new Date(now + REFRESH_TOKEN_TTL_SECONDS * 1000).toISOString(),
+      createdAt: new Date(now).toISOString(),
+    };
+    this.refreshSessions.push(session);
+    return { session, rawToken: token };
+  }
+
+  private buildAuthResponse(user: AuthUser, refreshToken: string) {
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+      },
+      accessToken: this.createAccessToken(user.id),
+      refreshToken,
+      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+    };
+  }
+
+  signup(payload: { email: string; password: string; displayName?: string }) {
+    const email = payload.email.trim().toLowerCase();
+    if (this.users.some((user) => user.email.toLowerCase() === email)) {
+      return { ok: false as const, reason: "email_exists" };
+    }
+    const now = new Date().toISOString();
+    const user: AuthUser = {
+      id: randomId("user"),
+      email,
+      passwordHash: passwordHash(payload.password),
+      displayName: payload.displayName?.trim() || email.split("@")[0] || "사용자",
+      createdAt: now,
+    };
+    this.users.push(user);
+    const { rawToken } = this.createRefreshTokenSession(user.id);
+    return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
+  }
+
+  login(payload: { email: string; password: string }) {
+    const email = payload.email.trim().toLowerCase();
+    const user = this.users.find((item) => item.email.toLowerCase() === email);
+    if (!user?.passwordHash) {
+      return { ok: false as const, reason: "invalid_credentials" };
+    }
+    if (!verifyPassword(payload.password, user.passwordHash)) {
+      return { ok: false as const, reason: "invalid_credentials" };
+    }
+    const { rawToken } = this.createRefreshTokenSession(user.id);
+    return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
+  }
+
+  loginWithKakao(payload: { kakaoUserId: string; email?: string; nickname?: string }) {
+    const providerUserId = payload.kakaoUserId.trim();
+    const linked = this.authProviders.find((item) => item.provider === "kakao" && item.providerUserId === providerUserId);
+    if (linked) {
+      const user = this.users.find((item) => item.id === linked.userId);
+      if (!user) {
+        return { ok: false as const, reason: "user_not_found" };
+      }
+      const { rawToken } = this.createRefreshTokenSession(user.id);
+      return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
+    }
+
+    const now = new Date().toISOString();
+    const email = payload.email?.trim().toLowerCase() || `kakao_${providerUserId}@seoulwalk.local`;
+    let user = this.users.find((item) => item.email.toLowerCase() === email);
+    if (!user) {
+      user = {
+        id: randomId("user"),
+        email,
+        displayName: payload.nickname?.trim() || "카카오 사용자",
+        createdAt: now,
+      };
+      this.users.push(user);
+    }
+    this.authProviders.push({
+      id: randomId("provider"),
+      userId: user.id,
+      provider: "kakao",
+      providerUserId,
+      createdAt: now,
+    });
+    const { rawToken } = this.createRefreshTokenSession(user.id);
+    return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
+  }
+
+  refresh(payload: { refreshToken: string }) {
+    const tokenHash = sha256(payload.refreshToken);
+    const found = this.refreshSessions.find((item) => item.refreshTokenHash === tokenHash && !item.revokedAt);
+    if (!found) {
+      return { ok: false as const, reason: "invalid_refresh_token" };
+    }
+    if (new Date(found.expiresAt).getTime() < Date.now()) {
+      found.revokedAt = new Date().toISOString();
+      return { ok: false as const, reason: "refresh_token_expired" };
+    }
+    found.revokedAt = new Date().toISOString();
+    const user = this.users.find((item) => item.id === found.userId);
+    if (!user) {
+      return { ok: false as const, reason: "user_not_found" };
+    }
+    const { rawToken } = this.createRefreshTokenSession(user.id);
+    return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
+  }
+
+  logout(payload: { refreshToken: string }) {
+    const tokenHash = sha256(payload.refreshToken);
+    const found = this.refreshSessions.find((item) => item.refreshTokenHash === tokenHash && !item.revokedAt);
+    if (found) {
+      found.revokedAt = new Date().toISOString();
+    }
+    return { ok: true as const };
+  }
+
+  getUserByAccessToken(token?: string) {
+    if (!token) return null;
+    const userId = this.verifyAccessToken(token);
+    if (!userId) return null;
+    const user = this.users.find((item) => item.id === userId);
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+    };
   }
 
   getPlaces(params: {

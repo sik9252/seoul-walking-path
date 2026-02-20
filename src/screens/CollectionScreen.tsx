@@ -16,6 +16,7 @@ import {
 type Props = {
   cards: MyCard[];
   apiBaseUrl?: string;
+  userId?: string;
   loadingMyCards: boolean;
   myCardsError: boolean;
   selectedCategory: CollectionCategory;
@@ -50,6 +51,7 @@ const REGION_LABELS_BY_CODE: Record<string, string> = Object.fromEntries(
 export function CollectionScreen({
   cards,
   apiBaseUrl,
+  userId,
   loadingMyCards,
   myCardsError,
   selectedCategory,
@@ -58,7 +60,7 @@ export function CollectionScreen({
 }: Props) {
   const selectedAreaCode = selectedCategory === "all" ? undefined : selectedCategory;
   const selectedRegion = selectedAreaCode ? REGION_LABELS_BY_CODE[selectedAreaCode] : undefined;
-  const catalogQuery = useCardCatalogQuery(apiBaseUrl, selectedRegion);
+  const catalogQuery = useCardCatalogQuery(apiBaseUrl, userId, selectedRegion);
   const catalogItems = React.useMemo(
     () => (catalogQuery.data?.pages ?? []).flatMap((page) => page.items),
     [catalogQuery.data?.pages],

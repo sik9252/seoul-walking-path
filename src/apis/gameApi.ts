@@ -1,7 +1,6 @@
 import { Platform } from "react-native";
-import { CatalogCardPage, PlacePage, MyCard, VisitCheckResponse } from "../types/gameTypes";
+import { CatalogCardPage, MyCard, PlacePage, VisitCheckResponse } from "../types/gameTypes";
 
-export const DEMO_USER_ID = "demo-user";
 export const DEMO_LAT = 37.579617;
 export const DEMO_LNG = 126.977041;
 export const PAGE_SIZE = 20;
@@ -54,13 +53,13 @@ export async function fetchPlacesByViewport(
   return page.items;
 }
 
-export async function fetchMyCards(apiBaseUrl: string) {
-  return fetchJson<MyCard[]>(`${apiBaseUrl}/cards/my?userId=${DEMO_USER_ID}`);
+export async function fetchMyCards(apiBaseUrl: string, userId: string) {
+  return fetchJson<MyCard[]>(`${apiBaseUrl}/cards/my?userId=${encodeURIComponent(userId)}`);
 }
 
-export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, region?: string) {
+export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, userId: string, region?: string) {
   const params = new URLSearchParams({
-    userId: DEMO_USER_ID,
+    userId,
     page: String(page),
     pageSize: String(CATALOG_PAGE_SIZE),
   });
@@ -70,12 +69,12 @@ export async function fetchCardCatalogPage(apiBaseUrl: string, page: number, reg
   return fetchJson<CatalogCardPage>(`${apiBaseUrl}/cards/catalog?${params.toString()}`);
 }
 
-export async function checkVisit(apiBaseUrl: string) {
+export async function checkVisitWithUser(apiBaseUrl: string, userId: string) {
   return fetchJson<VisitCheckResponse>(`${apiBaseUrl}/visits/check`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      userId: DEMO_USER_ID,
+      userId,
       lat: DEMO_LAT,
       lng: DEMO_LNG,
       radiusM: 50,

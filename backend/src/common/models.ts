@@ -26,3 +26,28 @@ export type UserVisitItem = {
   lat: number;
   lng: number;
 };
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  passwordHash?: string;
+  displayName: string;
+  createdAt: string;
+};
+
+export type AuthProviderLink = {
+  id: string;
+  userId: string;
+  provider: "kakao";
+  providerUserId: string;
+  createdAt: string;
+};
+
+export type RefreshTokenSession = {
+  id: string;
+  userId: string;
+  refreshTokenHash: string;
+  expiresAt: string;
+  revokedAt?: string;
+  createdAt: string;
+};

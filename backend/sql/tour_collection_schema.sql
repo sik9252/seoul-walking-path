@@ -53,3 +53,32 @@ create table if not exists user_cards (
 );
 
 create index if not exists idx_user_cards_user_id on user_cards(user_id);
+
+-- auth domain
+create table if not exists users (
+  id varchar primary key,
+  email varchar not null unique,
+  password_hash varchar,
+  display_name varchar not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists auth_providers (
+  id varchar primary key,
+  user_id varchar not null references users(id) on delete cascade,
+  provider varchar not null,
+  provider_user_id varchar not null,
+  created_at timestamptz not null default now(),
+  constraint uniq_auth_provider unique (provider, provider_user_id)
+);
+
+create table if not exists refresh_tokens (
+  id varchar primary key,
+  user_id varchar not null references users(id) on delete cascade,
+  refresh_token_hash varchar not null unique,
+  expires_at timestamptz not null,
+  revoked_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_refresh_tokens_user_id on refresh_tokens(user_id);

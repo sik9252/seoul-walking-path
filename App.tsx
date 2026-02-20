@@ -4,21 +4,25 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { Button, TabBar, TabItem } from "./src/components/ui";
+import { getSessionUser, logoutSession, refreshSession } from "./src/apis/authApi";
 import { getApiBaseUrl } from "./src/apis/gameApi";
+import { Button, TabBar, TabItem } from "./src/components/ui";
+import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
+import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
+import { useUserLocation } from "./src/hooks/useUserLocation";
+import { AuthScreen } from "./src/screens/AuthScreen";
 import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
-import { useUserLocation } from "./src/hooks/useUserLocation";
-import { useNearbyCollectionAlert } from "./src/hooks/useNearbyCollectionAlert";
-import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
+import { ExploreVisitResultModal } from "./src/screens/widgets/explore";
 import { CollectionCategory } from "./src/screens/widgets/collection";
+import { AuthSession, clearAuthSession, getAuthSession, setAuthSession } from "./src/storage/authSession";
 import { getOnboardingCompleted, setOnboardingCompleted } from "./src/storage/startupFlags";
 import { gameStyles as styles } from "./src/styles/gameStyles";
 import { GameTab, PlaceItem } from "./src/types/gameTypes";
 import { colors } from "./src/theme/tokens";
 
 const queryClient = new QueryClient();
-type StartupStep = "splash" | "onboarding" | "permission" | "home";
+type StartupStep = "splash" | "onboarding" | "auth" | "home";
 type OnboardingSlide = {
   title: string;
   body: string;
@@ -55,10 +59,12 @@ export default function App() {
 
 function AppShell() {
   const [startupStep, setStartupStep] = React.useState<StartupStep>("splash");
-  const [isRequestingPermission, setIsRequestingPermission] = React.useState(false);
+  const [authSession, setAuthSessionState] = React.useState<AuthSession | null>(null);
+  const [isGuestMode, setIsGuestMode] = React.useState(false);
+  const [isRequestingAuthFlow, setIsRequestingAuthFlow] = React.useState(false);
   const [onboardingIndex, setOnboardingIndex] = React.useState(0);
   const [splashProgress, setSplashProgress] = React.useState(0.1);
-  const [splashStatus, setSplashStatus] = React.useState("권한 상태를 확인하는 중...");
+  const [splashStatus, setSplashStatus] = React.useState("초기 상태를 확인하는 중...");
   const [tab, setTab] = React.useState<GameTab>("explore");
   const [collectionCategory, setCollectionCategory] = React.useState<CollectionCategory>("all");
   const [tabBarHeight, setTabBarHeight] = React.useState(0);
@@ -78,11 +84,14 @@ function AppShell() {
     title: "",
     message: "",
   });
+  const [authRequiredDialogVisible, setAuthRequiredDialogVisible] = React.useState(false);
+
   const apiBaseUrl = getApiBaseUrl();
+  const activeUserId = authSession?.user.id ?? (isGuestMode ? "guest-user" : undefined);
 
   const placesQuery = usePlacesQuery(apiBaseUrl);
-  const cardsQuery = useMyCardsQuery(apiBaseUrl);
-  const visitMutation = useVisitMutation(apiBaseUrl, {
+  const cardsQuery = useMyCardsQuery(apiBaseUrl, authSession?.user.id);
+  const visitMutation = useVisitMutation(apiBaseUrl, authSession?.user.id, {
     onOpenDialog: ({ title, message }) =>
       setVisitDialog({
         visible: true,
@@ -90,8 +99,7 @@ function AppShell() {
         message,
       }),
   });
-  const { location, isLoadingLocation, locationError, refreshLocation, refreshLocationWithOptions, getPermissionStatus, clearLocationError } =
-    useUserLocation();
+  const { location, isLoadingLocation, locationError, refreshLocation } = useUserLocation();
 
   const places = React.useMemo(
     () => (placesQuery.data?.pages ?? []).flatMap((page) => page.items),
@@ -109,7 +117,7 @@ function AppShell() {
     places,
     location,
     radiusM: 120,
-    enabled: tab === "explore",
+    enabled: tab === "explore" && Boolean(authSession),
   });
 
   React.useEffect(() => {
@@ -117,51 +125,61 @@ function AppShell() {
     const startedAt = Date.now();
     const minSplashMs = 1200;
 
-    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
     const runBootstrap = async () => {
       try {
         const onboardingCompleted = await getOnboardingCompleted();
 
-        setSplashStatus("권한 상태를 확인하는 중...");
+        setSplashStatus("온보딩 상태를 확인하는 중...");
         setSplashProgress(0.33);
-        const permissionStatus = await getPermissionStatus();
 
-        setSplashStatus("컬렉션 상태를 확인하는 중...");
+        setSplashStatus("로그인 세션을 확인하는 중...");
         setSplashProgress(0.66);
-        if (apiBaseUrl) {
-          await cardsQuery.refetch();
+        const savedSession = await getAuthSession();
+
+        let restoredSession: AuthSession | null = null;
+        if (savedSession && apiBaseUrl) {
+          try {
+            await getSessionUser(apiBaseUrl, savedSession.accessToken);
+            restoredSession = savedSession;
+          } catch {
+            try {
+              const refreshed = await refreshSession(apiBaseUrl, savedSession.refreshToken);
+              restoredSession = {
+                user: refreshed.user,
+                accessToken: refreshed.accessToken,
+                refreshToken: refreshed.refreshToken,
+              };
+              await setAuthSession(restoredSession);
+            } catch {
+              await clearAuthSession();
+            }
+          }
         }
 
-        let nextStep: StartupStep;
-        if (!onboardingCompleted) {
-          nextStep = "onboarding";
-        } else if (permissionStatus === "granted") {
-          setSplashStatus("위치 준비를 확인하는 중...");
-          setSplashProgress(0.9);
-          await refreshLocationWithOptions({ requestIfNeeded: false });
-          nextStep = "home";
-        } else {
-          setSplashStatus("위치 준비를 확인하는 중...");
-          setSplashProgress(0.9);
-          nextStep = "permission";
-        }
+        setAuthSessionState(restoredSession);
+        setIsGuestMode(false);
+
+        setSplashStatus("앱 진입 준비 중...");
+        setSplashProgress(0.9);
+
+        const nextStep: StartupStep = !onboardingCompleted ? "onboarding" : restoredSession ? "home" : "auth";
 
         const elapsed = Date.now() - startedAt;
         if (elapsed < minSplashMs) {
           await new Promise((resolve) => setTimeout(resolve, minSplashMs - elapsed));
         }
+
         if (cancelled) return;
         setSplashProgress(1);
-        await sleep(220);
+        await new Promise((resolve) => setTimeout(resolve, 220));
         if (cancelled) return;
         setStartupStep(nextStep);
       } catch {
         if (cancelled) return;
         setSplashProgress(1);
-        await sleep(220);
+        await new Promise((resolve) => setTimeout(resolve, 220));
         if (cancelled) return;
-        setStartupStep("onboarding");
+        setStartupStep("auth");
       }
     };
 
@@ -170,19 +188,7 @@ function AppShell() {
     return () => {
       cancelled = true;
     };
-  }, [apiBaseUrl, cardsQuery.refetch, getPermissionStatus, refreshLocationWithOptions]);
-
-  const handlePermissionRequest = React.useCallback(async () => {
-    setIsRequestingPermission(true);
-    const result = await refreshLocation();
-    if (result.ok) {
-      clearLocationError();
-      setStartupStep("home");
-      setIsRequestingPermission(false);
-      return;
-    }
-    setIsRequestingPermission(false);
-  }, [clearLocationError, refreshLocation]);
+  }, [apiBaseUrl]);
 
   const handleOnboardingNext = React.useCallback(async () => {
     const isLast = onboardingIndex >= ONBOARDING_SLIDES.length - 1;
@@ -191,32 +197,46 @@ function AppShell() {
       return;
     }
 
-    setIsRequestingPermission(true);
+    setIsRequestingAuthFlow(true);
     try {
       await setOnboardingCompleted(true);
-      const permissionStatus = await getPermissionStatus();
-      if (permissionStatus === "granted") {
-        await refreshLocationWithOptions({ requestIfNeeded: false });
-        clearLocationError();
-        setStartupStep("home");
-        return;
-      }
-      setStartupStep("permission");
+      setStartupStep(authSession || isGuestMode ? "home" : "auth");
     } finally {
-      setIsRequestingPermission(false);
+      setIsRequestingAuthFlow(false);
     }
-  }, [clearLocationError, getPermissionStatus, onboardingIndex, refreshLocationWithOptions]);
-
-  const handleContinueWithoutPermission = React.useCallback(() => {
-    clearLocationError();
-    setStartupStep("home");
-  }, [clearLocationError]);
+  }, [authSession, isGuestMode, onboardingIndex]);
 
   const handleReplayTutorial = React.useCallback(() => {
     setOnboardingIndex(0);
-    clearLocationError();
     setStartupStep("onboarding");
-  }, [clearLocationError]);
+  }, []);
+
+  const handleAuthenticated = React.useCallback(async (session: AuthSession) => {
+    await setAuthSession(session);
+    setAuthSessionState(session);
+    setIsGuestMode(false);
+    setStartupStep("home");
+  }, []);
+
+  const handleContinueGuest = React.useCallback(() => {
+    setAuthSessionState(null);
+    setIsGuestMode(true);
+    setStartupStep("home");
+  }, []);
+
+  const handleLogout = React.useCallback(async () => {
+    if (apiBaseUrl && authSession?.refreshToken) {
+      try {
+        await logoutSession(apiBaseUrl, authSession.refreshToken);
+      } catch {
+        // noop
+      }
+    }
+    await clearAuthSession();
+    setAuthSessionState(null);
+    setIsGuestMode(false);
+    setStartupStep("auth");
+  }, [apiBaseUrl, authSession?.refreshToken]);
 
   const handleLocatePlaceFromCollection = React.useCallback((place: PlaceItem) => {
     setTab("explore");
@@ -232,33 +252,21 @@ function AppShell() {
       key: "explore",
       label: "탐험",
       renderIcon: (active) => (
-        <Ionicons
-          name={active ? "compass" : "compass-outline"}
-          size={18}
-          color={active ? colors.brand[700] : colors.base.text}
-        />
+        <Ionicons name={active ? "compass" : "compass-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
       ),
     },
     {
       key: "collection",
       label: "컬렉션",
       renderIcon: (active) => (
-        <Ionicons
-          name={active ? "albums" : "albums-outline"}
-          size={18}
-          color={active ? colors.brand[700] : colors.base.text}
-        />
+        <Ionicons name={active ? "albums" : "albums-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
       ),
     },
     {
       key: "my",
-      label: "마이",
+      label: "설정",
       renderIcon: (active) => (
-        <Ionicons
-          name={active ? "person" : "person-outline"}
-          size={18}
-          color={active ? colors.brand[700] : colors.base.text}
-        />
+        <Ionicons name={active ? "person" : "person-outline"} size={18} color={active ? colors.brand[700] : colors.base.text} />
       ),
     },
   ];
@@ -298,41 +306,20 @@ function AppShell() {
         </View>
         <View style={startupStyles.footer}>
           <Button
-            label={isRequestingPermission ? "확인 중..." : isLastSlide ? "시작하기" : "다음"}
+            label={isRequestingAuthFlow ? "확인 중..." : isLastSlide ? "시작하기" : "다음"}
             onPress={() => void handleOnboardingNext()}
-            disabled={isRequestingPermission}
+            disabled={isRequestingAuthFlow}
           />
         </View>
       </SafeAreaView>
     );
   }
 
-  if (startupStep === "permission") {
+  if (startupStep === "auth") {
     return (
       <SafeAreaView edges={["top", "bottom"]} style={startupStyles.safe}>
         <StatusBar style="dark" />
-        <View style={startupStyles.center}>
-          <Ionicons name="location-outline" size={48} color={colors.brand[700]} />
-          <Text style={startupStyles.onboardingTitle}>위치 권한 안내</Text>
-          <Text style={startupStyles.onboardingBody}>
-            현재 위치를 기반으로 주변 스팟을 정확하게 보여주기 위해 위치 권한이 필요합니다.
-          </Text>
-          {locationError ? <Text style={startupStyles.permissionError}>{locationError}</Text> : null}
-        </View>
-        <View style={startupStyles.footer}>
-          <Button
-            label={isRequestingPermission ? "권한 확인 중..." : "위치 권한 허용하고 시작"}
-            onPress={() => void handlePermissionRequest()}
-            disabled={isRequestingPermission}
-          />
-          <Button
-            label="나중에 하기"
-            variant="secondary"
-            onPress={handleContinueWithoutPermission}
-            disabled={isRequestingPermission}
-            style={startupStyles.secondaryButton}
-          />
-        </View>
+        <AuthScreen apiBaseUrl={apiBaseUrl} onAuthenticated={handleAuthenticated} onContinueGuest={handleContinueGuest} />
       </SafeAreaView>
     );
   }
@@ -352,7 +339,13 @@ function AppShell() {
           isLoadingLocation={isLoadingLocation}
           locationError={locationError}
           onRefreshLocation={refreshLocation}
-          onCheckVisit={() => visitMutation.mutate()}
+          onCheckVisit={() => {
+            if (!authSession) {
+              setAuthRequiredDialogVisible(true);
+              return;
+            }
+            visitMutation.mutate();
+          }}
           visitDialogVisible={visitDialog.visible}
           visitDialogTitle={visitDialog.title}
           visitDialogMessage={visitDialog.message}
@@ -370,6 +363,7 @@ function AppShell() {
         <CollectionScreen
           cards={cardsQuery.data ?? []}
           apiBaseUrl={apiBaseUrl}
+          userId={activeUserId}
           loadingMyCards={cardsQuery.isPending}
           myCardsError={cardsQuery.isError}
           selectedCategory={collectionCategory}
@@ -380,21 +374,33 @@ function AppShell() {
 
       {tab === "my" ? (
         <View style={styles.screen}>
-          <Text style={styles.title}>마이</Text>
-          <Text style={styles.description}>계정/설정은 다음 단계에서 연결합니다.</Text>
+          <Text style={styles.title}>설정</Text>
+          <Text style={styles.description}>
+            {authSession ? `${authSession.user.displayName} (${authSession.user.email})` : "게스트 모드로 둘러보는 중"}
+          </Text>
           <Button label="튜토리얼 다시보기" variant="secondary" onPress={handleReplayTutorial} />
+          {authSession ? (
+            <Button label="로그아웃" variant="secondary" onPress={() => void handleLogout()} />
+          ) : (
+            <Button label="로그인 / 가입" variant="secondary" onPress={() => setStartupStep("auth")} />
+          )}
           <Text style={styles.cardBody}>API: {apiBaseUrl ?? "설정되지 않음"}</Text>
         </View>
       ) : null}
 
       {!isExploreDetailExpanded ? (
-        <TabBar
-          tabs={tabs}
-          activeKey={tab}
-          onPressTab={(key) => setTab(key as GameTab)}
-          onHeightChange={setTabBarHeight}
-        />
+        <TabBar tabs={tabs} activeKey={tab} onPressTab={(key) => setTab(key as GameTab)} onHeightChange={setTabBarHeight} />
       ) : null}
+
+      <ExploreVisitResultModal
+        visible={authRequiredDialogVisible}
+        title="로그인이 필요해요"
+        message="수집 기능은 로그인/가입 후 사용할 수 있어요."
+        onClose={() => {
+          setAuthRequiredDialogVisible(false);
+          setStartupStep("auth");
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -473,17 +479,8 @@ const startupStyles = StyleSheet.create({
     color: colors.base.textSubtle,
     textAlign: "center",
   },
-  permissionError: {
-    marginTop: 8,
-    fontSize: 14,
-    color: colors.semantic.error,
-    textAlign: "center",
-  },
   footer: {
     gap: 12,
     paddingBottom: 12,
-  },
-  secondaryButton: {
-    borderColor: colors.base.border,
   },
 });

@@ -19,6 +19,7 @@
 - Language: TypeScript
 - DB: PostgreSQL(도입 예정)
 - 배치: 관광지 원천 데이터 주 1회 동기화
+- 인증: 이메일/비밀번호 + 카카오 로그인, Access/Refresh 토큰 기반 세션
 
 ## 4) 도메인 모델(목표)
 - places
@@ -36,6 +37,11 @@
 - POST `/visits/check` (현재 좌표 기반 방문 판정)
 - GET `/cards/my`
 - GET `/cards/catalog`
+- POST `/auth/signup`
+- POST `/auth/login`
+- POST `/auth/kakao`
+- POST `/auth/refresh`
+- POST `/auth/logout`
 
 ## 6) 방문 판정 규칙
 - 입력: 사용자 현재 좌표(lat/lng), 타임스탬프

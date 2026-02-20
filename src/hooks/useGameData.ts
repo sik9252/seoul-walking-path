@@ -1,5 +1,12 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CATALOG_PAGE_SIZE, checkVisit, DEMO_USER_ID, fetchCardCatalogPage, fetchMyCards, fetchPlacesPage, PAGE_SIZE } from "../apis/gameApi";
+import {
+  CATALOG_PAGE_SIZE,
+  checkVisitWithUser,
+  fetchCardCatalogPage,
+  fetchMyCards,
+  fetchPlacesPage,
+  PAGE_SIZE,
+} from "../apis/gameApi";
 
 export function usePlacesQuery(apiBaseUrl?: string) {
   return useInfiniteQuery({
@@ -11,23 +18,23 @@ export function usePlacesQuery(apiBaseUrl?: string) {
   });
 }
 
-export function useMyCardsQuery(apiBaseUrl?: string) {
+export function useMyCardsQuery(apiBaseUrl?: string, userId?: string) {
   return useQuery({
-    queryKey: ["cards", "my", apiBaseUrl, DEMO_USER_ID],
-    enabled: Boolean(apiBaseUrl),
-    queryFn: () => fetchMyCards(apiBaseUrl as string),
+    queryKey: ["cards", "my", apiBaseUrl, userId],
+    enabled: Boolean(apiBaseUrl && userId),
+    queryFn: () => fetchMyCards(apiBaseUrl as string, userId as string),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnMount: false,
   });
 }
 
-export function useCardCatalogQuery(apiBaseUrl?: string, region?: string) {
+export function useCardCatalogQuery(apiBaseUrl?: string, userId?: string, region?: string) {
   return useInfiniteQuery({
-    queryKey: ["cards", "catalog", apiBaseUrl, region ?? "all", CATALOG_PAGE_SIZE],
-    enabled: Boolean(apiBaseUrl),
+    queryKey: ["cards", "catalog", apiBaseUrl, userId, region ?? "all", CATALOG_PAGE_SIZE],
+    enabled: Boolean(apiBaseUrl && userId),
     initialPageParam: 1,
-    queryFn: ({ pageParam }) => fetchCardCatalogPage(apiBaseUrl as string, pageParam, region),
+    queryFn: ({ pageParam }) => fetchCardCatalogPage(apiBaseUrl as string, pageParam, userId as string, region),
     getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -42,13 +49,14 @@ export type VisitDialogPayload = {
 
 export function useVisitMutation(
   apiBaseUrl?: string,
+  userId?: string,
   options?: {
     onOpenDialog?: (payload: VisitDialogPayload) => void;
   },
 ) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => checkVisit(apiBaseUrl as string),
+    mutationFn: () => checkVisitWithUser(apiBaseUrl as string, userId as string),
     onSuccess: async (payload) => {
       if (!payload.matched) {
         options?.onOpenDialog?.({
@@ -71,7 +79,7 @@ export function useVisitMutation(
       if (payload.collected) {
         await Promise.all([
           queryClient.invalidateQueries({
-            queryKey: ["cards", "my", apiBaseUrl, DEMO_USER_ID],
+            queryKey: ["cards", "my", apiBaseUrl, userId],
             refetchType: "active",
           }),
           queryClient.invalidateQueries({

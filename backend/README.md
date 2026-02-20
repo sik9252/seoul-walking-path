@@ -25,3 +25,9 @@ npm run sync:tour-places
 - `POST /api/visits/check`
 - `GET /api/cards/catalog`
 - `GET /api/cards/my`
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/kakao`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/auth/session`
