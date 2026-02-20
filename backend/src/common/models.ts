@@ -30,6 +30,7 @@ export type UserVisitItem = {
 export type AuthUser = {
   id: string;
   username: string;
+  nickname?: string;
   passwordHash?: string;
   createdAt: string;
 };

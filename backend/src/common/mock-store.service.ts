@@ -258,6 +258,7 @@ export class MockStoreService {
       user: {
         id: user.id,
         username: user.username,
+        nickname: user.nickname,
       },
       accessToken: this.createAccessToken(user.id),
       refreshToken,
@@ -303,6 +304,9 @@ export class MockStoreService {
       if (!user) {
         return { ok: false as const, reason: "user_not_found" };
       }
+      if (!user.nickname && payload.nickname?.trim()) {
+        user.nickname = payload.nickname.trim();
+      }
       const { rawToken } = this.createRefreshTokenSession(user.id);
       return { ok: true as const, ...this.buildAuthResponse(user, rawToken) };
     }
@@ -319,6 +323,7 @@ export class MockStoreService {
       user = {
         id: randomId("user"),
         username,
+        nickname: payload.nickname?.trim() || undefined,
         createdAt: now,
       };
       this.users.push(user);
@@ -371,6 +376,23 @@ export class MockStoreService {
     return {
       id: user.id,
       username: user.username,
+      nickname: user.nickname,
+    };
+  }
+
+  updateUserNickname(payload: { userId: string; nickname: string }) {
+    const user = this.users.find((item) => item.id === payload.userId);
+    if (!user) {
+      return { ok: false as const, reason: "user_not_found" };
+    }
+    user.nickname = payload.nickname.trim();
+    return {
+      ok: true as const,
+      user: {
+        id: user.id,
+        username: user.username,
+        nickname: user.nickname,
+      },
     };
   }
 

@@ -58,6 +58,7 @@ create index if not exists idx_user_cards_user_id on user_cards(user_id);
 create table if not exists users (
   id varchar primary key,
   username varchar not null unique,
+  nickname varchar,
   password_hash varchar,
   created_at timestamptz not null default now()
 );

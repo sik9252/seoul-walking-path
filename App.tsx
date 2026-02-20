@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { getSessionUser, logoutSession, refreshSession } from "./src/apis/authApi";
+import { getSessionUser, logoutSession, refreshSession, updateNickname } from "./src/apis/authApi";
 import { getApiBaseUrl } from "./src/apis/gameApi";
 import { Button, TabBar, TabItem } from "./src/components/ui";
 import { useMyCardsQuery, usePlacesQuery, useVisitMutation } from "./src/hooks/useGameData";
@@ -13,6 +13,7 @@ import { useUserLocation } from "./src/hooks/useUserLocation";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { CollectionScreen } from "./src/screens/CollectionScreen";
 import { ExploreScreen } from "./src/screens/ExploreScreen";
+import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { ExploreVisitResultModal } from "./src/screens/widgets/explore";
 import { CollectionCategory } from "./src/screens/widgets/collection";
 import { AuthSession, clearAuthSession, getAuthSession, setAuthSession } from "./src/storage/authSession";
@@ -228,6 +229,27 @@ function AppShell() {
     setStartupStep("auth");
   }, [apiBaseUrl, authSession?.refreshToken]);
 
+  const handleSaveNickname = React.useCallback(
+    async (nickname: string) => {
+      if (!apiBaseUrl || !authSession) {
+        return "로그인이 필요합니다.";
+      }
+      try {
+        const result = await updateNickname(apiBaseUrl, authSession.accessToken, nickname);
+        const nextSession: AuthSession = {
+          ...authSession,
+          user: result.user,
+        };
+        setAuthSessionState(nextSession);
+        await setAuthSession(nextSession);
+        return;
+      } catch (error) {
+        return error instanceof Error ? error.message : "닉네임 저장에 실패했습니다.";
+      }
+    },
+    [apiBaseUrl, authSession],
+  );
+
   const handleLocatePlaceFromCollection = React.useCallback((place: PlaceItem) => {
     setTab("explore");
     setMapFocusRequest({
@@ -363,19 +385,15 @@ function AppShell() {
       ) : null}
 
       {tab === "my" ? (
-        <View style={styles.screen}>
-          <Text style={styles.title}>설정</Text>
-          <Text style={styles.description}>
-            {authSession ? `아이디: ${authSession.user.username}` : "로그인이 필요합니다"}
-          </Text>
-          <Button label="튜토리얼 다시보기" variant="secondary" onPress={handleReplayTutorial} />
-          {authSession ? (
-            <Button label="로그아웃" variant="secondary" onPress={() => void handleLogout()} />
-          ) : (
-            <Button label="로그인 / 가입" variant="secondary" onPress={() => setStartupStep("auth")} />
-          )}
-          <Text style={styles.cardBody}>API: {apiBaseUrl ?? "설정되지 않음"}</Text>
-        </View>
+        <SettingsScreen
+          authSession={authSession}
+          locationEnabled={Boolean(location)}
+          onRefreshLocation={refreshLocation}
+          onReplayTutorial={handleReplayTutorial}
+          onLogout={() => void handleLogout()}
+          onRequireAuth={() => setStartupStep("auth")}
+          onSaveNickname={handleSaveNickname}
+        />
       ) : null}
 
       {!isExploreDetailExpanded ? (

@@ -47,3 +47,10 @@ export class LogoutRequestDto {
   @IsString()
   refreshToken!: string;
 }
+
+export class UpdateNicknameRequestDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(20)
+  nickname!: string;
+}

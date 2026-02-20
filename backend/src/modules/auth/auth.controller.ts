@@ -6,6 +6,7 @@ import {
   LogoutRequestDto,
   RefreshRequestDto,
   SignupRequestDto,
+  UpdateNicknameRequestDto,
 } from "./auth.dto";
 
 @Controller("auth")
@@ -153,6 +154,23 @@ export class AuthController {
   @Post("logout")
   logout(@Body() body: LogoutRequestDto) {
     return this.store.logout({ refreshToken: body.refreshToken });
+  }
+
+  @Post("profile/nickname")
+  updateNickname(@Body() body: UpdateNicknameRequestDto, @Headers("authorization") authorization?: string) {
+    const token = authorization?.startsWith("Bearer ") ? authorization.slice(7) : undefined;
+    const user = this.store.getUserByAccessToken(token);
+    if (!user) {
+      throw new UnauthorizedException("세션이 유효하지 않습니다.");
+    }
+    const result = this.store.updateUserNickname({
+      userId: user.id,
+      nickname: body.nickname,
+    });
+    if (!result.ok) {
+      throw new BadRequestException("닉네임 저장에 실패했습니다.");
+    }
+    return result;
   }
 
   @Get("session")

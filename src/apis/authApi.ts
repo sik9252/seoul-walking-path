@@ -1,6 +1,7 @@
 export type AuthUser = {
   id: string;
   username: string;
+  nickname?: string;
 };
 
 export type AuthResponse = {
@@ -12,6 +13,11 @@ export type AuthResponse = {
 };
 
 type SessionResponse = {
+  user: AuthUser;
+};
+
+type UpdateNicknameResponse = {
+  ok: true;
   user: AuthUser;
 };
 
@@ -74,5 +80,16 @@ export async function getSessionUser(apiBaseUrl: string, accessToken: string) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  });
+}
+
+export async function updateNickname(apiBaseUrl: string, accessToken: string, nickname: string) {
+  return fetchJson<UpdateNicknameResponse>(`${apiBaseUrl}/auth/profile/nickname`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ nickname }),
   });
 }
