@@ -25,6 +25,13 @@ type CollectionGridProps = {
   onLocatePlace: (place: PlaceItem) => void;
 };
 
+const rarityBorderStyleByType = {
+  common: styles.collectionCardWrapRarityCommon,
+  rare: styles.collectionCardWrapRarityRare,
+  epic: styles.collectionCardWrapRarityEpic,
+  legendary: styles.collectionCardWrapRarityLegendary,
+} as const;
+
 export function CollectionGrid({ items, loading, hasNext, onLoadMore, onLocatePlace }: CollectionGridProps) {
   return (
     <FlatList
@@ -85,7 +92,7 @@ export function CollectionGrid({ items, loading, hasNext, onLoadMore, onLocatePl
         const { card } = item;
         const imageUrl = card.place?.imageUrl;
         return (
-          <View style={styles.collectionCardWrap}>
+          <View style={[styles.collectionCardWrap, rarityBorderStyleByType[card.rarity]]}>
             <View style={styles.collectionCardImageWrap}>
               {imageUrl ? (
                 <Image source={{ uri: imageUrl }} style={styles.collectionCardImage} />

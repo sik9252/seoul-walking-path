@@ -492,6 +492,18 @@ export const gameStyles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
+  collectionCardWrapRarityCommon: {
+    borderColor: "#18D860",
+  },
+  collectionCardWrapRarityRare: {
+    borderColor: "#2563EB",
+  },
+  collectionCardWrapRarityEpic: {
+    borderColor: "#A21CEF",
+  },
+  collectionCardWrapRarityLegendary: {
+    borderColor: "#F3B312",
+  },
   collectionCardImageWrap: {
     borderRadius: radius.lg,
     overflow: "hidden",
