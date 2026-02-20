@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { Button } from "../components/ui";
 import { AuthSession } from "../storage/authSession";
 import { colors, radius, spacing, typography } from "../theme/tokens";
@@ -70,7 +70,12 @@ export function SettingsScreen({
   }, [authSession, nickname, onRequireAuth, onSaveNickname]);
 
   return (
-    <View style={settingsStyles.container}>
+    <ScrollView
+      style={settingsStyles.container}
+      contentContainerStyle={settingsStyles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={settingsStyles.headerRow}>
         <Text style={settingsStyles.headerTitle}>마이페이지</Text>
         <Pressable style={settingsStyles.iconBtn}>
@@ -179,7 +184,7 @@ export function SettingsScreen({
           <Text style={settingsStyles.versionText}>v1.0.0</Text>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -189,6 +194,8 @@ const settingsStyles = StyleSheet.create({
     backgroundColor: colors.base.background,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
+  },
+  contentContainer: {
     paddingBottom: 110,
   },
   headerRow: {
